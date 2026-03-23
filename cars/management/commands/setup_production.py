@@ -22,15 +22,16 @@ class Command(BaseCommand):
         self.stdout.write(self.style.SUCCESS(f'Site updated: {site.domain}'))
 
         # Create superuser from env if set
-        email = os.environ.get('SUPERUSER_EMAIL', '').strip()
+        username = os.environ.get('SUPERUSER_USERNAME', 'admin').strip()
+        email = os.environ.get('SUPERUSER_EMAIL', f'{username}@radheauto.com').strip()
         password = os.environ.get('SUPERUSER_PASSWORD', '').strip()
-        if email and password and not User.objects.filter(is_superuser=True).exists():
+        if username and password and not User.objects.filter(is_superuser=True).exists():
             User.objects.create_superuser(
-                username='admin',
+                username=username,
                 email=email,
                 password=password,
             )
-            self.stdout.write(self.style.SUCCESS(f'Superuser created: {email}'))
+            self.stdout.write(self.style.SUCCESS(f'Superuser created: {username}'))
         elif User.objects.filter(is_superuser=True).exists():
             self.stdout.write('Superuser already exists, skipping.')
         else:
