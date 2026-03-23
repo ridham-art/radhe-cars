@@ -25,14 +25,20 @@ class Command(BaseCommand):
         username = os.environ.get('SUPERUSER_USERNAME', 'admin').strip()
         email = os.environ.get('SUPERUSER_EMAIL', f'{username}@radheauto.com').strip()
         password = os.environ.get('SUPERUSER_PASSWORD', '').strip()
-        if username and password and not User.objects.filter(is_superuser=True).exists():
-            User.objects.create_superuser(
+        if username and password:
+            user, created = User.objects.get_or_create(
                 username=username,
-                email=email,
-                password=password,
+                defaults={'email': email, 'is_staff': True, 'is_superuser': True}
             )
-            self.stdout.write(self.style.SUCCESS(f'Superuser created: {username}'))
-        elif User.objects.filter(is_superuser=True).exists():
-            self.stdout.write('Superuser already exists, skipping.')
+            if created:
+                user.set_password(password)
+                user.save()
+                self.stdout.write(self.style.SUCCESS(f'Superuser created: {username}'))
+            else:
+                user.set_password(password)
+                user.is_staff = True
+                user.is_superuser = True
+                user.save()
+                self.stdout.write(self.style.SUCCESS(f'Superuser {username} password updated'))
         else:
-            self.stdout.write('Set SUPERUSER_EMAIL and SUPERUSER_PASSWORD in Environment to create admin.')
+            self.stdout.write('Set SUPERUSER_USERNAME, SUPERUSER_EMAIL, SUPERUSER_PASSWORD in Environment.')
