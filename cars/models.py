@@ -1,3 +1,4 @@
+from django.core.exceptions import ValidationError
 from django.db import models
 from django.contrib.auth.models import User
 
@@ -91,6 +92,11 @@ class Car(models.Model):
 
     def __str__(self):
         return f"{self.year} {self.brand.name} {self.model.name} - {self.title}"
+
+    def clean(self):
+        super().clean()
+        if self.brand_id and self.model_id and self.model.brand_id != self.brand_id:
+            raise ValidationError({'model': 'Selected model must belong to the selected brand.'})
 
     @property
     def primary_image(self):

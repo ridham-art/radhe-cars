@@ -1,0 +1,43 @@
+{% extends "admin/change_form.html" %}
+
+{% block admin_change_form_document_ready %}
+{{ block.super }}
+<script>
+(function () {
+  var ajaxUrl = "{{ ajax_models_url|escapejs }}";
+  function brandEl() { return document.querySelector("#id_brand"); }
+  function modelEl() { return document.querySelector("#id_model"); }
+  function loadModels(brandId, keepSelection) {
+    var model = modelEl();
+    if (!model || !brandId) return;
+    var prev = keepSelection ? model.value : "";
+    fetch(ajaxUrl + "?brand=" + encodeURIComponent(brandId), { credentials: "same-origin" })
+      .then(function (r) { return r.json(); })
+      .then(function (data) {
+        model.innerHTML = "";
+        var empty = document.createElement("option");
+        empty.value = "";
+        empty.textContent = "---------";
+        model.appendChild(empty);
+        (data.models || []).forEach(function (m) {
+          var opt = document.createElement("option");
+          opt.value = m.id;
+          opt.textContent = m.name;
+          model.appendChild(opt);
+        });
+        if (prev && (data.models || []).some(function (m) { return String(m.id) === String(prev); })) {
+          model.value = prev;
+        }
+      })
+      .catch(function () {});
+  }
+  document.addEventListener("DOMContentLoaded", function () {
+    var b = brandEl();
+    if (!b) return;
+    b.addEventListener("change", function () {
+      loadModels(b.value, false);
+    });
+  });
+})();
+</script>
+{% endblock %}

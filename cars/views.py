@@ -7,12 +7,17 @@ from django.contrib import messages
 from django.core.paginator import Paginator
 from django.db.models import Q, F
 from django.db.models.functions import Coalesce
-from django.http import JsonResponse
+from django.http import HttpResponse, JsonResponse
 from .models import Car, Brand, CarModel, CarImage, Testimonial, Wishlist
 from .forms import SignUpForm, ContactForm
 
 MIN_IMAGES = 3
 MAX_IMAGES = 20
+
+
+def health_check(request):
+    """No DB — if this returns 200 but / returns 500, the crash is DB or app logic."""
+    return HttpResponse('ok', content_type='text/plain')
 
 
 def home(request):

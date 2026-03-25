@@ -1,5 +1,6 @@
 from django.contrib import admin
-from django.core.exceptions import ValidationError
+from django.http import JsonResponse
+from django.urls import path, reverse
 from .models import Brand, CarModel, Car, CarImage, Inquiry, Testimonial, Wishlist
 
 
@@ -30,6 +31,49 @@ class CarAdmin(admin.ModelAdmin):
     search_fields = ['title', 'brand__name', 'model__name', 'variant']
     list_editable = ['status', 'is_featured']
     inlines = [CarImageInline]
+    change_form_template = 'admin/cars/car/change_form.html'
+
+    def get_urls(self):
+        info = self.model._meta.app_label, self.model._meta.model_name
+        return [
+            path(
+                'ajax-models/',
+                self.admin_site.admin_view(self.ajax_models_by_brand),
+                name='%s_%s_ajax_models' % info,
+            ),
+        ] + super().get_urls()
+
+    def ajax_models_by_brand(self, request):
+        brand_id = request.GET.get('brand')
+        if not brand_id:
+            return JsonResponse({'models': []})
+        qs = CarModel.objects.filter(brand_id=brand_id).order_by('name')
+        return JsonResponse({'models': [{'id': m.pk, 'name': str(m)} for m in qs]})
+
+    def formfield_for_foreignkey(self, db_field, request, **kwargs):
+        if db_field.name == 'model':
+            brand_id = None
+            if request.method == 'POST':
+                brand_id = request.POST.get('brand')
+            if not brand_id and request.resolver_match:
+                oid = request.resolver_match.kwargs.get('object_id')
+                if oid:
+                    brand_id = Car.objects.filter(pk=oid).values_list('brand_id', flat=True).first()
+            if not brand_id:
+                brand_id = request.GET.get('brand')
+            if brand_id:
+                kwargs['queryset'] = CarModel.objects.filter(brand_id=brand_id).order_by('name')
+            else:
+                kwargs['queryset'] = CarModel.objects.none()
+        return super().formfield_for_foreignkey(db_field, request, **kwargs)
+
+    def changeform_view(self, request, object_id=None, form_url='', extra_context=None):
+        extra_context = extra_context or {}
+        extra_context['ajax_models_url'] = reverse(
+            'admin:%s_%s_ajax_models' % (self.model._meta.app_label, self.model._meta.model_name)
+        )
+        return super().changeform_view(request, object_id, form_url, extra_context)
+
     fieldsets = (
         ('Basic Info', {
             'fields': ('title', 'brand', 'model', 'year', 'variant', 'color', 'description')
