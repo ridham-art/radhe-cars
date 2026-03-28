@@ -1,0 +1,39 @@
+# Copy to /etc/nginx/sites-available/radhe-cars (then symlink to sites-enabled).
+# Replace server_name and ssl_certificate paths after certbot.
+# Upstream must match gunicorn --bind in gunicorn.service.
+
+upstream radhe_cars_app {
+    server 127.0.0.1:8000;
+}
+
+server {
+    listen 80;
+    server_name your-lightsail-domain.com www.your-lightsail-domain.com;
+    return 301 https://$host$request_uri;
+}
+
+server {
+    listen 443 ssl http2;
+    server_name your-lightsail-domain.com www.your-lightsail-domain.com;
+
+    ssl_certificate /etc/letsencrypt/live/your-lightsail-domain.com/fullchain.pem;
+    ssl_certificate_key /etc/letsencrypt/live/your-lightsail-domain.com/privkey.pem;
+
+    client_max_body_size 25M;
+
+    location /static/ {
+        alias /var/www/radhe-cars/staticfiles/;
+    }
+
+    location /media/ {
+        alias /var/www/radhe-cars/media/;
+    }
+
+    location / {
+        proxy_pass http://radhe_cars_app;
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto $scheme;
+    }
+}

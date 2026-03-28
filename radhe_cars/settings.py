@@ -30,29 +30,21 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 # Load project root .env into os.environ (file is optional; gitignored)
 load_dotenv(BASE_DIR / '.env')
 
-DEBUG = os.environ.get('DEBUG', 'True').lower() in ('true', '1', 'yes')
+DEBUG = os.environ.get('DEBUG') == 'True'
 
-SECRET_KEY = os.environ.get('SECRET_KEY', 'django-insecure-radhe-cars-dev-key-change-in-production')
-if not DEBUG:
-    if not SECRET_KEY or SECRET_KEY.startswith('django-insecure-') or len(SECRET_KEY) < 50:
-        raise ImproperlyConfigured(
-            'Production requires SECRET_KEY: a long random value (50+ chars, 5+ unique chars). '
-            'Generate: python -c "from django.core.management.utils import get_random_secret_key; print(get_random_secret_key())"'
-        )
-    if len(set(SECRET_KEY)) < 5:
-        raise ImproperlyConfigured(
-            'Production SECRET_KEY must use at least 5 different characters (use get_random_secret_key()).'
-        )
+SECRET_KEY = os.environ.get('SECRET_KEY')
+if not SECRET_KEY:
+    raise ImproperlyConfigured('Set the SECRET_KEY environment variable.')
 
-_allowed_raw = os.environ.get('ALLOWED_HOSTS', '').strip()
-if _allowed_raw:
-    ALLOWED_HOSTS = [h.strip() for h in _allowed_raw.split(',') if h.strip()]
-elif not DEBUG:
+# Temporary: replace with your domain list before final production cutover
+ALLOWED_HOSTS = ['*']
+
+GOOGLE_CLIENT_ID = os.environ.get('GOOGLE_CLIENT_ID')
+GOOGLE_CLIENT_SECRET = os.environ.get('GOOGLE_CLIENT_SECRET')
+if not GOOGLE_CLIENT_ID or not GOOGLE_CLIENT_SECRET:
     raise ImproperlyConfigured(
-        'Set ALLOWED_HOSTS in the environment (comma-separated), e.g. radheauto.com,www.radheauto.com'
+        'Set GOOGLE_CLIENT_ID and GOOGLE_CLIENT_SECRET environment variables.'
     )
-else:
-    ALLOWED_HOSTS = ['*']
 
 INSTALLED_APPS = [
     'django.contrib.admin',
@@ -78,6 +70,7 @@ AUTHENTICATION_BACKENDS = [
 
 ACCOUNT_LOGIN_METHODS = {'email'}
 ACCOUNT_SIGNUP_FIELDS = ['email*', 'password1*', 'password2*']
+ACCOUNT_EMAIL_REQUIRED = True
 ACCOUNT_EMAIL_VERIFICATION = 'optional'
 ACCOUNT_PREVENT_ENUMERATION = False
 SOCIALACCOUNT_AUTO_SIGNUP = True
@@ -183,27 +176,17 @@ ACCOUNT_LOGIN_URL = '/login/'
 ACCOUNT_LOGOUT_REDIRECT_URL = '/'
 ACCOUNT_ADAPTER = 'cars.account_adapter.CustomAccountAdapter'
 
-# Google OAuth - set via environment variables (never commit secrets)
-GOOGLE_CLIENT_ID = os.environ.get('GOOGLE_CLIENT_ID', '')
-GOOGLE_CLIENT_SECRET = os.environ.get('GOOGLE_CLIENT_SECRET', '')
+# Security defaults (enable SECURE_SSL_REDIRECT and cookie flags when HTTPS is configured)
+SECURE_BROWSER_XSS_FILTER = True
+SECURE_CONTENT_TYPE_NOSNIFF = True
+X_FRAME_OPTIONS = 'DENY'
+SECURE_SSL_REDIRECT = False
+SESSION_COOKIE_SECURE = False
+CSRF_COOKIE_SECURE = False
 
-# HTTPS / cookies — only when DEBUG=False (production)
-if not DEBUG:
-    SECURE_SSL_REDIRECT = os.environ.get('SECURE_SSL_REDIRECT', 'true').lower() in ('true', '1', 'yes')
-    SESSION_COOKIE_SECURE = True
-    CSRF_COOKIE_SECURE = True
-    SECURE_HSTS_SECONDS = int(os.environ.get('SECURE_HSTS_SECONDS', '31536000'))
-    SECURE_HSTS_INCLUDE_SUBDOMAINS = os.environ.get('SECURE_HSTS_INCLUDE_SUBDOMAINS', 'true').lower() in (
-        'true',
-        '1',
-        'yes',
-    )
-    SECURE_HSTS_PRELOAD = os.environ.get('SECURE_HSTS_PRELOAD', 'true').lower() in ('true', '1', 'yes')
-    SECURE_REFERRER_POLICY = 'strict-origin-when-cross-origin'
-    # Behind nginx, ALB, Render, etc. (set when TLS terminates at the proxy)
-    if os.environ.get('USE_X_FORWARDED_HEADERS', '').lower() in ('true', '1', 'yes'):
-        SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
-        USE_X_FORWARDED_HOST = True
+if os.environ.get('USE_X_FORWARDED_HEADERS', '').lower() in ('true', '1', 'yes'):
+    SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
+    USE_X_FORWARDED_HOST = True
 
 _csrf_origins = os.environ.get('CSRF_TRUSTED_ORIGINS', '').strip()
 _csrf_list = [o.strip() for o in _csrf_origins.split(',') if o.strip()] if _csrf_origins else []
