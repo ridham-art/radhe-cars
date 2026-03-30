@@ -146,6 +146,7 @@
 {% block extra_js %}
 <script>
 (function(){
+    function initHomePage() {
     var state = {};
 
     function isMobile() { return window.innerWidth < 768; }
@@ -327,11 +328,10 @@
     };
 
     window.addEventListener('resize', function(){ init('featured'); init('recent'); });
-})();
 
-// Hero infinite carousel
-(function(){
+    // Hero infinite carousel
     var track = document.getElementById('hero-track');
+    if (!track) return;
     var dots = document.querySelectorAll('.hero-dot');
     var pos = 1, real = 0, total = 3, moving = false, timer;
 
@@ -391,6 +391,12 @@
         var dx = e.changedTouches[0].clientX - hsx;
         if (hm && Math.abs(dx) > 50) window.heroSlide(dx < 0 ? 1 : -1);
     }, { passive: true });
+    }
+    if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', initHomePage);
+    } else {
+        initHomePage();
+    }
 })();
 </script>
 {% endblock %}

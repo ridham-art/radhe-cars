@@ -115,17 +115,4 @@
         </nav>
     </div>
 </div>
-<script>
-(function(){
-    var menu = document.getElementById('mobile-menu');
-    var panel = document.getElementById('mobile-menu-panel');
-    var btn = document.getElementById('mobile-menu-btn');
-    var closeBtn = document.getElementById('mobile-menu-close');
-    var backdrop = document.getElementById('mobile-menu-backdrop');
-    function openMenu(){ menu.classList.remove('hidden'); if(panel){ panel.classList.remove('translate-x-full'); } document.body.style.overflow='hidden'; }
-    function closeMenu(){ menu.classList.add('hidden'); if(panel){ panel.classList.add('translate-x-full'); } document.body.style.overflow=''; }
-    if(btn) btn.addEventListener('click', openMenu);
-    if(closeBtn) closeBtn.addEventListener('click', closeMenu);
-    if(backdrop) backdrop.addEventListener('click', closeMenu);
-})();
-</script>
+{# Mobile menu JS: base.html (end of body) so it does not block early parse #}

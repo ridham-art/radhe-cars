@@ -7,6 +7,8 @@
     <title>{% block title %}Radhe Cars{% endblock %}</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    {# Hint browser to fetch CSS early; keep stylesheet link for correct cascade #}
+    <link rel="preload" href="{% static 'css/tailwind.css' %}" as="style">
     {# Built Tailwind (run: npm run build:css) — avoids CDN JIT + large render-blocking script #}
     <link rel="stylesheet" href="{% static 'css/tailwind.css' %}">
     {# Non-blocking font CSS; Inter uses font-display: swap in the Google Fonts URL #}
@@ -85,6 +87,28 @@
     {% include 'partials/footer.html' %}
 
     <script>
+    (function() {
+        function initMobileMenu() {
+            var menu = document.getElementById('mobile-menu');
+            var panel = document.getElementById('mobile-menu-panel');
+            var btn = document.getElementById('mobile-menu-btn');
+            var closeBtn = document.getElementById('mobile-menu-close');
+            var backdrop = document.getElementById('mobile-menu-backdrop');
+            if (!menu) return;
+            function openMenu() {
+                menu.classList.remove('hidden');
+                if (panel) panel.classList.remove('translate-x-full');
+                document.body.style.overflow = 'hidden';
+            }
+            function closeMenu() {
+                menu.classList.add('hidden');
+                if (panel) panel.classList.add('translate-x-full');
+                document.body.style.overflow = '';
+            }
+            if (btn) btn.addEventListener('click', openMenu);
+            if (closeBtn) closeBtn.addEventListener('click', closeMenu);
+            if (backdrop) backdrop.addEventListener('click', closeMenu);
+        }
         function copyToClipboard(text) {
             if (navigator.clipboard && navigator.clipboard.writeText) {
                 return navigator.clipboard.writeText(text);
@@ -166,8 +190,20 @@
             lastShareTap = Date.now();
             window.doShare(btn);
         }
-        document.addEventListener('click', handleShare, true);
-        document.addEventListener('touchend', handleShare, { capture: true, passive: false });
+        function initShare() {
+            document.addEventListener('click', handleShare, true);
+            document.addEventListener('touchend', handleShare, { capture: true, passive: false });
+        }
+        function initBaseApp() {
+            initMobileMenu();
+            initShare();
+        }
+        if (document.readyState === 'loading') {
+            document.addEventListener('DOMContentLoaded', initBaseApp);
+        } else {
+            initBaseApp();
+        }
+    })();
     </script>
     {% block extra_js %}{% endblock %}
 </body>
