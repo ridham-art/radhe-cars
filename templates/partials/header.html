@@ -15,8 +15,8 @@
     <!-- Center: Search (flexible, min-width to prevent collapse) -->
     <form action="{% url 'car_list' %}" method="get" id="header-search-form" class="flex-1 min-w-0 mx-2 sm:mx-4 max-w-2xl relative">
         <input type="text" name="q" id="header-search" placeholder="Search cars..." value="{{ request.GET.q|default:'' }}" class="w-full bg-white border border-gray-300 rounded-full py-2 sm:py-2.5 pl-4 sm:pl-6 pr-10 text-sm text-gray-900 placeholder-gray-400 focus:outline-none focus:border-blue-400 transition-colors">
-        <button type="submit" class="absolute right-2 top-1/2 -translate-y-1/2 p-1.5">
-            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" class="w-4 h-4 text-gray-400"><circle cx="11" cy="11" r="8"></circle><path d="m21 21-4.3-4.3"></path></svg>
+        <button type="submit" class="absolute right-2 top-1/2 -translate-y-1/2 p-1.5" aria-label="Search">
+            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" class="w-4 h-4 text-gray-400" aria-hidden="true"><circle cx="11" cy="11" r="8"></circle><path d="m21 21-4.3-4.3"></path></svg>
         </button>
     </form>
 

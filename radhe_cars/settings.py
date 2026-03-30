@@ -234,6 +234,8 @@ if not DEBUG:
             'BACKEND': 'whitenoise.storage.CompressedStaticFilesStorage',
         },
     }
+    # Long cache for fingerprinted static assets (PageSpeed: cache lifetimes)
+    WHITENOISE_MAX_AGE = 31536000
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 

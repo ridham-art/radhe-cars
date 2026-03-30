@@ -23,10 +23,14 @@ server {
 
     location /static/ {
         alias /var/www/radhe-cars/staticfiles/;
+        expires 365d;
+        add_header Cache-Control "public, immutable";
     }
 
     location /media/ {
         alias /var/www/radhe-cars/media/;
+        expires 30d;
+        add_header Cache-Control "public";
     }
 
     location / {

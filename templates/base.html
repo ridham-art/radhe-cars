@@ -7,22 +7,20 @@
     <title>{% block title %}Radhe Cars{% endblock %}</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <script src="https://cdn.tailwindcss.com"></script>
-    {# Inter uses font-display: swap via the Google Fonts URL — avoids invisible text during load #}
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
-    <script src="https://unpkg.com/lucide@latest"></script>
-    <script src="https://code.iconify.design/iconify-icon/2.0.0/iconify-icon.min.js"></script>
+    {# Built Tailwind (run: npm run build:css) — avoids CDN JIT + large render-blocking script #}
+    <link rel="stylesheet" href="{% static 'css/tailwind.css' %}">
+    {# Non-blocking font CSS; Inter uses font-display: swap in the Google Fonts URL #}
+    <link rel="preload" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap" as="style" onload="this.onload=null;this.rel='stylesheet'">
+    <noscript><link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap" rel="stylesheet"></noscript>
     <style>
         body {
             font-family: 'Inter', system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
         }
-        /* Stable header: reserve height so nav does not jump when fonts/icons paint */
         #main-header {
             min-height: 4.75rem;
             box-sizing: border-box;
             flex-shrink: 0;
         }
-        /* Car listing cards: horizontal sliders keep row height before images decode */
         .carousel-row-stable {
             min-height: 24rem;
         }
@@ -68,6 +66,7 @@
 
     {% include 'partials/header.html' %}
 
+    <main id="main-content" class="flex-1 flex flex-col min-w-0">
     {% if messages %}
     <div class="max-w-7xl mx-auto px-6 pt-4">
         {% for message in messages %}
@@ -81,11 +80,11 @@
     <div class="flex-1">
         {% block content %}{% endblock %}
     </div>
+    </main>
 
     {% include 'partials/footer.html' %}
 
     <script>
-        lucide.createIcons({ attrs: { 'stroke-width': 1.5 } });
         function copyToClipboard(text) {
             if (navigator.clipboard && navigator.clipboard.writeText) {
                 return navigator.clipboard.writeText(text);
