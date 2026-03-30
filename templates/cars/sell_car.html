@@ -785,7 +785,7 @@ function showPics(input){
     r.onload=function(e){
       const d=document.createElement('div');
       d.className='aspect-square rounded-lg overflow-hidden border border-slate-200';
-      d.innerHTML='<img src="'+e.target.result+'" class="w-full h-full object-cover">';
+      d.innerHTML='<img src="'+e.target.result+'" width="800" height="600" alt="" class="w-full h-full object-cover">';
       g.appendChild(d);
     };
     r.readAsDataURL(f);

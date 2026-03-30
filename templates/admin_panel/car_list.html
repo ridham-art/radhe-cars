@@ -69,7 +69,7 @@
                         <td class="w-16">
                             {% with img=car.primary_image %}
                             {% if img and img.display_url %}
-                            <img src="{{ img.display_url }}" alt="" class="w-14 h-10 object-cover rounded border border-slate-200">
+                            <img src="{{ img.display_url }}" alt="" width="56" height="40" loading="lazy" decoding="async" class="w-14 h-10 object-cover rounded border border-slate-200">
                             {% else %}
                             <span class="text-xs text-slate-400">—</span>
                             {% endif %}

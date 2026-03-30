@@ -12,7 +12,9 @@
             <a href="{% url 'sell_car' %}" class="hover:bg-gray-100 transition font-medium text-gray-900 bg-white rounded-lg pt-3 pr-6 pb-3 pl-6 no-underline w-full text-center block">Sell Now</a>
         </div>
         <div class="md:w-1/2 relative flex items-center justify-center p-6">
-            <img src="https://images.unsplash.com/photo-1675581334876-4e492346762c?w=1600&q=80" alt="Luxury Car" class="w-full h-auto object-contain rounded-2xl">
+            <div class="w-full max-w-xl aspect-[16/10] md:aspect-[4/3] rounded-2xl overflow-hidden bg-white/10">
+                <img src="https://images.unsplash.com/photo-1675581334876-4e492346762c?w=1600&q=80" alt="Luxury Car" width="1600" height="1000" loading="lazy" decoding="async" class="w-full h-full object-contain">
+            </div>
         </div>
     </div>
 </section>

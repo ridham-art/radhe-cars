@@ -5,12 +5,32 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>{% block title %}Radhe Cars{% endblock %}</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <script src="https://cdn.tailwindcss.com"></script>
+    {# Inter uses font-display: swap via the Google Fonts URL — avoids invisible text during load #}
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
     <script src="https://unpkg.com/lucide@latest"></script>
     <script src="https://code.iconify.design/iconify-icon/2.0.0/iconify-icon.min.js"></script>
     <style>
-        body { font-family: 'Inter', sans-serif; }
+        body {
+            font-family: 'Inter', system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+        }
+        /* Stable header: reserve height so nav does not jump when fonts/icons paint */
+        #main-header {
+            min-height: 4.75rem;
+            box-sizing: border-box;
+            flex-shrink: 0;
+        }
+        /* Car listing cards: horizontal sliders keep row height before images decode */
+        .carousel-row-stable {
+            min-height: 24rem;
+        }
+        @media (min-width: 768px) {
+            .carousel-row-stable {
+                min-height: 26rem;
+            }
+        }
         .hero-bg {
             background: linear-gradient(180deg, #1e293b 0%, #0f172a 100%);
             position: relative;

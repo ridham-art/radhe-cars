@@ -16,12 +16,12 @@
                 <div id="gallery-track" class="flex w-full h-full" style="transform: translateX(-100%); transition: transform 700ms cubic-bezier(0.25, 0.46, 0.45, 0.94); will-change: transform">
                     {% for img in car.images.all %}
                     <div class="gallery-slide w-full h-full shrink-0">
-                        <img src="{{ img.display_url }}" alt="{{ car.title }}" class="w-full h-full object-cover">
+                        <img src="{{ img.display_url }}" alt="{{ car.title }}" width="1920" height="1080" decoding="async" class="w-full h-full object-cover">
                     </div>
                     {% endfor %}
                 </div>
                 {% elif car.primary_image %}
-                <img id="main-image" src="{{ car.primary_image.display_url }}" alt="{{ car.title }}" class="w-full h-full object-cover">
+                <img id="main-image" src="{{ car.primary_image.display_url }}" alt="{{ car.title }}" width="1920" height="1080" decoding="async" class="w-full h-full object-cover">
                 {% else %}
                 <div id="main-image-placeholder" class="w-full h-full bg-gray-200 flex items-center justify-center">
                     <svg xmlns="http://www.w3.org/2000/svg" width="64" height="64" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1" class="text-gray-400"><path d="M19 17h2c.6 0 1-.4 1-1v-3c0-.9-.7-1.7-1.5-1.9C18.7 10.6 16 10 16 10s-1.3-1.4-2.2-2.3c-.5-.4-1.1-.7-1.8-.7H5c-.6 0-1.1.4-1.4.9l-1.4 2.9A3.7 3.7 0 0 0 2 12v4c0 .6.4 1 1 1h2"></path><circle cx="7" cy="17" r="2"></circle><path d="M9 17h6"></path><circle cx="17" cy="17" r="2"></circle></svg>
@@ -42,7 +42,7 @@
             <div class="flex gap-3 overflow-x-auto pb-2 scrollbar-hide snap-x" id="gallery-thumbs">
                 {% for img in car.images.all %}
                 <button type="button" class="gallery-thumb relative w-32 aspect-video shrink-0 rounded-xl overflow-hidden border-2 {% if forloop.first %}border-blue-600{% else %}border-transparent hover:border-gray-300{% endif %} transition-colors snap-start group" data-index="{{ forloop.counter0 }}" data-src="{{ img.display_url }}">
-                    <img src="{{ img.display_url }}" alt="Thumbnail {{ forloop.counter }}" class="w-full h-full object-cover {% if not forloop.first %}opacity-80 group-hover:opacity-100{% endif %} transition-opacity">
+                    <img src="{{ img.display_url }}" alt="Thumbnail {{ forloop.counter }}" width="128" height="72" loading="lazy" decoding="async" class="w-full h-full object-cover {% if not forloop.first %}opacity-80 group-hover:opacity-100{% endif %} transition-opacity">
                 </button>
                 {% endfor %}
             </div>
@@ -184,9 +184,9 @@
             <div class="flex gap-4 overflow-x-auto scrollbar-hide snap-x snap-mandatory pb-2 lg:grid lg:grid-cols-2 xl:grid-cols-3 lg:overflow-visible lg:gap-6" style="-webkit-overflow-scrolling: touch;">
                 {% for scar in similar_cars %}
                 <article class="w-[280px] min-w-[280px] shrink-0 snap-start bg-white rounded-2xl border border-gray-100 overflow-hidden flex flex-col shadow-sm hover:shadow-lg transition-all duration-300 hover:-translate-y-0 lg:hover:-translate-y-1 group lg:w-auto lg:min-w-0 lg:shrink">
-                    <div class="relative h-[220px] bg-slate-100 overflow-hidden">
+                    <div class="relative aspect-[4/3] bg-slate-100 overflow-hidden">
                         {% if scar.primary_image %}
-                        <img src="{{ scar.primary_image.display_url }}" alt="{{ scar.title }}" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500">
+                        <img src="{{ scar.primary_image.display_url }}" alt="{{ scar.title }}" width="800" height="600" loading="lazy" decoding="async" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500">
                         {% else %}
                         <div class="w-full h-full bg-gray-200"></div>
                         {% endif %}
@@ -213,7 +213,7 @@
             <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
                 {% for t in testimonials %}
                 <div class="relative rounded-2xl overflow-hidden aspect-[3/4] group cursor-pointer">
-                    <img src="{{ t.image.url }}" alt="{{ t.name }}" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700">
+                    <img src="{{ t.image.url }}" alt="{{ t.name }}" width="600" height="800" loading="lazy" decoding="async" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700">
                     <div class="absolute inset-0 bg-gradient-to-t from-black/90 via-black/20 to-transparent"></div>
                     <div class="absolute bottom-6 left-6 right-6">
                         <h4 class="text-lg font-semibold mb-1">{{ t.name }}</h4>
