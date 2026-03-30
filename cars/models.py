@@ -106,6 +106,16 @@ class Car(models.Model):
 
     @property
     def primary_image(self):
+        # Use prefetched images when present (avoids N+1 on list pages).
+        cache = getattr(self, '_prefetched_objects_cache', None)
+        if cache and 'images' in cache:
+            imgs = list(self.images.all())
+            if not imgs:
+                return None
+            for img in imgs:
+                if img.is_primary:
+                    return img
+            return imgs[0]
         img = self.images.filter(is_primary=True).first()
         if not img:
             img = self.images.first()

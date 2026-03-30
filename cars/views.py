@@ -5,10 +5,25 @@ from django.contrib.auth import login, authenticate, logout
 from django.contrib.auth.decorators import login_required
 from django.contrib import messages
 from django.core.paginator import Paginator
-from django.db.models import Q, F
+from django.db.models import Q, F, Prefetch
 from django.db.models.functions import Coalesce
 from django.http import HttpResponse, JsonResponse
 from .models import Car, Brand, CarModel, CarImage, Testimonial, Wishlist
+
+# One query batch for car images (primary first) — avoids dozens of round-trips to the DB per page.
+_CAR_IMAGES_PREFETCH = Prefetch(
+    'images',
+    queryset=CarImage.objects.order_by('-is_primary', 'id'),
+)
+# Wishlist → Car → images
+_WISHLIST_CAR_IMAGES = Prefetch(
+    'car__images',
+    queryset=CarImage.objects.order_by('-is_primary', 'id'),
+)
+
+
+def _cars_with_related(qs):
+    return qs.select_related('brand', 'model').prefetch_related(_CAR_IMAGES_PREFETCH)
 from .forms import SignUpForm, ContactForm
 
 MIN_IMAGES = 3
@@ -21,8 +36,12 @@ def health_check(request):
 
 
 def home(request):
-    featured_cars = Car.objects.filter(status='APPROVED', is_featured=True)[:12]
-    recent_cars = Car.objects.filter(status='APPROVED').order_by('-created_at')[:12]
+    featured_cars = _cars_with_related(
+        Car.objects.filter(status='APPROVED', is_featured=True)
+    )[:12]
+    recent_cars = _cars_with_related(
+        Car.objects.filter(status='APPROVED').order_by('-created_at')
+    )[:12]
     brands = Brand.objects.all()
     testimonials = Testimonial.objects.filter(is_active=True)[:4]
     wishlisted_ids = set()
@@ -43,7 +62,7 @@ def home(request):
 def home_cars_api(request):
     """AJAX: Return cars filtered by body_type for home page Recently Added section."""
     from django.template.loader import render_to_string
-    cars = Car.objects.filter(status='APPROVED').order_by('-created_at')
+    cars = _cars_with_related(Car.objects.filter(status='APPROVED').order_by('-created_at'))
     body_type = request.GET.get('body_type', '').strip()
     if body_type:
         cars = cars.filter(body_type__iexact=body_type)
@@ -118,6 +137,8 @@ def car_list(request):
     else:
         cars = cars.order_by('-created_at')
 
+    cars = _cars_with_related(cars)
+
     import datetime
     current_year = datetime.datetime.now().year
     year_range = list(range(current_year, 2004, -1))
@@ -164,10 +185,13 @@ def car_list(request):
 
 
 def car_detail(request, pk):
-    car = get_object_or_404(Car, pk=pk, status='APPROVED')
-    similar_cars = Car.objects.filter(
-        status='APPROVED', brand=car.brand
-    ).exclude(pk=car.pk)[:3]
+    car = get_object_or_404(
+        _cars_with_related(Car.objects.filter(status='APPROVED')),
+        pk=pk,
+    )
+    similar_cars = _cars_with_related(
+        Car.objects.filter(status='APPROVED', brand=car.brand).exclude(pk=car.pk)
+    )[:3]
     testimonials = Testimonial.objects.filter(is_active=True)[:3]
     wishlist_count = car.wishlisted_by.count()
     in_wishlist = request.user.is_authenticated and car.wishlisted_by.filter(user=request.user).exists()
@@ -445,6 +469,10 @@ def toggle_wishlist(request, pk):
 
 @login_required
 def wishlist_view(request):
-    wishlist_items = Wishlist.objects.filter(user=request.user).select_related('car')
+    wishlist_items = (
+        Wishlist.objects.filter(user=request.user)
+        .select_related('car', 'car__brand', 'car__model')
+        .prefetch_related(_WISHLIST_CAR_IMAGES)
+    )
     cars = [item.car for item in wishlist_items]
     return render(request, 'cars/wishlist.html', {'cars': cars})

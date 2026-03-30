@@ -23,12 +23,21 @@ class Command(BaseCommand):
             self.stderr.write('Error: GOOGLE_CLIENT_ID and GOOGLE_CLIENT_SECRET must be set')
             return
 
-        site = Site.objects.get(id=settings.SITE_ID)
         # Live domain (no scheme). For local dev use SITE_DOMAIN=127.0.0.1:8000
         domain = os.environ.get('SITE_DOMAIN', 'www.radheauto.com')
-        site.domain = domain
-        site.name = 'Radhe Auto'
-        site.save()
+        site_id = settings.SITE_ID
+        # domain is UNIQUE: remove stray rows using the same domain with a different pk
+        Site.objects.filter(domain=domain).exclude(pk=site_id).delete()
+        site, site_created = Site.objects.get_or_create(
+            pk=site_id,
+            defaults={'domain': domain, 'name': 'Radhe Auto'},
+        )
+        if not site_created:
+            site.domain = domain
+            site.name = 'Radhe Auto'
+            site.save()
+        else:
+            self.stdout.write(self.style.WARNING(f'Created django.contrib.sites Site id={site_id} ({domain}).'))
         app, created = SocialApp.objects.update_or_create(
             provider='google',
             defaults={
