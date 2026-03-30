@@ -224,14 +224,15 @@ STATIC_ROOT = os.path.join(BASE_DIR, 'staticfiles')
 MEDIA_URL = '/media/'
 MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
 
-# Production: compressed static files via WhiteNoise. Dev: default finder storage.
+# Production: hashed filenames (cache-busting) + gzip via WhiteNoise.
+# Run: npm run build:css && python manage.py collectstatic --noinput
 if not DEBUG:
     STORAGES = {
         'default': {
             'BACKEND': 'django.core.files.storage.FileSystemStorage',
         },
         'staticfiles': {
-            'BACKEND': 'whitenoise.storage.CompressedStaticFilesStorage',
+            'BACKEND': 'whitenoise.storage.CompressedManifestStaticFilesStorage',
         },
     }
 
