@@ -29,9 +29,6 @@ staticfiles/
 *.swp
 *.swo
 
-# Node (Tailwind build)
-node_modules/
-
 # OS
 .DS_Store
 Thumbs.db
