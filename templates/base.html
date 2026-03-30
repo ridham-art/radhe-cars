@@ -5,12 +5,22 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>{% block title %}Radhe Cars{% endblock %}</title>
-    <script src="https://cdn.tailwindcss.com"></script>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
-    <script src="https://unpkg.com/lucide@latest"></script>
-    <script src="https://code.iconify.design/iconify-icon/2.0.0/iconify-icon.min.js"></script>
+
+    {# DNS early hints for fonts #}
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+
+    {# Main stylesheet: load without blocking first paint (swap avoids invisible text) #}
+    <link rel="preload" as="style" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap" onload="this.onload=null;this.rel='stylesheet'">
+    <noscript>
+        <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+    </noscript>
+
+    {# Critical CSS: minimal layout + above-the-fold; full utility classes come from Tailwind at end of body #}
     <style>
-        body { font-family: 'Inter', sans-serif; }
+        html { -webkit-text-size-adjust: 100%; }
+        body { margin: 0; font-family: 'Inter', system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif; background-color: #f9fafb; color: #111827; min-height: 100vh; display: flex; flex-direction: column; width: 100%; overflow-x: hidden; }
+        .antialiased { -webkit-font-smoothing: antialiased; -moz-osx-font-smoothing: grayscale; }
         .hero-bg {
             background: linear-gradient(180deg, #1e293b 0%, #0f172a 100%);
             position: relative;
@@ -64,91 +74,106 @@
 
     {% include 'partials/footer.html' %}
 
+    {# External JS at end of body — defer preserves order and runs after HTML is parsed #}
+    <script defer src="https://cdn.tailwindcss.com"></script>
+    <script defer src="https://unpkg.com/lucide@latest"></script>
+    <script defer src="https://code.iconify.design/iconify-icon/2.0.0/iconify-icon.min.js"></script>
     <script>
-        lucide.createIcons({ attrs: { 'stroke-width': 1.5 } });
-        function copyToClipboard(text) {
-            if (navigator.clipboard && navigator.clipboard.writeText) {
-                return navigator.clipboard.writeText(text);
+    (function() {
+        function initApp() {
+            if (window.lucide && typeof lucide.createIcons === 'function') {
+                lucide.createIcons({ attrs: { 'stroke-width': 1.5 } });
             }
-            var ta = document.createElement('textarea');
-            ta.value = text;
-            ta.setAttribute('readonly', '');
-            ta.style.cssText = 'position:fixed;top:0;left:0;width:2px;height:2px;padding:0;border:none;outline:none;opacity:0;z-index:-1;';
-            document.body.appendChild(ta);
-            ta.focus();
-            ta.select();
-            ta.setSelectionRange(0, text.length);
-            try {
-                var ok = document.execCommand('copy');
-                document.body.removeChild(ta);
-                return ok ? Promise.resolve() : Promise.reject();
-            } catch (e) {
-                document.body.removeChild(ta);
-                return Promise.reject(e);
+            function copyToClipboard(text) {
+                if (navigator.clipboard && navigator.clipboard.writeText) {
+                    return navigator.clipboard.writeText(text);
+                }
+                var ta = document.createElement('textarea');
+                ta.value = text;
+                ta.setAttribute('readonly', '');
+                ta.style.cssText = 'position:fixed;top:0;left:0;width:2px;height:2px;padding:0;border:none;outline:none;opacity:0;z-index:-1;';
+                document.body.appendChild(ta);
+                ta.focus();
+                ta.select();
+                ta.setSelectionRange(0, text.length);
+                try {
+                    var ok = document.execCommand('copy');
+                    document.body.removeChild(ta);
+                    return ok ? Promise.resolve() : Promise.reject();
+                } catch (e) {
+                    document.body.removeChild(ta);
+                    return Promise.reject(e);
+                }
             }
+            window.doShare = function(btn) {
+                if (!btn) return;
+                var path = btn.dataset.shareUrl || btn.getAttribute('data-share-url');
+                var title = (btn.dataset.shareTitle || btn.getAttribute('data-share-title') || 'Check out this car');
+                var url = path ? (path.startsWith('http') ? path : window.location.origin + path) : window.location.href;
+                var orig = btn.innerHTML;
+                function done(msg) { try { btn.innerHTML = msg; } catch(e){} setTimeout(function(){ try { btn.innerHTML = orig; } catch(e){} }, 2000); }
+                function showFallback() {
+                    var existing = document.getElementById('share-fallback');
+                    if (existing) existing.remove();
+                    var box = document.createElement('div');
+                    box.id = 'share-fallback';
+                    var safeUrl = String(url).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+                    box.innerHTML = '<div class="share-box"><p class="font-semibold text-gray-900">Share link</p><div class="share-url">' + safeUrl + '</div><p class="text-sm text-gray-500 mb-2">Tap Copy to copy the link, then paste it in WhatsApp or any app.</p><button type="button" class="share-copy">Copy Link</button><button type="button" class="share-close">Close</button></div>';
+                    box.onclick = function(e) {
+                        if (e.target === box || e.target.classList.contains('share-close')) box.remove();
+                    };
+                    var copyBtn = box.querySelector('.share-copy');
+                    copyBtn.onclick = function(e) {
+                        e.stopPropagation();
+                        copyToClipboard(url).then(function() {
+                            copyBtn.textContent = 'Copied!';
+                            copyBtn.style.background = '#22c55e';
+                            setTimeout(function() { copyBtn.textContent = 'Copy Link'; copyBtn.style.background = ''; }, 1500);
+                        }).catch(function() {
+                            copyBtn.textContent = 'Select & copy manually';
+                        });
+                    };
+                    copyBtn.ontouchend = function(e) {
+                        e.preventDefault();
+                        e.stopPropagation();
+                        copyToClipboard(url).then(function() {
+                            copyBtn.textContent = 'Copied!';
+                            copyBtn.style.background = '#22c55e';
+                            setTimeout(function() { copyBtn.textContent = 'Copy Link'; copyBtn.style.background = ''; }, 1500);
+                        }).catch(function() {
+                            copyBtn.textContent = 'Select & copy manually';
+                        });
+                    };
+                    document.body.appendChild(box);
+                }
+                if (navigator.share) {
+                    navigator.share({ title: title, url: url, text: title }).then(function(){ done('Shared!'); }).catch(function(err){ if (err && err.name === 'AbortError') return; showFallback(); });
+                } else {
+                    copyToClipboard(url).then(function(){ done('Copied!'); }).catch(showFallback);
+                }
+            };
+            var lastShareTap = 0;
+            function handleShare(e) {
+                var el = e.target;
+                if (!el) return;
+                if (el.nodeType === 3) el = el.parentElement;
+                var btn = (el && el.closest ? el.closest('.share-btn') : null) || (el && el.classList && el.classList.contains('share-btn') ? el : null);
+                if (!btn) return;
+                e.stopPropagation();
+                e.preventDefault();
+                if (Date.now() - lastShareTap < 500) return;
+                lastShareTap = Date.now();
+                window.doShare(btn);
+            }
+            document.addEventListener('click', handleShare, true);
+            document.addEventListener('touchend', handleShare, { capture: true, passive: false });
         }
-        window.doShare = function(btn) {
-            if (!btn) return;
-            var path = btn.dataset.shareUrl || btn.getAttribute('data-share-url');
-            var title = (btn.dataset.shareTitle || btn.getAttribute('data-share-title') || 'Check out this car');
-            var url = path ? (path.startsWith('http') ? path : window.location.origin + path) : window.location.href;
-            var orig = btn.innerHTML;
-            function done(msg) { try { btn.innerHTML = msg; } catch(e){} setTimeout(function(){ try { btn.innerHTML = orig; } catch(e){} }, 2000); }
-            function showFallback() {
-                var existing = document.getElementById('share-fallback');
-                if (existing) existing.remove();
-                var box = document.createElement('div');
-                box.id = 'share-fallback';
-                var safeUrl = String(url).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
-                box.innerHTML = '<div class="share-box"><p class="font-semibold text-gray-900">Share link</p><div class="share-url">' + safeUrl + '</div><p class="text-sm text-gray-500 mb-2">Tap Copy to copy the link, then paste it in WhatsApp or any app.</p><button type="button" class="share-copy">Copy Link</button><button type="button" class="share-close">Close</button></div>';
-                box.onclick = function(e) {
-                    if (e.target === box || e.target.classList.contains('share-close')) box.remove();
-                };
-                var copyBtn = box.querySelector('.share-copy');
-                copyBtn.onclick = function(e) {
-                    e.stopPropagation();
-                    copyToClipboard(url).then(function() {
-                        copyBtn.textContent = 'Copied!';
-                        copyBtn.style.background = '#22c55e';
-                        setTimeout(function() { copyBtn.textContent = 'Copy Link'; copyBtn.style.background = ''; }, 1500);
-                    }).catch(function() {
-                        copyBtn.textContent = 'Select & copy manually';
-                    });
-                };
-                copyBtn.ontouchend = function(e) {
-                    e.preventDefault();
-                    e.stopPropagation();
-                    copyToClipboard(url).then(function() {
-                        copyBtn.textContent = 'Copied!';
-                        copyBtn.style.background = '#22c55e';
-                        setTimeout(function() { copyBtn.textContent = 'Copy Link'; copyBtn.style.background = ''; }, 1500);
-                    }).catch(function() {
-                        copyBtn.textContent = 'Select & copy manually';
-                    });
-                };
-                document.body.appendChild(box);
-            }
-            if (navigator.share) {
-                navigator.share({ title: title, url: url, text: title }).then(function(){ done('Shared!'); }).catch(function(err){ if (err && err.name === 'AbortError') return; showFallback(); });
-            } else {
-                copyToClipboard(url).then(function(){ done('Copied!'); }).catch(showFallback);
-            }
-        };
-        var lastShareTap = 0;
-        function handleShare(e) {
-            var el = e.target;
-            if (!el) return;
-            if (el.nodeType === 3) el = el.parentElement;
-            var btn = (el && el.closest ? el.closest('.share-btn') : null) || (el && el.classList && el.classList.contains('share-btn') ? el : null);
-            if (!btn) return;
-            e.stopPropagation();
-            e.preventDefault();
-            if (Date.now() - lastShareTap < 500) return;
-            lastShareTap = Date.now();
-            window.doShare(btn);
+        if (document.readyState === 'loading') {
+            document.addEventListener('DOMContentLoaded', initApp);
+        } else {
+            initApp();
         }
-        document.addEventListener('click', handleShare, true);
-        document.addEventListener('touchend', handleShare, { capture: true, passive: false });
+    })();
     </script>
     {% block extra_js %}{% endblock %}
 </body>
