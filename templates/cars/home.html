@@ -2,8 +2,9 @@
 {% load static %}
 
 {% block head_extra %}
-{# LCP hero: tiny mobile preload (matches <picture> source); desktop loads full srcset only — no heavy imagesrcset preload #}
-<link rel="preload" as="image" href="https://images.unsplash.com/photo-1519641471654-76ce0107ad1b?auto=format&amp;fm=webp&amp;fit=crop&amp;w=640&amp;q=65" media="(max-width: 768px)">
+{# LCP hero: self-hosted WebP (same origin); preloads match <picture> candidates #}
+<link rel="preload" as="image" href="{% static 'images/hero/dream-car-640.webp' %}" media="(max-width: 768px)">
+<link rel="preload" as="image" href="{% static 'images/hero/dream-car-1280.webp' %}" media="(min-width: 769px)">
 {% endblock %}
 
 {% block title %}Radhe Cars - Find Your Dream Car{% endblock %}
@@ -17,8 +18,8 @@
             <div id="hero-slide-0" role="group" aria-roledescription="slide" aria-label="Slide 1 of 3" class="w-full h-full shrink-0 relative"><img src="https://images.unsplash.com/photo-1568605117036-5fe5e7bab0b7?auto=format&amp;fm=webp&amp;fit=crop&amp;w=1280&amp;q=75" srcset="https://images.unsplash.com/photo-1568605117036-5fe5e7bab0b7?auto=format&amp;fm=webp&amp;fit=crop&amp;w=480&amp;q=68 480w, https://images.unsplash.com/photo-1568605117036-5fe5e7bab0b7?auto=format&amp;fm=webp&amp;fit=crop&amp;w=640&amp;q=68 640w, https://images.unsplash.com/photo-1568605117036-5fe5e7bab0b7?auto=format&amp;fm=webp&amp;fit=crop&amp;w=768&amp;q=68 768w, https://images.unsplash.com/photo-1568605117036-5fe5e7bab0b7?auto=format&amp;fm=webp&amp;fit=crop&amp;w=960&amp;q=72 960w, https://images.unsplash.com/photo-1568605117036-5fe5e7bab0b7?auto=format&amp;fm=webp&amp;fit=crop&amp;w=1280&amp;q=75 1280w, https://images.unsplash.com/photo-1568605117036-5fe5e7bab0b7?auto=format&amp;fm=webp&amp;fit=crop&amp;w=1920&amp;q=75 1920w" sizes="(max-width: 768px) 100vw, 100vw" alt="Sell your car instantly" width="1920" height="1080" loading="lazy" decoding="async" class="w-full h-full object-cover"><div class="absolute inset-0 bg-gradient-to-r from-black/50 to-transparent flex items-center"><div class="ml-8 md:ml-20 max-w-lg"><h1 class="text-white text-3xl md:text-5xl font-bold tracking-tight leading-tight">Sell Your Car Instantly</h1><p class="text-white/90 mt-3 text-base md:text-lg">Get the best price — no delays, no hassle.</p></div></div></div>
             <div id="hero-slide-1" role="group" aria-roledescription="slide" aria-label="Slide 2 of 3" class="w-full h-full shrink-0 relative">
                 <picture class="absolute inset-0 w-full h-full">
-                    <source media="(max-width: 768px)" srcset="https://images.unsplash.com/photo-1519641471654-76ce0107ad1b?auto=format&amp;fm=webp&amp;fit=crop&amp;w=640&amp;q=65 640w, https://images.unsplash.com/photo-1519641471654-76ce0107ad1b?auto=format&amp;fm=webp&amp;fit=crop&amp;w=768&amp;q=68 768w" sizes="100vw" type="image/webp">
-                    <img src="https://images.unsplash.com/photo-1519641471654-76ce0107ad1b?auto=format&amp;fm=webp&amp;fit=crop&amp;w=1280&amp;q=75" srcset="https://images.unsplash.com/photo-1519641471654-76ce0107ad1b?auto=format&amp;fm=webp&amp;fit=crop&amp;w=960&amp;q=72 960w, https://images.unsplash.com/photo-1519641471654-76ce0107ad1b?auto=format&amp;fm=webp&amp;fit=crop&amp;w=1280&amp;q=75 1280w, https://images.unsplash.com/photo-1519641471654-76ce0107ad1b?auto=format&amp;fm=webp&amp;fit=crop&amp;w=1920&amp;q=75 1920w" sizes="100vw" alt="Find your dream car — quality pre-owned cars" width="1920" height="1080" fetchpriority="high" decoding="async" class="w-full h-full object-cover">
+                    <source media="(max-width: 768px)" srcset="{% static 'images/hero/dream-car-640.webp' %} 640w, {% static 'images/hero/dream-car-768.webp' %} 768w" sizes="100vw" type="image/webp">
+                    <img src="{% static 'images/hero/dream-car-1280.webp' %}" srcset="{% static 'images/hero/dream-car-960.webp' %} 960w, {% static 'images/hero/dream-car-1280.webp' %} 1280w, {% static 'images/hero/dream-car-1920.webp' %} 1920w" sizes="100vw" alt="Find your dream car — quality pre-owned cars" width="1920" height="1080" fetchpriority="high" decoding="async" class="w-full h-full object-cover">
                 </picture>
                 <div class="absolute inset-0 bg-gradient-to-r from-black/50 to-transparent flex items-center"><div class="ml-8 md:ml-20 max-w-lg"><h1 class="text-white text-3xl md:text-5xl font-bold tracking-tight leading-tight">Find Your Dream Car</h1><p class="text-white/90 mt-3 text-base md:text-lg">Explore the best deals on quality pre-owned cars.</p></div></div>
             </div>
@@ -26,8 +27,8 @@
             <div class="w-full h-full shrink-0 relative" aria-hidden="true"><img src="https://images.unsplash.com/photo-1568605117036-5fe5e7bab0b7?auto=format&amp;fm=webp&amp;fit=crop&amp;w=1280&amp;q=75" srcset="https://images.unsplash.com/photo-1568605117036-5fe5e7bab0b7?auto=format&amp;fm=webp&amp;fit=crop&amp;w=480&amp;q=68 480w, https://images.unsplash.com/photo-1568605117036-5fe5e7bab0b7?auto=format&amp;fm=webp&amp;fit=crop&amp;w=640&amp;q=68 640w, https://images.unsplash.com/photo-1568605117036-5fe5e7bab0b7?auto=format&amp;fm=webp&amp;fit=crop&amp;w=768&amp;q=68 768w, https://images.unsplash.com/photo-1568605117036-5fe5e7bab0b7?auto=format&amp;fm=webp&amp;fit=crop&amp;w=960&amp;q=72 960w, https://images.unsplash.com/photo-1568605117036-5fe5e7bab0b7?auto=format&amp;fm=webp&amp;fit=crop&amp;w=1280&amp;q=75 1280w, https://images.unsplash.com/photo-1568605117036-5fe5e7bab0b7?auto=format&amp;fm=webp&amp;fit=crop&amp;w=1920&amp;q=75 1920w" sizes="(max-width: 768px) 100vw, 100vw" alt="" width="1920" height="1080" loading="lazy" decoding="async" class="w-full h-full object-cover"><div class="absolute inset-0 bg-gradient-to-r from-black/50 to-transparent flex items-center"><div class="ml-8 md:ml-20 max-w-lg"><h1 class="text-white text-3xl md:text-5xl font-bold tracking-tight leading-tight">Sell Your Car Instantly</h1><p class="text-white/90 mt-3 text-base md:text-lg">Get the best price — no delays, no hassle.</p></div></div></div>
             <div class="w-full h-full shrink-0 relative" aria-hidden="true">
                 <picture class="absolute inset-0 w-full h-full">
-                    <source media="(max-width: 768px)" srcset="https://images.unsplash.com/photo-1519641471654-76ce0107ad1b?auto=format&amp;fm=webp&amp;fit=crop&amp;w=640&amp;q=65 640w, https://images.unsplash.com/photo-1519641471654-76ce0107ad1b?auto=format&amp;fm=webp&amp;fit=crop&amp;w=768&amp;q=68 768w" sizes="100vw" type="image/webp">
-                    <img src="https://images.unsplash.com/photo-1519641471654-76ce0107ad1b?auto=format&amp;fm=webp&amp;fit=crop&amp;w=1280&amp;q=75" srcset="https://images.unsplash.com/photo-1519641471654-76ce0107ad1b?auto=format&amp;fm=webp&amp;fit=crop&amp;w=960&amp;q=72 960w, https://images.unsplash.com/photo-1519641471654-76ce0107ad1b?auto=format&amp;fm=webp&amp;fit=crop&amp;w=1280&amp;q=75 1280w, https://images.unsplash.com/photo-1519641471654-76ce0107ad1b?auto=format&amp;fm=webp&amp;fit=crop&amp;w=1920&amp;q=75 1920w" sizes="100vw" alt="" width="1920" height="1080" loading="lazy" decoding="async" class="w-full h-full object-cover">
+                    <source media="(max-width: 768px)" srcset="{% static 'images/hero/dream-car-640.webp' %} 640w, {% static 'images/hero/dream-car-768.webp' %} 768w" sizes="100vw" type="image/webp">
+                    <img src="{% static 'images/hero/dream-car-1280.webp' %}" srcset="{% static 'images/hero/dream-car-960.webp' %} 960w, {% static 'images/hero/dream-car-1280.webp' %} 1280w, {% static 'images/hero/dream-car-1920.webp' %} 1920w" sizes="100vw" alt="" width="1920" height="1080" loading="lazy" decoding="async" class="w-full h-full object-cover">
                 </picture>
                 <div class="absolute inset-0 bg-gradient-to-r from-black/50 to-transparent flex items-center"><div class="ml-8 md:ml-20 max-w-lg"><h1 class="text-white text-3xl md:text-5xl font-bold tracking-tight leading-tight">Find Your Dream Car</h1><p class="text-white/90 mt-3 text-base md:text-lg">Explore the best deals on quality pre-owned cars.</p></div></div>
             </div>
@@ -74,7 +75,7 @@
 </section>
 
 <!-- Explore by Body Type -->
-<section class="cf-home-below max-w-4xl mx-auto px-4 sm:px-6 py-6 sm:py-12 w-full">
+<section class="max-w-4xl mx-auto px-4 sm:px-6 py-6 sm:py-12 w-full">
     <h2 class="text-xl sm:text-2xl font-semibold mb-4 sm:mb-8 tracking-tight text-gray-900 text-center">Explore by Body Type</h2>
     <div class="flex gap-4 overflow-x-auto pb-2 pt-2 -mx-4 px-4 md:mx-0 md:px-0 md:flex-wrap md:justify-center scrollbar-hide snap-x snap-mandatory md:snap-none" style="-webkit-overflow-scrolling:touch">
         <button type="button" class="body-type-btn shrink-0 snap-start rounded-2xl p-5 w-28 flex flex-col items-center gap-3 bg-white border border-gray-200 text-gray-600 hover:border-blue-300 hover:shadow-md hover:text-blue-600 hover:-translate-y-1 transition-all cursor-pointer" data-body-type="Hatchback">
@@ -132,7 +133,7 @@
 
 <!-- Testimonials -->
 {% if testimonials %}
-<section class="cf-home-below py-16 bg-white border-t border-gray-100 w-full">
+<section class="py-16 bg-white border-t border-gray-100 w-full">
     <div class="max-w-7xl mx-auto px-6">
         <h2 class="text-3xl font-semibold text-center mb-12 tracking-tight text-gray-900">Stories from Happy Customers</h2>
         <div class="bg-[#0f172a] rounded-2xl p-4 sm:p-6 md:p-8 overflow-hidden">
