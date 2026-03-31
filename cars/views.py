@@ -490,9 +490,8 @@ def wishlist_view(request):
     return render(request, 'cars/wishlist.html', {'cars': cars})
 
 
-@login_required
-def sell_requests_dashboard(request):
-    """Cars submitted via /sell/ — user sees Pending, Approved, or Rejected (admin also uses On hold / Sold)."""
+def _sell_dashboard_context(request):
+    """Shared by full page and AJAX partial (same queries, one round-trip)."""
     bucket = request.GET.get('bucket', 'pending')
     if bucket not in ('pending', 'approved', 'rejected'):
         bucket = 'pending'
@@ -512,14 +511,19 @@ def sell_requests_dashboard(request):
 
     cars = _cars_with_related(qs.order_by('-created_at'))
 
-    return render(
-        request,
-        'cars/sell_requests_dashboard.html',
-        {
-            'bucket': bucket,
-            'cars': cars,
-            'count_pending': count_pending,
-            'count_approved': count_approved,
-            'count_rejected': count_rejected,
-        },
-    )
+    return {
+        'bucket': bucket,
+        'cars': cars,
+        'count_pending': count_pending,
+        'count_approved': count_approved,
+        'count_rejected': count_rejected,
+    }
+
+
+@login_required
+def sell_requests_dashboard(request):
+    """Cars submitted via /sell/ — Pending / Approved / Rejected tabs; AJAX swaps fragment without full reload."""
+    ctx = _sell_dashboard_context(request)
+    if request.headers.get('x-requested-with') == 'XMLHttpRequest':
+        return render(request, 'cars/_sell_dashboard_fragment.html', ctx)
+    return render(request, 'cars/sell_requests_dashboard.html', ctx)
