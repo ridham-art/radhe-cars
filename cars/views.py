@@ -488,3 +488,38 @@ def wishlist_view(request):
     )
     cars = [item.car for item in wishlist_items]
     return render(request, 'cars/wishlist.html', {'cars': cars})
+
+
+@login_required
+def sell_requests_dashboard(request):
+    """Cars submitted via /sell/ — user sees Pending, Approved, or Rejected (admin also uses On hold / Sold)."""
+    bucket = request.GET.get('bucket', 'pending')
+    if bucket not in ('pending', 'approved', 'rejected'):
+        bucket = 'pending'
+
+    base = Car.objects.filter(seller=request.user, submit_via_sell_form=True)
+    count_pending = base.filter(status='PENDING').count()
+    count_approved = base.filter(status__in=('APPROVED', 'ON_HOLD', 'SOLD')).count()
+    count_rejected = base.filter(status='REJECTED').count()
+
+    qs = base
+    if bucket == 'pending':
+        qs = qs.filter(status='PENDING')
+    elif bucket == 'rejected':
+        qs = qs.filter(status='REJECTED')
+    else:
+        qs = qs.filter(status__in=('APPROVED', 'ON_HOLD', 'SOLD'))
+
+    cars = _cars_with_related(qs.order_by('-created_at'))
+
+    return render(
+        request,
+        'cars/sell_requests_dashboard.html',
+        {
+            'bucket': bucket,
+            'cars': cars,
+            'count_pending': count_pending,
+            'count_approved': count_approved,
+            'count_rejected': count_rejected,
+        },
+    )

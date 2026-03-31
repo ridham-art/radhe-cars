@@ -15,5 +15,6 @@ urlpatterns = [
     path('login/', views.login_view, name='login'),
     path('logout/', views.logout_view, name='logout'),
     path('wishlist/', views.wishlist_view, name='wishlist'),
+    path('dashboard/sell/', views.sell_requests_dashboard, name='sell_requests_dashboard'),
     path('wishlist/toggle/<int:pk>/', views.toggle_wishlist, name='toggle_wishlist'),
 ]

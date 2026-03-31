@@ -149,6 +149,7 @@ class Car(models.Model):
         ('APPROVED', 'Approved'),
         ('ON_HOLD', 'On Hold'),
         ('SOLD', 'Sold'),
+        ('REJECTED', 'Rejected'),
     ]
 
     seller = models.ForeignKey(User, on_delete=models.CASCADE, related_name='cars', null=True, blank=True)

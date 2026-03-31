@@ -1,0 +1,83 @@
+{% extends 'base.html' %}
+
+{% block title %}Dashboard — Sell requests · Radhe Cars{% endblock %}
+
+{% block content %}
+<section class="py-8 px-4 sm:px-6">
+    <div class="max-w-4xl mx-auto">
+        <h1 class="text-2xl md:text-3xl font-semibold text-gray-900 tracking-tight mb-2">Dashboard</h1>
+        <p class="text-gray-600 text-sm md:text-base mb-8">Track cars you submitted via <a href="{% url 'sell_car' %}" class="text-blue-600 hover:underline">Sell Car</a>. Staff use more statuses; here you only see <strong>Pending</strong>, <strong>Approved</strong>, or <strong>Rejected</strong>.</p>
+
+        <div class="flex flex-wrap gap-2 mb-8" role="tablist" aria-label="Filter by status">
+            <a href="{% url 'sell_requests_dashboard' %}?bucket=pending" class="px-4 py-2 rounded-full text-sm font-medium no-underline transition-colors {% if bucket == 'pending' %}bg-amber-100 text-amber-900 ring-2 ring-amber-300{% else %}bg-gray-100 text-gray-700 hover:bg-gray-200{% endif %}">
+                Pending{% if count_pending %} ({{ count_pending }}){% endif %}
+            </a>
+            <a href="{% url 'sell_requests_dashboard' %}?bucket=approved" class="px-4 py-2 rounded-full text-sm font-medium no-underline transition-colors {% if bucket == 'approved' %}bg-emerald-100 text-emerald-900 ring-2 ring-emerald-300{% else %}bg-gray-100 text-gray-700 hover:bg-gray-200{% endif %}">
+                Approved{% if count_approved %} ({{ count_approved }}){% endif %}
+            </a>
+            <a href="{% url 'sell_requests_dashboard' %}?bucket=rejected" class="px-4 py-2 rounded-full text-sm font-medium no-underline transition-colors {% if bucket == 'rejected' %}bg-red-100 text-red-900 ring-2 ring-red-300{% else %}bg-gray-100 text-gray-700 hover:bg-gray-200{% endif %}">
+                Rejected{% if count_rejected %} ({{ count_rejected }}){% endif %}
+            </a>
+        </div>
+
+        {% if not cars %}
+        <div class="text-center py-16 px-4 rounded-2xl border border-dashed border-gray-200 bg-gray-50">
+            <p class="text-gray-600 mb-2">No listings in this category.</p>
+            {% if bucket == 'pending' %}
+            <p class="text-sm text-gray-500 mb-4">When you submit a car for sale, it appears here until we review it.</p>
+            {% endif %}
+            <a href="{% url 'sell_car' %}" class="inline-flex items-center justify-center px-5 py-2.5 rounded-xl bg-blue-600 text-white text-sm font-medium hover:bg-blue-700 no-underline">Sell a car</a>
+        </div>
+        {% else %}
+        <ul class="space-y-4">
+            {% for car in cars %}
+            <li class="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden flex flex-col sm:flex-row">
+                <div class="relative sm:w-48 shrink-0 aspect-[4/3] sm:aspect-auto sm:min-h-[140px] bg-gray-100">
+                    {% if car.primary_image %}
+                    <img src="{{ car.primary_image.display_url }}" alt="" width="400" height="300" loading="lazy" decoding="async" class="w-full h-full object-cover">
+                    {% else %}
+                    <div class="w-full h-full flex items-center justify-center text-gray-400 text-sm">No photo</div>
+                    {% endif %}
+                </div>
+                <div class="p-5 flex-1 flex flex-col min-w-0">
+                    <div class="flex flex-wrap items-start justify-between gap-2 mb-2">
+                        <h2 class="text-lg font-semibold text-gray-900 leading-snug">{{ car.title }}</h2>
+                        {% if car.status == 'PENDING' %}
+                        <span class="shrink-0 px-2.5 py-1 rounded-lg text-xs font-semibold bg-amber-100 text-amber-900">Pending</span>
+                        {% elif car.status == 'REJECTED' %}
+                        <span class="shrink-0 px-2.5 py-1 rounded-lg text-xs font-semibold bg-red-100 text-red-900">Rejected</span>
+                        {% else %}
+                        <span class="shrink-0 px-2.5 py-1 rounded-lg text-xs font-semibold bg-emerald-100 text-emerald-900">Approved</span>
+                        {% endif %}
+                    </div>
+                    <p class="text-sm text-gray-500 mb-1">{{ car.specs_short }}</p>
+                    <p class="text-base font-semibold text-gray-900 mb-3">{{ car.price_display }}</p>
+                    <div class="mt-auto flex flex-wrap items-center gap-x-4 gap-y-1 text-xs text-gray-500">
+                        <span>Submitted {{ car.created_at|date:"M j, Y, g:i a" }}</span>
+                        {% if car.status == 'ON_HOLD' %}
+                        <span class="text-amber-700 font-medium">Staff: on hold</span>
+                        {% elif car.status == 'SOLD' %}
+                        <span class="text-slate-600 font-medium">Listed as sold</span>
+                        {% endif %}
+                    </div>
+                    <div class="mt-4 flex flex-wrap gap-2">
+                        {% if car.status == 'APPROVED' %}
+                        <a href="{% url 'car_detail' car.pk %}" class="inline-flex items-center justify-center px-4 py-2 rounded-xl bg-blue-600 text-white text-sm font-medium hover:bg-blue-700 no-underline">View live listing</a>
+                        {% elif car.status == 'SOLD' %}
+                        <span class="text-sm text-gray-500">This car is marked sold — thank you for using Radhe Cars.</span>
+                        {% elif car.status == 'ON_HOLD' %}
+                        <span class="text-sm text-gray-500">Our team has paused this listing. We’ll contact you if needed.</span>
+                        {% elif car.status == 'REJECTED' %}
+                        <span class="text-sm text-gray-500">This submission was not approved. You can submit another car anytime.</span>
+                        {% else %}
+                        <span class="text-sm text-gray-500">We’ll notify you when your car is reviewed.</span>
+                        {% endif %}
+                    </div>
+                </div>
+            </li>
+            {% endfor %}
+        </ul>
+        {% endif %}
+    </div>
+</section>
+{% endblock %}
