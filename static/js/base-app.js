@@ -149,9 +149,52 @@
         document.addEventListener('click', handleShare, true);
         document.addEventListener('touchend', handleShare, { capture: true, passive: false });
     }
+    function escapeHtml(text) {
+        var d = document.createElement('div');
+        d.textContent = text;
+        return d.innerHTML;
+    }
+    function toastVariant(tags) {
+        var t = (tags || '').toLowerCase();
+        if (t.indexOf('error') !== -1) return 'site-toast--error';
+        if (t.indexOf('warning') !== -1) return 'site-toast--warning';
+        if (t.indexOf('success') !== -1) return 'site-toast--success';
+        return 'site-toast--info';
+    }
+    function initToastMessages() {
+        var container = document.getElementById('toast-container');
+        if (!container) return;
+        var sources = document.querySelectorAll('[data-toast-source]');
+        sources.forEach(function (src) {
+            var text = (src.textContent || '').trim();
+            var tags = src.getAttribute('data-tags') || '';
+            src.remove();
+            if (!text) return;
+            var el = document.createElement('div');
+            el.className = 'site-toast ' + toastVariant(tags);
+            el.setAttribute('role', 'status');
+            el.innerHTML =
+                '<span class="site-toast__text">' +
+                escapeHtml(text) +
+                '</span><button type="button" class="site-toast__btn" aria-label="Dismiss">&times;</button>';
+            container.appendChild(el);
+            requestAnimationFrame(function () {
+                el.classList.add('site-toast--visible');
+            });
+            var dismiss = function () {
+                el.classList.remove('site-toast--visible');
+                setTimeout(function () {
+                    if (el.parentNode) el.remove();
+                }, 300);
+            };
+            el.querySelector('.site-toast__btn').addEventListener('click', dismiss);
+            setTimeout(dismiss, 6500);
+        });
+    }
     function initBaseApp() {
         initMobileMenu();
         initShare();
+        initToastMessages();
     }
     if (document.readyState === 'loading') {
         document.addEventListener('DOMContentLoaded', initBaseApp);

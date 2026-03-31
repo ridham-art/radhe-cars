@@ -435,6 +435,7 @@ def login_view(request):
         if user is not None:
             login(request, user)
             next_url = _safe_next_url(request)
+            messages.success(request, 'Logged in successfully!')
             if is_ajax:
                 return JsonResponse({'success': True, 'message': 'Logged in successfully!', 'redirect': next_url})
             return redirect(next_url)
