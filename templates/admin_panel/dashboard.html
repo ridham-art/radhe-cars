@@ -3,41 +3,41 @@
 {% block heading %}Dashboard{% endblock %}
 {% block content %}
 <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-    <div class="bg-white rounded-xl border border-slate-200 p-5 shadow-sm">
-        <p class="text-sm text-slate-500">Total cars</p>
+    <a href="{% url 'admin_panel:car_list' %}" class="group block bg-white rounded-xl border border-slate-200 p-5 shadow-sm hover:border-blue-300 hover:shadow-md transition focus:outline-none focus:ring-2 focus:ring-blue-400 focus:ring-offset-2">
+        <p class="text-sm text-slate-500 group-hover:text-slate-600">Total cars</p>
         <p class="text-2xl font-bold text-slate-900 mt-1">{{ total_cars }}</p>
-    </div>
-    <div class="bg-white rounded-xl border border-slate-200 p-5 shadow-sm">
-        <p class="text-sm text-slate-500">Active (not sold)</p>
+    </a>
+    <a href="{% url 'admin_panel:car_list' %}?not_sold=1" class="group block bg-white rounded-xl border border-slate-200 p-5 shadow-sm hover:border-green-300 hover:shadow-md transition focus:outline-none focus:ring-2 focus:ring-green-400 focus:ring-offset-2">
+        <p class="text-sm text-slate-500 group-hover:text-slate-600">Active (not sold)</p>
         <p class="text-2xl font-bold text-green-700 mt-1">{{ active_cars }}</p>
-    </div>
-    <div class="bg-white rounded-xl border border-slate-200 p-5 shadow-sm">
-        <p class="text-sm text-slate-500">Sold</p>
+    </a>
+    <a href="{% url 'admin_panel:car_list' %}?status=SOLD" class="group block bg-white rounded-xl border border-slate-200 p-5 shadow-sm hover:border-slate-400 hover:shadow-md transition focus:outline-none focus:ring-2 focus:ring-slate-400 focus:ring-offset-2">
+        <p class="text-sm text-slate-500 group-hover:text-slate-600">Sold</p>
         <p class="text-2xl font-bold text-slate-700 mt-1">{{ sold_cars }}</p>
-    </div>
-    <div class="bg-white rounded-xl border border-slate-200 p-5 shadow-sm">
-        <p class="text-sm text-slate-500">Total inquiries</p>
+    </a>
+    <a href="{% url 'admin_panel:inquiry_list' %}" class="group block bg-white rounded-xl border border-slate-200 p-5 shadow-sm hover:border-blue-300 hover:shadow-md transition focus:outline-none focus:ring-2 focus:ring-blue-400 focus:ring-offset-2">
+        <p class="text-sm text-slate-500 group-hover:text-slate-600">Total inquiries</p>
         <p class="text-2xl font-bold text-slate-900 mt-1">{{ total_inquiries }}</p>
-    </div>
-    <div class="bg-white rounded-xl border border-slate-200 p-5 shadow-sm ring-2 ring-red-100">
-        <p class="text-sm text-slate-500">Unread inquiries</p>
+    </a>
+    <a href="{% url 'admin_panel:inquiry_list' %}?unread=1" class="group block bg-white rounded-xl border border-slate-200 p-5 shadow-sm ring-2 ring-red-100 hover:ring-red-200 hover:border-red-200 hover:shadow-md transition focus:outline-none focus:ring-2 focus:ring-red-400 focus:ring-offset-2">
+        <p class="text-sm text-slate-500 group-hover:text-slate-600">Unread inquiries</p>
         <p class="text-2xl font-bold text-red-600 mt-1">{{ unread_inquiries }}</p>
-    </div>
-    <div class="bg-white rounded-xl border border-slate-200 p-5 shadow-sm ring-2 ring-indigo-100">
-        <p class="text-sm text-slate-500">Customer accounts</p>
+    </a>
+    <a href="{% url 'admin_panel:customer_list' %}" class="group block bg-white rounded-xl border border-slate-200 p-5 shadow-sm ring-2 ring-indigo-100 hover:ring-indigo-200 hover:border-indigo-200 hover:shadow-md transition focus:outline-none focus:ring-2 focus:ring-indigo-400 focus:ring-offset-2">
+        <p class="text-sm text-slate-500 group-hover:text-slate-600">Customer accounts</p>
         <p class="text-2xl font-bold text-indigo-700 mt-1">{{ total_customers }}</p>
         <p class="text-xs text-slate-400 mt-2">People who signed up on the website (not staff)</p>
-    </div>
-    <div class="bg-white rounded-xl border border-slate-200 p-5 shadow-sm">
-        <p class="text-sm text-slate-500">Wishlist saves</p>
+    </a>
+    <a href="{% url 'admin_panel:wishlist_list' %}" class="group block bg-white rounded-xl border border-slate-200 p-5 shadow-sm hover:border-blue-300 hover:shadow-md transition focus:outline-none focus:ring-2 focus:ring-blue-400 focus:ring-offset-2">
+        <p class="text-sm text-slate-500 group-hover:text-slate-600">Wishlist saves</p>
         <p class="text-2xl font-bold text-slate-900 mt-1">{{ total_wishlist_saves }}</p>
         <p class="text-xs text-slate-400 mt-2">Cars saved while logged in</p>
-    </div>
-    <div class="bg-white rounded-xl border border-slate-200 p-5 shadow-sm">
-        <p class="text-sm text-slate-500">Customers with a wishlist</p>
+    </a>
+    <a href="{% url 'admin_panel:customer_list' %}?has_wishlist=1" class="group block bg-white rounded-xl border border-slate-200 p-5 shadow-sm hover:border-blue-300 hover:shadow-md transition focus:outline-none focus:ring-2 focus:ring-blue-400 focus:ring-offset-2">
+        <p class="text-sm text-slate-500 group-hover:text-slate-600">Customers with a wishlist</p>
         <p class="text-2xl font-bold text-slate-900 mt-1">{{ customers_with_wishlist }}</p>
         <p class="text-xs text-slate-400 mt-2">How many customers saved at least one car</p>
-    </div>
+    </a>
 </div>
 
 <p class="mt-8 text-sm text-slate-500">Use the sidebar for full lists—<a href="{% url 'admin_panel:customer_list' %}" class="text-blue-600 hover:underline">Customers</a> and <a href="{% url 'admin_panel:wishlist_list' %}" class="text-blue-600 hover:underline">Wishlist</a>—and to manage cars, brands, models, inquiries, and CSV tools.</p>

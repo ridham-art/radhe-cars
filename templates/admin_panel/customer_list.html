@@ -5,6 +5,7 @@
 <p class="text-sm text-slate-600 mb-4 max-w-2xl">Website accounts (not staff). Newest sign-ups first. Email is used for login.</p>
 
 <form method="get" class="bg-white rounded-xl border border-slate-200 p-4 mb-6 flex flex-wrap gap-3 items-end">
+    {% if filter_has_wishlist %}<input type="hidden" name="has_wishlist" value="1">{% endif %}
     <div class="flex-1 min-w-[200px]">
         <label class="block text-xs text-slate-500 mb-1">Search</label>
         <input type="text" name="q" value="{{ search_q }}" placeholder="Email, name, or username" class="ap-input">
@@ -32,7 +33,7 @@
                 <td class="text-slate-600">{% if u.last_login %}{{ u.last_login|date:"M j, Y, g:i a" }}{% else %}—{% endif %}</td>
             </tr>
             {% empty %}
-            <tr><td colspan="4" class="text-center py-8 text-slate-500">No customers match your search.</td></tr>
+            <tr><td colspan="4" class="text-center py-8 text-slate-500">{% if filter_has_wishlist %}No customers with a wishlist match your search.{% else %}No customers match your search.{% endif %}</td></tr>
             {% endfor %}
         </tbody>
     </table>
@@ -41,11 +42,11 @@
 {% if page_obj.has_other_pages %}
 <div class="mt-4 flex justify-center gap-2">
     {% if page_obj.has_previous %}
-    <a href="?page={{ page_obj.previous_page_number }}{% if search_q %}&q={{ search_q|urlencode }}{% endif %}" class="ap-btn ap-btn-neutral">Previous</a>
+    <a href="?page={{ page_obj.previous_page_number }}{% if search_q %}&q={{ search_q|urlencode }}{% endif %}{% if filter_has_wishlist %}&has_wishlist=1{% endif %}" class="ap-btn ap-btn-neutral">Previous</a>
     {% endif %}
     <span class="text-sm text-slate-600 py-1">Page {{ page_obj.number }} of {{ page_obj.paginator.num_pages }}</span>
     {% if page_obj.has_next %}
-    <a href="?page={{ page_obj.next_page_number }}{% if search_q %}&q={{ search_q|urlencode }}{% endif %}" class="ap-btn ap-btn-neutral">Next</a>
+    <a href="?page={{ page_obj.next_page_number }}{% if search_q %}&q={{ search_q|urlencode }}{% endif %}{% if filter_has_wishlist %}&has_wishlist=1{% endif %}" class="ap-btn ap-btn-neutral">Next</a>
     {% endif %}
 </div>
 {% endif %}

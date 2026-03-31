@@ -7,6 +7,7 @@
     <a href="{% url 'admin_panel:csv_export' %}" class="inline-flex items-center px-4 py-2 bg-white border border-slate-200 text-sm font-medium rounded-lg hover:bg-slate-50">Export CSV</a>
 </div>
 <form method="get" class="bg-white rounded-xl border border-slate-200 p-4 mb-6 flex flex-wrap gap-3 items-end">
+    {% if filter_not_sold %}<input type="hidden" name="not_sold" value="1">{% endif %}
     <div>
         <label class="block text-xs text-slate-500 mb-1">Search</label>
         <input type="text" name="q" value="{{ search_q }}" placeholder="Title or model" class="ap-input w-48">
@@ -41,6 +42,9 @@
     <button type="submit" class="px-4 py-2 bg-slate-800 text-white text-sm rounded-lg">Apply</button>
     <a href="{% url 'admin_panel:car_list' %}" class="ap-btn ap-btn-neutral">Clear</a>
 </form>
+{% if filter_not_sold %}
+<p class="text-sm text-slate-600 mb-4">Showing active cars (not sold). <a href="{% url 'admin_panel:car_list' %}" class="text-blue-600 hover:underline">View all cars</a></p>
+{% endif %}
 
 <form method="post" action="{% url 'admin_panel:car_bulk_delete' %}" id="bulk-form">
     {% csrf_token %}
@@ -88,7 +92,7 @@
                         </td>
                     </tr>
                     {% empty %}
-                    <tr><td colspan="8" class="text-center text-slate-500 py-8">No cars found.</td></tr>
+                    <tr><td colspan="8" class="text-center text-slate-500 py-8">{% if filter_not_sold %}No active (not sold) cars match your filters.{% else %}No cars found.{% endif %}</td></tr>
                     {% endfor %}
                 </tbody>
             </table>
@@ -98,11 +102,11 @@
 {% if page_obj.has_other_pages %}
 <div class="mt-4 flex justify-center gap-2">
     {% if page_obj.has_previous %}
-    <a href="?page={{ page_obj.previous_page_number }}&q={{ search_q }}&brand={{ filter_brand }}&fuel={{ filter_fuel }}&status={{ filter_status }}" class="ap-btn ap-btn-neutral">Previous</a>
+    <a href="?page={{ page_obj.previous_page_number }}&q={{ search_q }}&brand={{ filter_brand|default_if_none:'' }}&fuel={{ filter_fuel }}&status={{ filter_status }}{% if filter_not_sold %}&not_sold=1{% endif %}" class="ap-btn ap-btn-neutral">Previous</a>
     {% endif %}
     <span class="text-sm text-slate-600 py-1">Page {{ page_obj.number }} of {{ page_obj.paginator.num_pages }}</span>
     {% if page_obj.has_next %}
-    <a href="?page={{ page_obj.next_page_number }}&q={{ search_q }}&brand={{ filter_brand }}&fuel={{ filter_fuel }}&status={{ filter_status }}" class="ap-btn ap-btn-neutral">Next</a>
+    <a href="?page={{ page_obj.next_page_number }}&q={{ search_q }}&brand={{ filter_brand|default_if_none:'' }}&fuel={{ filter_fuel }}&status={{ filter_status }}{% if filter_not_sold %}&not_sold=1{% endif %}" class="ap-btn ap-btn-neutral">Next</a>
     {% endif %}
 </div>
 {% endif %}

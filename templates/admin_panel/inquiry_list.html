@@ -2,6 +2,9 @@
 {% block title %}Inquiries{% endblock %}
 {% block heading %}Inquiries{% endblock %}
 {% block content %}
+{% if filter_unread %}
+<p class="text-sm text-slate-600 mb-4">Showing unread inquiries only. <a href="{% url 'admin_panel:inquiry_list' %}" class="text-blue-600 hover:underline">View all inquiries</a></p>
+{% endif %}
 <div class="flex flex-wrap gap-3 mb-4">
     <form method="post" action="{% url 'admin_panel:inquiry_mark_all_read' %}">
         {% csrf_token %}
@@ -31,16 +34,16 @@
                 </td>
             </tr>
             {% empty %}
-            <tr><td colspan="6" class="text-center py-8 text-slate-500">No inquiries.</td></tr>
+            <tr><td colspan="6" class="text-center py-8 text-slate-500">{% if filter_unread %}No unread inquiries.{% else %}No inquiries yet.{% endif %}</td></tr>
             {% endfor %}
         </tbody>
     </table>
 </div>
 {% if page_obj.has_other_pages %}
 <div class="mt-4 flex justify-center gap-2">
-    {% if page_obj.has_previous %}<a href="?page={{ page_obj.previous_page_number }}" class="ap-btn ap-btn-neutral">Previous</a>{% endif %}
+    {% if page_obj.has_previous %}<a href="?page={{ page_obj.previous_page_number }}{% if filter_unread %}&unread=1{% endif %}" class="ap-btn ap-btn-neutral">Previous</a>{% endif %}
     <span class="text-sm py-1">Page {{ page_obj.number }} of {{ page_obj.paginator.num_pages }}</span>
-    {% if page_obj.has_next %}<a href="?page={{ page_obj.next_page_number }}" class="ap-btn ap-btn-neutral">Next</a>{% endif %}
+    {% if page_obj.has_next %}<a href="?page={{ page_obj.next_page_number }}{% if filter_unread %}&unread=1{% endif %}" class="ap-btn ap-btn-neutral">Next</a>{% endif %}
 </div>
 {% endif %}
 {% endblock %}

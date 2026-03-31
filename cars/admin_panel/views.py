@@ -10,6 +10,7 @@ from django.conf import settings
 from django.contrib.auth.views import LoginView, LogoutView
 from django.http import HttpResponseRedirect
 from django.contrib.auth.mixins import LoginRequiredMixin, UserPassesTestMixin
+from django.core.paginator import EmptyPage
 from django.db.models import Q, Count
 from django.http import HttpResponse, JsonResponse
 from django.shortcuts import get_object_or_404, redirect, render
@@ -143,6 +144,31 @@ class StaffLogoutView(LogoutView):
     next_page = '/admin-panel/login/'
 
 
+class SafePagePaginationMixin:
+    """Invalid ?page= falls back to page 1 instead of raising Http404."""
+
+    def paginate_queryset(self, queryset, page_size):
+        paginator = self.get_paginator(
+            queryset,
+            page_size,
+            orphans=self.get_paginate_orphans(),
+            allow_empty_first_page=self.get_allow_empty(),
+        )
+        page_kwarg = self.page_kwarg
+        raw = self.request.GET.get(page_kwarg) or 1
+        try:
+            page_number = int(raw)
+        except (TypeError, ValueError):
+            page_number = 1
+        if page_number < 1:
+            page_number = 1
+        try:
+            page = paginator.page(page_number)
+        except EmptyPage:
+            page = paginator.page(1)
+        return (paginator, page, page.object_list, page.has_other_pages())
+
+
 class DashboardView(StaffRequiredMixin, AdminPanelContextMixin, TemplateView):
     template_name = 'admin_panel/dashboard.html'
 
@@ -166,7 +192,12 @@ class DashboardView(StaffRequiredMixin, AdminPanelContextMixin, TemplateView):
         return ctx
 
 
-class CustomerListView(StaffRequiredMixin, AdminPanelContextMixin, ListView):
+class CustomerListView(
+    StaffRequiredMixin,
+    AdminPanelContextMixin,
+    SafePagePaginationMixin,
+    ListView,
+):
     """Website sign-ups (non-staff). Newest first."""
 
     template_name = 'admin_panel/customer_list.html'
@@ -184,15 +215,23 @@ class CustomerListView(StaffRequiredMixin, AdminPanelContextMixin, ListView):
                 | Q(first_name__icontains=q)
                 | Q(last_name__icontains=q)
             )
+        if self.request.GET.get('has_wishlist') == '1':
+            qs = qs.filter(wishlist__isnull=False).distinct()
         return qs
 
     def get_context_data(self, **kwargs):
         ctx = super().get_context_data(**kwargs)
         ctx['search_q'] = self.request.GET.get('q', '')
+        ctx['filter_has_wishlist'] = self.request.GET.get('has_wishlist') == '1'
         return ctx
 
 
-class WishlistActivityListView(StaffRequiredMixin, AdminPanelContextMixin, ListView):
+class WishlistActivityListView(
+    StaffRequiredMixin,
+    AdminPanelContextMixin,
+    SafePagePaginationMixin,
+    ListView,
+):
     """Cars saved by logged-in users. Newest first."""
 
     model = Wishlist
@@ -221,7 +260,12 @@ class WishlistActivityListView(StaffRequiredMixin, AdminPanelContextMixin, ListV
         return ctx
 
 
-class CarListView(StaffRequiredMixin, AdminPanelContextMixin, ListView):
+class CarListView(
+    StaffRequiredMixin,
+    AdminPanelContextMixin,
+    SafePagePaginationMixin,
+    ListView,
+):
     model = Car
     template_name = 'admin_panel/car_list.html'
     context_object_name = 'cars'
@@ -245,6 +289,8 @@ class CarListView(StaffRequiredMixin, AdminPanelContextMixin, ListView):
         status = self.request.GET.get('status')
         if status:
             qs = qs.filter(status=status)
+        elif self.request.GET.get('not_sold') == '1':
+            qs = qs.exclude(status='SOLD')
         return qs.order_by('-created_at')
 
     def get_context_data(self, **kwargs):
@@ -257,6 +303,7 @@ class CarListView(StaffRequiredMixin, AdminPanelContextMixin, ListView):
         ctx['filter_brand'] = int(_b) if _b and str(_b).isdigit() else None
         ctx['filter_fuel'] = self.request.GET.get('fuel', '')
         ctx['filter_status'] = self.request.GET.get('status', '')
+        ctx['filter_not_sold'] = self.request.GET.get('not_sold') == '1'
         return ctx
 
 
@@ -374,7 +421,12 @@ class CarBulkDeleteView(StaffRequiredMixin, View):
         return redirect('admin_panel:car_list')
 
 
-class SellCarInquiryListView(StaffRequiredMixin, AdminPanelContextMixin, ListView):
+class SellCarInquiryListView(
+    StaffRequiredMixin,
+    AdminPanelContextMixin,
+    SafePagePaginationMixin,
+    ListView,
+):
     """Cars submitted via the public Sell Car form (pending review)."""
 
     model = Car
@@ -638,14 +690,27 @@ class CarModelDeleteView(StaffRequiredMixin, AdminPanelContextMixin, DeleteView)
         return super().delete(request, *args, **kwargs)
 
 
-class InquiryListView(StaffRequiredMixin, AdminPanelContextMixin, ListView):
+class InquiryListView(
+    StaffRequiredMixin,
+    AdminPanelContextMixin,
+    SafePagePaginationMixin,
+    ListView,
+):
     model = Inquiry
     template_name = 'admin_panel/inquiry_list.html'
     context_object_name = 'inquiries'
     paginate_by = 30
 
     def get_queryset(self):
-        return Inquiry.objects.order_by('is_read', '-created_at')
+        qs = Inquiry.objects.order_by('is_read', '-created_at')
+        if self.request.GET.get('unread') == '1':
+            qs = qs.filter(is_read=False)
+        return qs
+
+    def get_context_data(self, **kwargs):
+        ctx = super().get_context_data(**kwargs)
+        ctx['filter_unread'] = self.request.GET.get('unread') == '1'
+        return ctx
 
 
 class InquiryDetailView(StaffRequiredMixin, AdminPanelContextMixin, DetailView):
