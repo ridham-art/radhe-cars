@@ -48,6 +48,8 @@
                 {% endwith %}
                 <a href="{% url 'admin_panel:brand_list' %}" class="block px-3 py-2 rounded-lg hover:bg-slate-800 text-sm {% if 'brand' in request.resolver_match.url_name %}bg-slate-800{% endif %}">Brands</a>
                 <a href="{% url 'admin_panel:carmodel_list' %}" class="block px-3 py-2 rounded-lg hover:bg-slate-800 text-sm {% if 'carmodel' in request.resolver_match.url_name %}bg-slate-800{% endif %}">Models</a>
+                <a href="{% url 'admin_panel:customer_list' %}" class="block px-3 py-2 rounded-lg hover:bg-slate-800 text-sm {% if request.resolver_match.url_name == 'customer_list' %}bg-slate-800{% endif %}">Customers</a>
+                <a href="{% url 'admin_panel:wishlist_list' %}" class="block px-3 py-2 rounded-lg hover:bg-slate-800 text-sm {% if request.resolver_match.url_name == 'wishlist_list' %}bg-slate-800{% endif %}">Wishlist</a>
                 <a href="{% url 'admin_panel:inquiry_list' %}" class="block px-3 py-2 rounded-lg hover:bg-slate-800 text-sm flex items-center justify-between {% if 'inquiry' in request.resolver_match.url_name %}bg-slate-800{% endif %}">
                     <span>Inquiries</span>
                     {% if unread_inquiry_count %}

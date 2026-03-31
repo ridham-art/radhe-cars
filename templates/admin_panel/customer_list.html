@@ -1,0 +1,52 @@
+{% extends "admin_panel/base.html" %}
+{% block title %}Customers{% endblock %}
+{% block heading %}Customers{% endblock %}
+{% block content %}
+<p class="text-sm text-slate-600 mb-4 max-w-2xl">Website accounts (not staff). Newest sign-ups first. Email is used for login.</p>
+
+<form method="get" class="bg-white rounded-xl border border-slate-200 p-4 mb-6 flex flex-wrap gap-3 items-end">
+    <div class="flex-1 min-w-[200px]">
+        <label class="block text-xs text-slate-500 mb-1">Search</label>
+        <input type="text" name="q" value="{{ search_q }}" placeholder="Email, name, or username" class="ap-input">
+    </div>
+    <button type="submit" class="px-4 py-2 bg-slate-800 text-white text-sm rounded-lg">Apply</button>
+    <a href="{% url 'admin_panel:customer_list' %}" class="ap-btn ap-btn-neutral">Clear</a>
+</form>
+
+<div class="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden overflow-x-auto">
+    <table class="ap-table w-full min-w-[640px]">
+        <thead>
+            <tr class="bg-slate-50 text-slate-600 text-xs uppercase tracking-wide">
+                <th>Email</th>
+                <th>Name</th>
+                <th>Signed up</th>
+                <th>Last login</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for u in customers %}
+            <tr>
+                <td class="font-medium text-slate-800">{{ u.email|default:"—" }}</td>
+                <td>{{ u.get_full_name|default:u.username }}</td>
+                <td class="text-slate-600">{{ u.date_joined|date:"M j, Y, g:i a" }}</td>
+                <td class="text-slate-600">{% if u.last_login %}{{ u.last_login|date:"M j, Y, g:i a" }}{% else %}—{% endif %}</td>
+            </tr>
+            {% empty %}
+            <tr><td colspan="4" class="text-center py-8 text-slate-500">No customers match your search.</td></tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+
+{% if page_obj.has_other_pages %}
+<div class="mt-4 flex justify-center gap-2">
+    {% if page_obj.has_previous %}
+    <a href="?page={{ page_obj.previous_page_number }}{% if search_q %}&q={{ search_q|urlencode }}{% endif %}" class="ap-btn ap-btn-neutral">Previous</a>
+    {% endif %}
+    <span class="text-sm text-slate-600 py-1">Page {{ page_obj.number }} of {{ page_obj.paginator.num_pages }}</span>
+    {% if page_obj.has_next %}
+    <a href="?page={{ page_obj.next_page_number }}{% if search_q %}&q={{ search_q|urlencode }}{% endif %}" class="ap-btn ap-btn-neutral">Next</a>
+    {% endif %}
+</div>
+{% endif %}
+{% endblock %}
