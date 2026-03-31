@@ -213,7 +213,7 @@
         <div class="step" id="s4">
           <div class="sell-step-body">
             <h2 class="sell-step-title">Select variant</h2>
-            <p class="sell-step-sub">Choose fuel type, transmission and variant</p>
+            <p class="sell-step-sub" id="s4-sub">Choose fuel type, transmission, then variant. For electric cars, transmission is skipped.</p>
             <div id="fuel-section">
               <div class="sell-label">Select fuel type</div>
               <div class="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-6" id="fuel-g">
@@ -535,23 +535,56 @@ function resetVariantStep(){
   document.getElementById('variant-panel').classList.add('hidden');
   document.getElementById('variant-btn').classList.remove('open');
   document.getElementById('variant-search').value='';
+  D.fuel='';D.fuelName='';D.trans='';D.transName='';
+  document.getElementById('h-fuel').value='';
+  document.getElementById('h-trans').value='';
+  var sub=document.getElementById('s4-sub');
+  if(sub)sub.textContent='Choose fuel type, transmission, then variant. For electric cars, transmission is skipped.';
+}
+function showVariantAfterFuel(){
+  document.getElementById('variant-section').classList.remove('hidden');
+  document.getElementById('variant-input').value='';
+  document.getElementById('variant-btn-text').textContent='Choose variant (e.g. LXI, VXI, ZXI)';
+  document.getElementById('variant-search').value='';
+  var lbl=document.getElementById('lbl-model-variant');
+  if(lbl)lbl.textContent=D.modelName||'your model';
+  buildVariantList();
 }
 function pickFuel(el){
   if(el.classList.contains('selected')){
     el.classList.remove('selected');
     D.fuel='';D.fuelName='';
     document.getElementById('h-fuel').value='';
+    D.trans='';D.transName='';
+    document.getElementById('h-trans').value='';
     document.getElementById('trans-section').classList.add('hidden');
     document.getElementById('variant-section').classList.add('hidden');
+    var sub=document.getElementById('s4-sub');
+    if(sub)sub.textContent='Choose fuel type, transmission, then variant. For electric cars, transmission is skipped.';
     return;
   }
   document.querySelectorAll('#fuel-g .fuel-box').forEach(c=>c.classList.remove('selected'));
   el.classList.add('selected');
   D.fuel=el.dataset.v;D.fuelName=el.dataset.nm;
   document.getElementById('h-fuel').value=D.fuel;
-  document.getElementById('trans-section').classList.remove('hidden');
   document.getElementById('variant-section').classList.add('hidden');
   document.querySelectorAll('#trans-g .fuel-box').forEach(c=>c.classList.remove('selected'));
+
+  if(D.fuel==='ELECTRIC'){
+    document.getElementById('trans-section').classList.add('hidden');
+    D.trans='AUTOMATIC';
+    D.transName='Auto';
+    document.getElementById('h-trans').value=D.trans;
+    var sub=document.getElementById('s4-sub');
+    if(sub)sub.textContent='Electric — choose your variant below.';
+    showVariantAfterFuel();
+  }else{
+    document.getElementById('trans-section').classList.remove('hidden');
+    D.trans='';D.transName='';
+    document.getElementById('h-trans').value='';
+    var sub2=document.getElementById('s4-sub');
+    if(sub2)sub2.textContent='Choose fuel type, transmission, then variant. For electric cars, transmission is skipped.';
+  }
 }
 function pickTrans(el){
   if(el.classList.contains('selected')){
@@ -565,13 +598,7 @@ function pickTrans(el){
   el.classList.add('selected');
   D.trans=el.dataset.v;D.transName=el.dataset.nm;
   document.getElementById('h-trans').value=D.trans;
-  document.getElementById('variant-section').classList.remove('hidden');
-  document.getElementById('variant-input').value='';
-  document.getElementById('variant-btn-text').textContent='Choose variant (e.g. LXI, VXI, ZXI)';
-  document.getElementById('variant-search').value='';
-  var lbl=document.getElementById('lbl-model-variant');
-  if(lbl)lbl.textContent=D.modelName||'your model';
-  buildVariantList();
+  showVariantAfterFuel();
 }
 function buildVariantList(){
   const list=document.getElementById('variant-list');
