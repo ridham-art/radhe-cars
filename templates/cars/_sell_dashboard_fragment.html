@@ -23,15 +23,15 @@
 {% else %}
 <ul class="space-y-4">
     {% for car in cars %}
-    <li class="sell-dash-card bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden flex flex-col sm:flex-row sm:min-h-[188px]">
-        <div class="relative w-full sm:w-[220px] shrink-0 h-[160px] sm:h-[188px] bg-gray-100 overflow-hidden">
+    <li class="sell-dash-card bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden flex flex-col sm:flex-row sm:items-stretch">
+        <div class="sell-dash-thumb">
             {% if car.primary_image %}
-            <img src="{{ car.primary_image.display_url }}" alt="" width="440" height="376" loading="lazy" decoding="async" class="absolute inset-0 w-full h-full object-cover">
+            <img src="{{ car.primary_image.display_url }}" alt="{{ car.title }}" width="200" height="160" loading="lazy" decoding="async" class="sell-dash-thumb-img">
             {% else %}
-            <div class="absolute inset-0 flex items-center justify-center text-gray-400 text-sm bg-gray-100">No photo</div>
+            <div class="sell-dash-thumb-empty">No photo</div>
             {% endif %}
         </div>
-        <div class="p-5 flex-1 flex flex-col min-w-0 min-h-[160px] sm:min-h-[188px] justify-between">
+        <div class="sell-dash-body p-4 sm:p-5 flex-1 flex flex-col min-w-0 justify-between">
             <div>
                 <div class="flex flex-wrap items-start justify-between gap-2 mb-2">
                     <h2 class="text-lg font-semibold text-gray-900 leading-snug pr-2">{{ car.title }}</h2>
