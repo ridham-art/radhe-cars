@@ -161,10 +161,57 @@ class DashboardView(StaffRequiredMixin, AdminPanelContextMixin, TemplateView):
                 'total_customers': customers.count(),
                 'total_wishlist_saves': wish_qs.count(),
                 'customers_with_wishlist': wish_qs.values('user_id').distinct().count(),
-                'recent_customers': customers.order_by('-date_joined')[:25],
-                'recent_wishlists': wish_qs.select_related('user', 'car').order_by('-created_at')[:30],
             }
         )
+        return ctx
+
+
+class CustomerUserListView(StaffRequiredMixin, AdminPanelContextMixin, ListView):
+    """Non-staff accounts (customers who signed up on the site)."""
+
+    template_name = 'admin_panel/user_list.html'
+    context_object_name = 'customers'
+    paginate_by = 25
+
+    def get_queryset(self):
+        User = get_user_model()
+        qs = User.objects.filter(is_staff=False).order_by('-date_joined')
+        q = self.request.GET.get('q', '').strip()
+        if q:
+            qs = qs.filter(Q(email__icontains=q) | Q(username__icontains=q) | Q(first_name__icontains=q) | Q(last_name__icontains=q))
+        return qs
+
+    def get_context_data(self, **kwargs):
+        ctx = super().get_context_data(**kwargs)
+        ctx['search_q'] = self.request.GET.get('q', '')
+        return ctx
+
+
+class WishlistActivityListView(StaffRequiredMixin, AdminPanelContextMixin, ListView):
+    """Wishlist rows for logged-in users only."""
+
+    template_name = 'admin_panel/wishlist_list.html'
+    context_object_name = 'wishlists'
+    paginate_by = 25
+
+    def get_queryset(self):
+        qs = (
+            Wishlist.objects.filter(user__isnull=False)
+            .select_related('user', 'car', 'car__brand', 'car__model')
+            .order_by('-created_at')
+        )
+        q = self.request.GET.get('q', '').strip()
+        if q:
+            qs = qs.filter(
+                Q(user__email__icontains=q)
+                | Q(car__title__icontains=q)
+                | Q(user__username__icontains=q)
+            )
+        return qs
+
+    def get_context_data(self, **kwargs):
+        ctx = super().get_context_data(**kwargs)
+        ctx['search_q'] = self.request.GET.get('q', '')
         return ctx
 
 
