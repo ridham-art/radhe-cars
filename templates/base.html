@@ -64,10 +64,10 @@
         #share-fallback .share-close { background: #e2e8f0; color: #334155; width: 100%; }
         .body-type-btn[data-selected="true"] { background-color: #2563eb !important; color: #fff !important; border: none !important; }
         .body-type-btn[data-selected="true"]:hover { background-color: #1d4ed8 !important; color: #fff !important; }
-        /* Fixed toasts (base-app.js) — no document flow space */
+        /* Fixed toasts (base-app.js) — top of viewport, no document flow space */
         #toast-container {
             position: fixed;
-            bottom: 1rem;
+            top: max(0.75rem, env(safe-area-inset-top, 0px));
             right: 1rem;
             left: 1rem;
             z-index: 200;
@@ -96,7 +96,7 @@
             box-shadow: 0 10px 15px -3px rgba(0,0,0,.1), 0 4px 6px -4px rgba(0,0,0,.1);
             width: 100%;
             transition: opacity 0.3s ease, transform 0.3s ease;
-            transform: translateY(0.5rem);
+            transform: translateY(-0.5rem);
             opacity: 0;
         }
         .site-toast.site-toast--visible { transform: translateY(0); opacity: 1; }
