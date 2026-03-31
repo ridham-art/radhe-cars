@@ -138,6 +138,9 @@
 
     {% include 'partials/footer.html' %}
 
+    {# CSRF for JS (e.g. wishlist POST); hidden, no layout impact #}
+    <div class="hidden" aria-hidden="true">{% csrf_token %}</div>
+
     <script src="{% static 'js/base-app.js' %}" defer></script>
     {% block extra_js %}{% endblock %}
 </body>

@@ -3,6 +3,7 @@ from django.urls import reverse
 from django.utils.http import url_has_allowed_host_and_scheme
 from django.contrib.auth import login, authenticate, logout
 from django.contrib.auth.decorators import login_required
+from django.views.decorators.cache import never_cache
 from django.contrib import messages
 from django.core.paginator import Paginator
 from django.db.models import Q, F, Prefetch
@@ -451,9 +452,15 @@ def logout_view(request):
     return redirect('home')
 
 
+@never_cache
 @login_required
 def toggle_wishlist(request, pk):
     car = get_object_or_404(Car, pk=pk)
+    is_ajax = request.headers.get('x-requested-with') == 'XMLHttpRequest'
+    # AJAX must use POST so browsers cannot serve a cached GET response (breaks undo).
+    if is_ajax and request.method != 'POST':
+        return JsonResponse({'error': 'POST required'}, status=405)
+
     wishlist_item = Wishlist.objects.filter(car=car, user=request.user).first()
     if wishlist_item:
         wishlist_item.delete()
@@ -461,9 +468,13 @@ def toggle_wishlist(request, pk):
     else:
         Wishlist.objects.create(car=car, user=request.user)
         added = True
-    if request.headers.get('x-requested-with') == 'XMLHttpRequest':
+
+    if is_ajax:
         wishlist_count = car.wishlisted_by.count()
-        return JsonResponse({'added': added, 'wishlist_count': wishlist_count})
+        resp = JsonResponse({'added': added, 'wishlist_count': wishlist_count})
+        resp['Cache-Control'] = 'no-store, no-cache, must-revalidate, private'
+        resp['Pragma'] = 'no-cache'
+        return resp
     next_url = _safe_next_url(request, default=reverse('car_detail', args=[pk]))
     return redirect(next_url)
 
