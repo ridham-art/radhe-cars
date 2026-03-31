@@ -27,7 +27,6 @@
         <p class="text-sm text-slate-500">Customer accounts</p>
         <p class="text-2xl font-bold text-indigo-700 mt-1">{{ total_customers }}</p>
         <p class="text-xs text-slate-400 mt-2">People who signed up on the website (not staff)</p>
-        <a href="{% url 'admin_panel:user_list' %}" class="inline-block mt-3 text-sm font-medium text-blue-600 hover:underline">View all users →</a>
     </div>
     <div class="bg-white rounded-xl border border-slate-200 p-5 shadow-sm">
         <p class="text-sm text-slate-500">Wishlist saves</p>
@@ -38,9 +37,72 @@
         <p class="text-sm text-slate-500">Customers with a wishlist</p>
         <p class="text-2xl font-bold text-slate-900 mt-1">{{ customers_with_wishlist }}</p>
         <p class="text-xs text-slate-400 mt-2">How many customers saved at least one car</p>
-        <a href="{% url 'admin_panel:wishlist_list' %}" class="inline-block mt-3 text-sm font-medium text-blue-600 hover:underline">View wishlist activity →</a>
     </div>
 </div>
 
-<p class="mt-8 text-sm text-slate-500">Use the sidebar for detailed lists: <strong>Users</strong>, <strong>Wishlist</strong>, cars, inquiries, and sell form submissions.</p>
+<div class="mt-10 space-y-8">
+    <section>
+        <h2 class="text-lg font-semibold text-slate-900 mb-3">Recent customer sign-ups</h2>
+        <p class="text-sm text-slate-500 mb-4">Newest accounts first. Email is used for login.</p>
+        {% if recent_customers %}
+        <div class="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden overflow-x-auto">
+            <table class="ap-table w-full min-w-[640px]">
+                <thead>
+                    <tr class="bg-slate-50 text-slate-600 text-xs uppercase tracking-wide">
+                        <th>Email</th>
+                        <th>Name</th>
+                        <th>Signed up</th>
+                        <th>Last login</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for u in recent_customers %}
+                    <tr>
+                        <td class="font-medium text-slate-800">{{ u.email|default:"—" }}</td>
+                        <td>{{ u.get_full_name|default:u.username }}</td>
+                        <td class="text-slate-600">{{ u.date_joined|date:"M j, Y, g:i a" }}</td>
+                        <td class="text-slate-600">{% if u.last_login %}{{ u.last_login|date:"M j, Y, g:i a" }}{% else %}—{% endif %}</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        {% else %}
+        <p class="text-sm text-slate-500 bg-slate-50 border border-slate-200 rounded-lg px-4 py-3">No customer accounts yet.</p>
+        {% endif %}
+    </section>
+
+    <section>
+        <h2 class="text-lg font-semibold text-slate-900 mb-3">Wishlist activity</h2>
+        <p class="text-sm text-slate-500 mb-4">Who saved which car after logging in (newest first).</p>
+        {% if recent_wishlists %}
+        <div class="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden overflow-x-auto">
+            <table class="ap-table w-full min-w-[720px]">
+                <thead>
+                    <tr class="bg-slate-50 text-slate-600 text-xs uppercase tracking-wide">
+                        <th>Customer email</th>
+                        <th>Car</th>
+                        <th>Saved on</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for w in recent_wishlists %}
+                    <tr>
+                        <td class="font-medium text-slate-800">{{ w.user.email|default:w.user.username }}</td>
+                        <td>
+                            <a href="{% url 'car_detail' w.car.pk %}" target="_blank" rel="noopener" class="text-blue-600 hover:underline">{{ w.car.title }}</a>
+                        </td>
+                        <td class="text-slate-600">{{ w.created_at|date:"M j, Y, g:i a" }}</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        {% else %}
+        <p class="text-sm text-slate-500 bg-slate-50 border border-slate-200 rounded-lg px-4 py-3">No wishlist activity from logged-in users yet.</p>
+        {% endif %}
+    </section>
+</div>
+
+<p class="mt-8 text-sm text-slate-500">Use the sidebar to manage cars, brands, models, inquiries, and CSV tools. Everything above stays on this page for a quick overview.</p>
 {% endblock %}

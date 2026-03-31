@@ -31,26 +31,12 @@
         .ap-btn-header { display: inline-flex; align-items: center; justify-content: center; font-size: 0.875rem; font-weight: 500; padding: 0.5rem 0.875rem; border-radius: 0.5rem; border: 1px solid #e2e8f0; background: #fff; color: #1d4ed8; text-decoration: none; box-shadow: 0 1px 2px rgba(15, 23, 42, 0.06); transition: background-color 0.12s, border-color 0.12s; }
         .ap-btn-header:hover { background: #f8fafc; border-color: #cbd5e1; }
         button.ap-btn { font-family: inherit; }
-        /* Fixed sidebar + scrollable main; sticky filter bars inside main */
-        .ap-sticky-toolbar {
-            position: sticky;
-            top: 0;
-            z-index: 20;
-            margin-left: -1.5rem;
-            margin-right: -1.5rem;
-            padding: 0.25rem 1.5rem 1rem;
-            margin-bottom: 1rem;
-            background: rgba(241, 245, 249, 0.92);
-            backdrop-filter: blur(6px);
-            -webkit-backdrop-filter: blur(6px);
-            border-bottom: 1px solid rgba(226, 232, 240, 0.95);
-        }
     </style>
     {% block extra_css %}{% endblock %}
 </head>
-<body class="bg-slate-100 text-slate-900 h-screen overflow-hidden">
-    <div class="flex h-full min-h-0">
-        <aside class="fixed inset-y-0 left-0 z-30 w-56 bg-slate-900 text-white flex flex-col overflow-y-auto overscroll-contain">
+<body class="bg-slate-100 text-slate-900 min-h-screen">
+    <div class="flex min-h-screen">
+        <aside class="w-56 bg-slate-900 text-white flex flex-col shrink-0">
             <div class="p-4 border-b border-slate-700">
                 <p class="font-semibold text-lg">Radhe Cars</p>
                 <p class="text-xs text-slate-400">Staff panel</p>
@@ -78,8 +64,6 @@
                     <span id="nav-sell-badge" class="hidden bg-emerald-500 text-white text-xs font-bold min-w-[1.25rem] text-center px-1.5 py-0.5 rounded-full">0</span>
                     {% endif %}
                 </a>
-                <a href="{% url 'admin_panel:user_list' %}" class="block px-3 py-2 rounded-lg hover:bg-slate-800 text-sm {% if request.resolver_match.url_name == 'user_list' %}bg-slate-800{% endif %}">Users</a>
-                <a href="{% url 'admin_panel:wishlist_list' %}" class="block px-3 py-2 rounded-lg hover:bg-slate-800 text-sm {% if request.resolver_match.url_name == 'wishlist_list' %}bg-slate-800{% endif %}">Wishlist</a>
                 <a href="{% url 'admin_panel:csv_import' %}" class="block px-3 py-2 rounded-lg hover:bg-slate-800 text-sm {% if 'csv' in request.resolver_match.url_name %}bg-slate-800{% endif %}">CSV Import</a>
             </nav>
             <div class="p-3 border-t border-slate-700">
@@ -89,19 +73,19 @@
                 </form>
             </div>
         </aside>
-        <div class="flex flex-col flex-1 min-w-0 min-h-0 ml-56 h-full">
-            <header class="shrink-0 bg-white border-b border-slate-200 px-6 py-4 flex items-center justify-between">
+        <div class="flex-1 flex flex-col min-w-0">
+            <header class="bg-white border-b border-slate-200 px-6 py-4 flex items-center justify-between">
                 <h1 class="text-lg font-semibold text-slate-800">{% block heading %}Dashboard{% endblock %}</h1>
                 <a href="{% url 'home' %}" class="ap-btn-header">View site</a>
             </header>
             {% if messages %}
-            <div class="shrink-0 px-6 pt-4 space-y-2">
+            <div class="px-6 pt-4 space-y-2">
                 {% for message in messages %}
                 <div class="rounded-lg px-4 py-3 text-sm {% if message.tags == 'success' %}bg-green-50 text-green-800 border border-green-200{% elif message.tags == 'error' %}bg-red-50 text-red-800 border border-red-200{% elif message.tags == 'warning' %}bg-amber-50 text-amber-900 border border-amber-200{% else %}bg-blue-50 text-blue-800 border border-blue-200{% endif %}">{{ message }}</div>
                 {% endfor %}
             </div>
             {% endif %}
-            <main class="flex-1 min-h-0 overflow-y-auto overscroll-contain p-6">
+            <main class="flex-1 p-6 overflow-auto">
                 {% block content %}{% endblock %}
             </main>
         </div>

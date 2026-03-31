@@ -2,12 +2,11 @@
 {% block title %}Cars{% endblock %}
 {% block heading %}Cars{% endblock %}
 {% block content %}
-<div class="ap-sticky-toolbar space-y-4">
-<div class="flex flex-wrap gap-3">
+<div class="flex flex-wrap gap-3 mb-6">
     <a href="{% url 'admin_panel:car_add' %}" class="inline-flex items-center px-4 py-2 bg-blue-600 text-white text-sm font-medium rounded-lg hover:bg-blue-700">Add car</a>
     <a href="{% url 'admin_panel:csv_export' %}" class="inline-flex items-center px-4 py-2 bg-white border border-slate-200 text-sm font-medium rounded-lg hover:bg-slate-50">Export CSV</a>
 </div>
-<form method="get" class="bg-white rounded-xl border border-slate-200 p-4 flex flex-wrap gap-3 items-end shadow-sm">
+<form method="get" class="bg-white rounded-xl border border-slate-200 p-4 mb-6 flex flex-wrap gap-3 items-end">
     <div>
         <label class="block text-xs text-slate-500 mb-1">Search</label>
         <input type="text" name="q" value="{{ search_q }}" placeholder="Title or model" class="ap-input w-48">
@@ -42,7 +41,6 @@
     <button type="submit" class="px-4 py-2 bg-slate-800 text-white text-sm rounded-lg">Apply</button>
     <a href="{% url 'admin_panel:car_list' %}" class="ap-btn ap-btn-neutral">Clear</a>
 </form>
-</div>
 
 <form method="post" action="{% url 'admin_panel:car_bulk_delete' %}" id="bulk-form">
     {% csrf_token %}

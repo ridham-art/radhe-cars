@@ -7,8 +7,7 @@
     <strong>Featured</strong> highlights it on the home page when approved.
 </p>
 
-<div class="ap-sticky-toolbar">
-<form method="get" class="bg-white rounded-xl border border-slate-200 p-4 flex flex-wrap gap-3 items-end shadow-sm">
+<form method="get" class="bg-white rounded-xl border border-slate-200 p-4 mb-6 flex flex-wrap gap-3 items-end">
     <div>
         <label class="block text-xs text-slate-500 mb-1">Search</label>
         <input type="text" name="q" value="{{ search_q }}" placeholder="Title or phone" class="ap-input w-48">
@@ -25,7 +24,6 @@
     <button type="submit" class="px-4 py-2 bg-slate-800 text-white text-sm rounded-lg">Apply</button>
     <a href="{% url 'admin_panel:sell_car_inquiry_list' %}" class="ap-btn ap-btn-neutral">Clear</a>
 </form>
-</div>
 
 <form id="bulk-sell" method="post" action="{% url 'admin_panel:sell_car_inquiry_bulk_delete' %}">
     {% csrf_token %}
