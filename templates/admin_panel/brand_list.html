@@ -2,43 +2,30 @@
 {% block title %}Brands{% endblock %}
 {% block heading %}Brands{% endblock %}
 {% block content %}
-<div class="ap-page-list">
-    <div class="ap-sticky-toolbar">
-        <div class="flex flex-wrap gap-2 sm:gap-3">
-            <a href="{% url 'admin_panel:brand_add' %}" class="inline-flex px-4 py-2.5 bg-blue-600 text-white text-sm font-medium rounded-lg hover:bg-blue-700 shadow-sm">Add brand</a>
-            <a href="{% url 'admin_panel:brand_bulk_add' %}" class="inline-flex px-4 py-2.5 bg-white border border-slate-200 text-slate-800 text-sm font-medium rounded-lg hover:bg-slate-50">Bulk add brands</a>
-        </div>
-    </div>
-    <div class="ap-table-outer flex-1 min-h-0 flex flex-col">
-        <div class="ap-table-panel ap-table-panel--tall flex-1 min-h-0 overflow-auto">
-            <table class="w-full ap-table min-w-[520px]">
-                <thead>
-                    <tr class="text-slate-600 text-xs uppercase tracking-wide">
-                        <th scope="col">Name</th>
-                        <th scope="col" class="w-24">Cars</th>
-                        <th scope="col" class="text-right min-w-[14rem]">Actions</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    {% for b in brands %}
-                    <tr>
-                        <td class="font-medium text-slate-900">{{ b.name }}</td>
-                        <td class="tabular-nums text-slate-700">{{ b.car_count }}</td>
-                        <td class="text-right">
-                            <div class="ap-row-actions justify-end">
-                                <a href="{% url 'admin_panel:brand_edit' b.pk %}" class="ap-btn ap-btn-edit">Edit</a>
-                                <a href="{% url 'admin_panel:brand_delete_all_models' b.pk %}" class="ap-btn ap-btn-warn">Delete all models</a>
-                                <a href="{% url 'admin_panel:brand_delete' b.pk %}" class="ap-btn ap-btn-danger">Delete brand</a>
-                            </div>
-                        </td>
-                    </tr>
-                    {% empty %}
-                    <tr><td colspan="3" class="text-center text-slate-500 py-12">No brands.</td></tr>
-                    {% endfor %}
-                </tbody>
-            </table>
-        </div>
-        <p class="ap-scroll-hint px-3 pb-2 sm:hidden">Swipe sideways to see all columns</p>
-    </div>
+<div class="mb-4 flex flex-wrap gap-2">
+    <a href="{% url 'admin_panel:brand_add' %}" class="inline-flex px-4 py-2 bg-blue-600 text-white text-sm font-medium rounded-lg hover:bg-blue-700">Add brand</a>
+    <a href="{% url 'admin_panel:brand_bulk_add' %}" class="inline-flex px-4 py-2 bg-white border border-slate-200 text-slate-800 text-sm font-medium rounded-lg hover:bg-slate-50">Bulk add brands</a>
+</div>
+<div class="bg-white rounded-xl border border-slate-200 overflow-hidden">
+    <table class="w-full ap-table">
+        <thead class="bg-slate-50 text-xs uppercase text-slate-500"><tr><th>Name</th><th>Cars</th><th></th></tr></thead>
+        <tbody>
+            {% for b in brands %}
+            <tr>
+                <td class="font-medium">{{ b.name }}</td>
+                <td>{{ b.car_count }}</td>
+                <td class="text-right">
+                    <div class="ap-row-actions">
+                        <a href="{% url 'admin_panel:brand_edit' b.pk %}" class="ap-btn ap-btn-edit">Edit</a>
+                        <a href="{% url 'admin_panel:brand_delete_all_models' b.pk %}" class="ap-btn ap-btn-warn">Delete all models</a>
+                        <a href="{% url 'admin_panel:brand_delete' b.pk %}" class="ap-btn ap-btn-danger">Delete brand</a>
+                    </div>
+                </td>
+            </tr>
+            {% empty %}
+            <tr><td colspan="3" class="text-center text-slate-500 py-8">No brands.</td></tr>
+            {% endfor %}
+        </tbody>
+    </table>
 </div>
 {% endblock %}

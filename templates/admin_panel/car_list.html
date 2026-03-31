@@ -2,116 +2,112 @@
 {% block title %}Cars{% endblock %}
 {% block heading %}Cars{% endblock %}
 {% block content %}
-<div class="ap-page-list">
-    <div class="ap-sticky-toolbar space-y-4">
-        <div class="flex flex-wrap gap-2 sm:gap-3">
-            <a href="{% url 'admin_panel:car_add' %}" class="inline-flex items-center px-4 py-2.5 bg-blue-600 text-white text-sm font-medium rounded-lg hover:bg-blue-700 shadow-sm">Add car</a>
-            <a href="{% url 'admin_panel:csv_export' %}" class="inline-flex items-center px-4 py-2.5 bg-white border border-slate-200 text-slate-800 text-sm font-medium rounded-lg hover:bg-slate-50">Export CSV</a>
-        </div>
-        <form method="get" class="bg-white rounded-xl border border-slate-200 p-4 flex flex-wrap gap-3 sm:gap-4 items-end shadow-sm">
-            <div>
-                <label class="block text-xs font-medium text-slate-600 mb-1.5" for="id-car-q">Search</label>
-                <input id="id-car-q" type="search" name="q" value="{{ search_q }}" placeholder="Title or model" class="ap-input w-48 sm:w-52">
-            </div>
-            <div>
-                <label class="block text-xs font-medium text-slate-600 mb-1.5" for="id-car-brand">Brand</label>
-                <select id="id-car-brand" name="brand" class="ap-input w-40">
-                    <option value="">All</option>
-                    {% for b in brands %}
-                    <option value="{{ b.pk }}" {% if filter_brand == b.pk %}selected{% endif %}>{{ b.name }}</option>
-                    {% endfor %}
-                </select>
-            </div>
-            <div>
-                <label class="block text-xs font-medium text-slate-600 mb-1.5" for="id-car-fuel">Fuel</label>
-                <select id="id-car-fuel" name="fuel" class="ap-input w-36">
-                    <option value="">All</option>
-                    {% for v,l in fuel_types %}
-                    <option value="{{ v }}" {% if filter_fuel == v %}selected{% endif %}>{{ l }}</option>
-                    {% endfor %}
-                </select>
-            </div>
-            <div>
-                <label class="block text-xs font-medium text-slate-600 mb-1.5" for="id-car-status">Status</label>
-                <select id="id-car-status" name="status" class="ap-input w-36">
-                    <option value="">All</option>
-                    {% for v,l in statuses %}
-                    <option value="{{ v }}" {% if filter_status == v %}selected{% endif %}>{{ l }}</option>
-                    {% endfor %}
-                </select>
-            </div>
-            <button type="submit" class="ap-btn ap-btn-primary px-5 py-2 text-sm rounded-lg">Apply</button>
-            <a href="{% url 'admin_panel:car_list' %}" class="ap-btn ap-btn-neutral py-2 px-4 text-sm rounded-lg">Clear</a>
-        </form>
+<div class="ap-sticky-toolbar space-y-4">
+<div class="flex flex-wrap gap-3">
+    <a href="{% url 'admin_panel:car_add' %}" class="inline-flex items-center px-4 py-2 bg-blue-600 text-white text-sm font-medium rounded-lg hover:bg-blue-700">Add car</a>
+    <a href="{% url 'admin_panel:csv_export' %}" class="inline-flex items-center px-4 py-2 bg-white border border-slate-200 text-sm font-medium rounded-lg hover:bg-slate-50">Export CSV</a>
+</div>
+<form method="get" class="bg-white rounded-xl border border-slate-200 p-4 flex flex-wrap gap-3 items-end shadow-sm">
+    <div>
+        <label class="block text-xs text-slate-500 mb-1">Search</label>
+        <input type="text" name="q" value="{{ search_q }}" placeholder="Title or model" class="ap-input w-48">
     </div>
-
-    <form method="post" action="{% url 'admin_panel:car_bulk_delete' %}" id="bulk-form" class="flex flex-col flex-1 min-h-0 gap-3">
-        {% csrf_token %}
-        <div class="shrink-0">
-            <button type="submit" class="ap-btn ap-btn-danger py-2 px-4 text-sm rounded-lg" onclick="return confirm('Delete selected cars?');">Bulk delete</button>
-        </div>
-        <div class="ap-table-outer flex-1 min-h-0 flex flex-col">
-            <div class="ap-table-panel ap-table-panel--tall flex-1 min-h-0 overflow-auto">
-                <table class="w-full ap-table min-w-[880px]">
-                    <thead>
-                        <tr class="text-slate-600 text-xs uppercase tracking-wide">
-                            <th scope="col" class="w-10"><input type="checkbox" id="select-all" title="Select all" aria-label="Select all rows"></th>
-                            <th scope="col" class="w-16">Image</th>
-                            <th scope="col" class="min-w-[10rem]">Title</th>
-                            <th scope="col">Brand</th>
-                            <th scope="col">Model</th>
-                            <th scope="col" class="whitespace-nowrap">Price</th>
-                            <th scope="col">Status</th>
-                            <th scope="col" class="text-right min-w-[7rem]">Actions</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        {% for car in cars %}
-                        <tr class="{% if car.is_featured %}bg-amber-50/90{% endif %}">
-                            <td><input type="checkbox" name="ids" value="{{ car.pk }}" class="row-check" aria-label="Select {{ car.title }}"></td>
-                            <td class="w-16">
-                                {% with img=car.primary_image %}
-                                {% if img and img.display_url %}
-                                <img src="{{ img.display_url }}" alt="" width="56" height="40" loading="lazy" decoding="async" class="w-14 h-10 object-cover rounded border border-slate-200">
-                                {% else %}
-                                <span class="text-xs text-slate-400">—</span>
-                                {% endif %}
-                                {% endwith %}
-                            </td>
-                            <td class="font-medium text-slate-900">{{ car.title }}{% if car.is_featured %} <span class="text-amber-600 text-xs" title="Featured">★</span>{% endif %}</td>
-                            <td class="text-slate-700">{{ car.brand.name }}</td>
-                            <td class="text-slate-700">{{ car.model.name }}</td>
-                            <td class="tabular-nums text-slate-800">₹{{ car.price }}</td>
-                            <td><span class="text-xs px-2 py-0.5 rounded-full bg-slate-100 text-slate-700">{{ car.get_status_display }}</span></td>
-                            <td class="text-right">
-                                <div class="ap-row-actions justify-end">
-                                    <a href="{% url 'admin_panel:car_edit' car.pk %}" class="ap-btn ap-btn-edit">Edit</a>
-                                    <a href="{% url 'admin_panel:car_delete' car.pk %}" class="ap-btn ap-btn-danger">Delete</a>
-                                </div>
-                            </td>
-                        </tr>
-                        {% empty %}
-                        <tr><td colspan="8" class="text-center text-slate-500 py-12">No cars found.</td></tr>
-                        {% endfor %}
-                    </tbody>
-                </table>
-            </div>
-            <p class="ap-scroll-hint px-3 pb-2 sm:hidden">Swipe sideways to see all columns</p>
-        </div>
-    </form>
-
-    {% if page_obj.has_other_pages %}
-    <div class="ap-pagination flex flex-wrap items-center justify-center gap-2">
-        {% if page_obj.has_previous %}
-        <a href="?page={{ page_obj.previous_page_number }}&q={{ search_q }}&brand={{ filter_brand }}&fuel={{ filter_fuel }}&status={{ filter_status }}" class="ap-btn ap-btn-neutral">Previous</a>
-        {% endif %}
-        <span class="text-sm text-slate-600 py-1.5 px-2">Page {{ page_obj.number }} of {{ page_obj.paginator.num_pages }}</span>
-        {% if page_obj.has_next %}
-        <a href="?page={{ page_obj.next_page_number }}&q={{ search_q }}&brand={{ filter_brand }}&fuel={{ filter_fuel }}&status={{ filter_status }}" class="ap-btn ap-btn-neutral">Next</a>
-        {% endif %}
+    <div>
+        <label class="block text-xs text-slate-500 mb-1">Brand</label>
+        <select name="brand" class="ap-input w-40">
+            <option value="">All</option>
+            {% for b in brands %}
+            <option value="{{ b.pk }}" {% if filter_brand == b.pk %}selected{% endif %}>{{ b.name }}</option>
+            {% endfor %}
+        </select>
     </div>
+    <div>
+        <label class="block text-xs text-slate-500 mb-1">Fuel</label>
+        <select name="fuel" class="ap-input w-36">
+            <option value="">All</option>
+            {% for v,l in fuel_types %}
+            <option value="{{ v }}" {% if filter_fuel == v %}selected{% endif %}>{{ l }}</option>
+            {% endfor %}
+        </select>
+    </div>
+    <div>
+        <label class="block text-xs text-slate-500 mb-1">Status</label>
+        <select name="status" class="ap-input w-36">
+            <option value="">All</option>
+            {% for v,l in statuses %}
+            <option value="{{ v }}" {% if filter_status == v %}selected{% endif %}>{{ l }}</option>
+            {% endfor %}
+        </select>
+    </div>
+    <button type="submit" class="px-4 py-2 bg-slate-800 text-white text-sm rounded-lg">Apply</button>
+    <a href="{% url 'admin_panel:car_list' %}" class="ap-btn ap-btn-neutral">Clear</a>
+</form>
+</div>
+
+<form method="post" action="{% url 'admin_panel:car_bulk_delete' %}" id="bulk-form">
+    {% csrf_token %}
+    <div class="flex items-center gap-3 mb-3">
+        <button type="submit" class="ap-btn ap-btn-danger" onclick="return confirm('Delete selected cars?');">Bulk delete</button>
+    </div>
+    <div class="bg-white rounded-xl border border-slate-200 overflow-hidden shadow-sm">
+        <div class="overflow-x-auto">
+            <table class="w-full ap-table">
+                <thead class="bg-slate-50 text-slate-600 text-xs uppercase tracking-wide">
+                    <tr>
+                        <th class="w-10"><input type="checkbox" id="select-all" title="Select all"></th>
+                        <th>Image</th>
+                        <th>Title</th>
+                        <th>Brand</th>
+                        <th>Model</th>
+                        <th>Price</th>
+                        <th>Status</th>
+                        <th></th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for car in cars %}
+                    <tr class="{% if car.is_featured %}bg-amber-50/80{% endif %}">
+                        <td><input type="checkbox" name="ids" value="{{ car.pk }}" class="row-check"></td>
+                        <td class="w-16">
+                            {% with img=car.primary_image %}
+                            {% if img and img.display_url %}
+                            <img src="{{ img.display_url }}" alt="" width="56" height="40" loading="lazy" decoding="async" class="w-14 h-10 object-cover rounded border border-slate-200">
+                            {% else %}
+                            <span class="text-xs text-slate-400">—</span>
+                            {% endif %}
+                            {% endwith %}
+                        </td>
+                        <td class="font-medium text-slate-900">{{ car.title }}{% if car.is_featured %} <span class="text-amber-600 text-xs">★</span>{% endif %}</td>
+                        <td>{{ car.brand.name }}</td>
+                        <td>{{ car.model.name }}</td>
+                        <td>₹{{ car.price }}</td>
+                        <td><span class="text-xs px-2 py-0.5 rounded-full bg-slate-100">{{ car.get_status_display }}</span></td>
+                        <td class="text-right">
+                            <div class="ap-row-actions">
+                                <a href="{% url 'admin_panel:car_edit' car.pk %}" class="ap-btn ap-btn-edit">Edit</a>
+                                <a href="{% url 'admin_panel:car_delete' car.pk %}" class="ap-btn ap-btn-danger">Delete</a>
+                            </div>
+                        </td>
+                    </tr>
+                    {% empty %}
+                    <tr><td colspan="8" class="text-center text-slate-500 py-8">No cars found.</td></tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</form>
+{% if page_obj.has_other_pages %}
+<div class="mt-4 flex justify-center gap-2">
+    {% if page_obj.has_previous %}
+    <a href="?page={{ page_obj.previous_page_number }}&q={{ search_q }}&brand={{ filter_brand }}&fuel={{ filter_fuel }}&status={{ filter_status }}" class="ap-btn ap-btn-neutral">Previous</a>
+    {% endif %}
+    <span class="text-sm text-slate-600 py-1">Page {{ page_obj.number }} of {{ page_obj.paginator.num_pages }}</span>
+    {% if page_obj.has_next %}
+    <a href="?page={{ page_obj.next_page_number }}&q={{ search_q }}&brand={{ filter_brand }}&fuel={{ filter_fuel }}&status={{ filter_status }}" class="ap-btn ap-btn-neutral">Next</a>
     {% endif %}
 </div>
+{% endif %}
 <script>
 document.getElementById('select-all')?.addEventListener('change', function(e){
     document.querySelectorAll('.row-check').forEach(function(c){ c.checked = e.target.checked; });
