@@ -9,17 +9,34 @@
     <link rel="preload" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" as="style" onload="this.onload=null;this.rel='stylesheet'">
     <noscript><link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet"></noscript>
     <style>
-        body { font-family: 'Inter', sans-serif; }
+        body { font-family: 'Inter', sans-serif; -webkit-font-smoothing: antialiased; }
         .ap-input { width: 100%; border: 1px solid #e2e8f0; border-radius: 0.5rem; padding: 0.5rem 0.75rem; font-size: 0.875rem; }
-        .ap-input:focus { outline: none; ring: 2px; border-color: #3b82f6; box-shadow: 0 0 0 2px rgba(59,130,246,.2); }
+        .ap-input:focus { outline: none; border-color: #3b82f6; box-shadow: 0 0 0 2px rgba(59,130,246,.2); }
         .ap-checkbox { width: 1rem; height: 1rem; border-radius: 0.25rem; }
-        .ap-table th, .ap-table td { padding: 0.75rem 1rem; text-align: left; border-bottom: 1px solid #e2e8f0; font-size: 0.875rem; }
+        .ap-table { border-collapse: separate; border-spacing: 0; width: 100%; }
+        .ap-table th, .ap-table td { padding: 0.75rem 1rem; text-align: left; border-bottom: 1px solid #e2e8f0; font-size: 0.875rem; vertical-align: middle; }
+        .ap-table tbody tr { transition: background-color 0.1s; }
+        .ap-table tbody tr:hover { background-color: rgba(248, 250, 252, 0.9); }
         .ap-table tr.unread { background-color: #fef2f2; }
+        .ap-table-panel { overflow: auto; -webkit-overflow-scrolling: touch; border-radius: 0.75rem; }
+        .ap-table-panel thead th {
+            position: sticky;
+            top: 0;
+            z-index: 5;
+            background: #f8fafc;
+            box-shadow: inset 0 -1px 0 #e2e8f0;
+            font-weight: 600;
+            letter-spacing: 0.02em;
+            white-space: nowrap;
+        }
+        .ap-col-email { min-width: 14rem; max-width: 22rem; word-break: break-word; }
+        .ap-scroll-hint { font-size: 0.7rem; color: #94a3b8; margin-top: 0.35rem; }
         #toast-container { position: fixed; bottom: 1rem; right: 1rem; z-index: 100; display: flex; flex-direction: column; gap: 0.5rem; }
-        /* Row action buttons (read as buttons, not bare links) */
         .ap-row-actions { display: flex; flex-wrap: wrap; gap: 0.375rem; justify-content: flex-end; align-items: center; }
-        .ap-btn { display: inline-flex; align-items: center; justify-content: center; font-size: 0.75rem; font-weight: 500; line-height: 1.25; padding: 0.35rem 0.65rem; border-radius: 0.375rem; border: 1px solid; text-decoration: none; transition: background-color 0.12s, border-color 0.12s, box-shadow 0.12s; box-shadow: 0 1px 2px rgba(15, 23, 42, 0.05); cursor: pointer; }
+        .ap-btn { display: inline-flex; align-items: center; justify-content: center; font-size: 0.75rem; font-weight: 500; line-height: 1.25; padding: 0.4rem 0.7rem; border-radius: 0.375rem; border: 1px solid; text-decoration: none; transition: background-color 0.12s, border-color 0.12s, box-shadow 0.12s; box-shadow: 0 1px 2px rgba(15, 23, 42, 0.05); cursor: pointer; }
         .ap-btn:hover { box-shadow: 0 1px 3px rgba(15, 23, 42, 0.08); }
+        .ap-btn-primary { border-color: #1e293b; background: #1e293b; color: #fff; }
+        .ap-btn-primary:hover { background: #334155; border-color: #334155; }
         .ap-btn-edit { border-color: #93c5fd; background: #fff; color: #1d4ed8; }
         .ap-btn-edit:hover { background: #eff6ff; border-color: #60a5fa; }
         .ap-btn-warn { border-color: #fcd34d; background: #fffbeb; color: #b45309; }
@@ -31,38 +48,39 @@
         .ap-btn-header { display: inline-flex; align-items: center; justify-content: center; font-size: 0.875rem; font-weight: 500; padding: 0.5rem 0.875rem; border-radius: 0.5rem; border: 1px solid #e2e8f0; background: #fff; color: #1d4ed8; text-decoration: none; box-shadow: 0 1px 2px rgba(15, 23, 42, 0.06); transition: background-color 0.12s, border-color 0.12s; }
         .ap-btn-header:hover { background: #f8fafc; border-color: #cbd5e1; }
         button.ap-btn { font-family: inherit; }
-        /* Fixed sidebar + scrollable main; sticky filter bars inside main */
+        a:focus-visible, button:focus-visible, .ap-btn:focus-visible { outline: 2px solid #3b82f6; outline-offset: 2px; }
+        /* Toolbar: stays under page header while scrolling the table below */
         .ap-sticky-toolbar {
             position: sticky;
             top: 0;
-            z-index: 20;
-            margin-left: -1.5rem;
-            margin-right: -1.5rem;
-            padding: 0.25rem 1.5rem 1rem;
-            margin-bottom: 1rem;
-            background: rgba(241, 245, 249, 0.92);
-            backdrop-filter: blur(6px);
-            -webkit-backdrop-filter: blur(6px);
-            border-bottom: 1px solid rgba(226, 232, 240, 0.95);
+            z-index: 25;
+            padding-bottom: 1rem;
+            margin-bottom: 0.75rem;
+            background: linear-gradient(to bottom, #f1f5f9 0%, #f1f5f9 85%, rgba(241,245,249,0.92) 100%);
+            border-bottom: 1px solid #e2e8f0;
         }
+        .ap-page-list { display: flex; flex-direction: column; flex: 1 1 0%; min-height: 0; gap: 0.75rem; }
+        .ap-table-outer { display: flex; flex-direction: column; flex: 1 1 auto; min-height: 0; border-radius: 0.75rem; border: 1px solid #e2e8f0; background: #fff; box-shadow: 0 1px 3px rgba(15, 23, 42, 0.06); }
+        .ap-table-panel--tall { max-height: min(72vh, calc(100vh - 15rem)); }
+        .ap-pagination { flex-shrink: 0; padding-top: 0.5rem; }
     </style>
     {% block extra_css %}{% endblock %}
 </head>
 <body class="bg-slate-100 text-slate-900 h-screen overflow-hidden">
     <div class="flex h-full min-h-0">
-        <aside class="fixed inset-y-0 left-0 z-30 w-56 bg-slate-900 text-white flex flex-col overflow-y-auto overscroll-contain">
-            <div class="p-4 border-b border-slate-700">
-                <p class="font-semibold text-lg">Radhe Cars</p>
-                <p class="text-xs text-slate-400">Staff panel</p>
+        <aside class="fixed inset-y-0 left-0 z-30 w-64 bg-slate-900 text-white flex flex-col overflow-y-auto overscroll-contain shadow-xl shadow-slate-900/20">
+            <div class="p-4 border-b border-slate-700/80">
+                <p class="font-semibold text-lg tracking-tight">Radhe Cars</p>
+                <p class="text-xs text-slate-400 mt-0.5">Staff panel</p>
             </div>
-            <nav class="flex-1 py-4 space-y-1 px-2">
-                <a href="{% url 'admin_panel:dashboard' %}" class="block px-3 py-2 rounded-lg hover:bg-slate-800 text-sm {% if request.resolver_match.url_name == 'dashboard' %}bg-slate-800{% endif %}">Dashboard</a>
+            <nav class="flex-1 py-3 space-y-0.5 px-2.5" aria-label="Admin navigation">
+                <a href="{% url 'admin_panel:dashboard' %}" class="block px-3 py-2.5 rounded-lg text-sm transition-colors hover:bg-slate-800/90 {% if request.resolver_match.url_name == 'dashboard' %}bg-slate-800 text-white font-medium{% else %}text-slate-200{% endif %}">Dashboard</a>
                 {% with n=request.resolver_match.url_name %}
-                <a href="{% url 'admin_panel:car_list' %}" class="block px-3 py-2 rounded-lg hover:bg-slate-800 text-sm {% if n == 'car_list' or n == 'car_add' or n == 'car_edit' or n == 'car_delete' or n == 'car_bulk_delete' %}bg-slate-800{% endif %}">Cars</a>
+                <a href="{% url 'admin_panel:car_list' %}" class="block px-3 py-2.5 rounded-lg text-sm transition-colors hover:bg-slate-800/90 {% if n == 'car_list' or n == 'car_add' or n == 'car_edit' or n == 'car_delete' or n == 'car_bulk_delete' %}bg-slate-800 text-white font-medium{% else %}text-slate-200{% endif %}">Cars</a>
                 {% endwith %}
-                <a href="{% url 'admin_panel:brand_list' %}" class="block px-3 py-2 rounded-lg hover:bg-slate-800 text-sm {% if 'brand' in request.resolver_match.url_name %}bg-slate-800{% endif %}">Brands</a>
-                <a href="{% url 'admin_panel:carmodel_list' %}" class="block px-3 py-2 rounded-lg hover:bg-slate-800 text-sm {% if 'carmodel' in request.resolver_match.url_name %}bg-slate-800{% endif %}">Models</a>
-                <a href="{% url 'admin_panel:inquiry_list' %}" class="block px-3 py-2 rounded-lg hover:bg-slate-800 text-sm flex items-center justify-between {% if 'inquiry' in request.resolver_match.url_name %}bg-slate-800{% endif %}">
+                <a href="{% url 'admin_panel:brand_list' %}" class="block px-3 py-2.5 rounded-lg text-sm transition-colors hover:bg-slate-800/90 {% if 'brand' in request.resolver_match.url_name %}bg-slate-800 text-white font-medium{% else %}text-slate-200{% endif %}">Brands</a>
+                <a href="{% url 'admin_panel:carmodel_list' %}" class="block px-3 py-2.5 rounded-lg text-sm transition-colors hover:bg-slate-800/90 {% if 'carmodel' in request.resolver_match.url_name %}bg-slate-800 text-white font-medium{% else %}text-slate-200{% endif %}">Models</a>
+                <a href="{% url 'admin_panel:inquiry_list' %}" class="block px-3 py-2.5 rounded-lg text-sm transition-colors hover:bg-slate-800/90 flex items-center justify-between gap-2 {% if 'inquiry' in request.resolver_match.url_name %}bg-slate-800 text-white font-medium{% else %}text-slate-200{% endif %}">
                     <span>Inquiries</span>
                     {% if unread_inquiry_count %}
                     <span id="nav-inquiry-badge" class="bg-red-500 text-white text-xs font-bold px-2 py-0.5 rounded-full">{{ unread_inquiry_count }}</span>
@@ -70,17 +88,17 @@
                     <span id="nav-inquiry-badge" class="hidden bg-red-500 text-white text-xs font-bold px-2 py-0.5 rounded-full">0</span>
                     {% endif %}
                 </a>
-                <a href="{% url 'admin_panel:sell_car_inquiry_list' %}" class="block px-3 py-2 rounded-lg hover:bg-slate-800 text-sm flex items-center justify-between {% if 'sell_car_inquiry' in request.resolver_match.url_name %}bg-slate-800{% endif %}">
-                    <span>Sell car inquiries</span>
+                <a href="{% url 'admin_panel:sell_car_inquiry_list' %}" class="block px-3 py-2.5 rounded-lg text-sm transition-colors hover:bg-slate-800/90 flex items-center justify-between gap-2 {% if 'sell_car_inquiry' in request.resolver_match.url_name %}bg-slate-800 text-white font-medium{% else %}text-slate-200{% endif %}">
+                    <span class="leading-snug">Sell car inquiries</span>
                     {% if sell_inquiry_unread_count %}
                     <span id="nav-sell-badge" class="bg-emerald-500 text-white text-xs font-bold min-w-[1.25rem] text-center px-1.5 py-0.5 rounded-full">{{ sell_inquiry_unread_count }}</span>
                     {% else %}
                     <span id="nav-sell-badge" class="hidden bg-emerald-500 text-white text-xs font-bold min-w-[1.25rem] text-center px-1.5 py-0.5 rounded-full">0</span>
                     {% endif %}
                 </a>
-                <a href="{% url 'admin_panel:user_list' %}" class="block px-3 py-2 rounded-lg hover:bg-slate-800 text-sm {% if request.resolver_match.url_name == 'user_list' %}bg-slate-800{% endif %}">Users</a>
-                <a href="{% url 'admin_panel:wishlist_list' %}" class="block px-3 py-2 rounded-lg hover:bg-slate-800 text-sm {% if request.resolver_match.url_name == 'wishlist_list' %}bg-slate-800{% endif %}">Wishlist</a>
-                <a href="{% url 'admin_panel:csv_import' %}" class="block px-3 py-2 rounded-lg hover:bg-slate-800 text-sm {% if 'csv' in request.resolver_match.url_name %}bg-slate-800{% endif %}">CSV Import</a>
+                <a href="{% url 'admin_panel:user_list' %}" class="block px-3 py-2.5 rounded-lg text-sm transition-colors hover:bg-slate-800/90 {% if request.resolver_match.url_name == 'user_list' %}bg-slate-800 text-white font-medium{% else %}text-slate-200{% endif %}">Users</a>
+                <a href="{% url 'admin_panel:wishlist_list' %}" class="block px-3 py-2.5 rounded-lg text-sm transition-colors hover:bg-slate-800/90 {% if request.resolver_match.url_name == 'wishlist_list' %}bg-slate-800 text-white font-medium{% else %}text-slate-200{% endif %}">Wishlist</a>
+                <a href="{% url 'admin_panel:csv_import' %}" class="block px-3 py-2.5 rounded-lg text-sm transition-colors hover:bg-slate-800/90 {% if 'csv' in request.resolver_match.url_name %}bg-slate-800 text-white font-medium{% else %}text-slate-200{% endif %}">CSV Import</a>
             </nav>
             <div class="p-3 border-t border-slate-700">
                 <form method="post" action="{% url 'admin_panel:logout' %}">
@@ -89,19 +107,19 @@
                 </form>
             </div>
         </aside>
-        <div class="flex flex-col flex-1 min-w-0 min-h-0 ml-56 h-full">
-            <header class="shrink-0 bg-white border-b border-slate-200 px-6 py-4 flex items-center justify-between">
-                <h1 class="text-lg font-semibold text-slate-800">{% block heading %}Dashboard{% endblock %}</h1>
-                <a href="{% url 'home' %}" class="ap-btn-header">View site</a>
+        <div class="flex flex-col flex-1 min-w-0 min-h-0 ml-64 h-full bg-slate-100">
+            <header class="shrink-0 bg-white border-b border-slate-200 px-5 sm:px-6 py-3.5 flex items-center justify-between gap-4 shadow-sm">
+                <h1 class="text-lg font-semibold text-slate-900 tracking-tight">{% block heading %}Dashboard{% endblock %}</h1>
+                <a href="{% url 'home' %}" class="ap-btn-header shrink-0" target="_blank" rel="noopener">View site</a>
             </header>
             {% if messages %}
-            <div class="shrink-0 px-6 pt-4 space-y-2">
+            <div class="shrink-0 px-5 sm:px-6 pt-3 space-y-2">
                 {% for message in messages %}
                 <div class="rounded-lg px-4 py-3 text-sm {% if message.tags == 'success' %}bg-green-50 text-green-800 border border-green-200{% elif message.tags == 'error' %}bg-red-50 text-red-800 border border-red-200{% elif message.tags == 'warning' %}bg-amber-50 text-amber-900 border border-amber-200{% else %}bg-blue-50 text-blue-800 border border-blue-200{% endif %}">{{ message }}</div>
                 {% endfor %}
             </div>
             {% endif %}
-            <main class="flex-1 min-h-0 overflow-y-auto overscroll-contain p-6">
+            <main class="flex flex-1 flex-col min-h-0 overflow-hidden px-5 sm:px-6 py-4">
                 {% block content %}{% endblock %}
             </main>
         </div>

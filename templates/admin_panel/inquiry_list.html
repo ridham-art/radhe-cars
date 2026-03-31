@@ -2,45 +2,59 @@
 {% block title %}Inquiries{% endblock %}
 {% block heading %}Inquiries{% endblock %}
 {% block content %}
-<div class="flex flex-wrap gap-3 mb-4">
-    <form method="post" action="{% url 'admin_panel:inquiry_mark_all_read' %}">
-        {% csrf_token %}
-        <button type="submit" class="px-4 py-2 bg-white border border-slate-200 text-sm rounded-lg hover:bg-slate-50">Mark all as read</button>
-    </form>
+<div class="ap-page-list">
+    <div class="ap-sticky-toolbar">
+        <form method="post" action="{% url 'admin_panel:inquiry_mark_all_read' %}" class="inline">
+            {% csrf_token %}
+            <button type="submit" class="inline-flex px-4 py-2.5 bg-white border border-slate-200 text-slate-800 text-sm font-medium rounded-lg hover:bg-slate-50 shadow-sm">Mark all as read</button>
+        </form>
+    </div>
+
+    <div class="ap-table-outer flex-1 min-h-0 flex flex-col">
+        <div class="ap-table-panel ap-table-panel--tall flex-1 min-h-0 overflow-auto">
+            <table class="w-full ap-table min-w-[800px]">
+                <thead>
+                    <tr class="text-slate-600 text-xs uppercase tracking-wide">
+                        <th scope="col" class="min-w-[7rem]">Name</th>
+                        <th scope="col" class="ap-col-email min-w-[12rem]">Email</th>
+                        <th scope="col" class="min-w-[8rem]">Phone</th>
+                        <th scope="col">Subject</th>
+                        <th scope="col" class="whitespace-nowrap min-w-[9rem]">Date</th>
+                        <th scope="col" class="text-right min-w-[8rem]">Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for i in inquiries %}
+                    <tr class="{% if not i.is_read %}unread font-medium{% endif %}">
+                        <td class="text-slate-900">{{ i.first_name }} {{ i.last_name }}</td>
+                        <td class="ap-col-email text-slate-800">{{ i.email }}</td>
+                        <td class="text-slate-700">{{ i.phone }}</td>
+                        <td class="text-slate-700">{{ i.get_subject_display|default:"—" }}</td>
+                        <td class="text-sm text-slate-600 whitespace-nowrap">{{ i.created_at|date:"M j, Y H:i" }}</td>
+                        <td class="text-right">
+                            <div class="ap-row-actions justify-end">
+                                <a href="{% url 'admin_panel:inquiry_detail' i.pk %}" class="ap-btn ap-btn-edit">View</a>
+                                {% if not i.is_read %}
+                                <form method="post" action="{% url 'admin_panel:inquiry_mark_read' i.pk %}" class="inline">{% csrf_token %}<button type="submit" class="ap-btn ap-btn-neutral">Mark read</button></form>
+                                {% endif %}
+                            </div>
+                        </td>
+                    </tr>
+                    {% empty %}
+                    <tr><td colspan="6" class="text-center py-12 text-slate-500">No inquiries.</td></tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        <p class="ap-scroll-hint px-3 pb-2 sm:hidden">Swipe sideways to see all columns</p>
+    </div>
+
+    {% if page_obj.has_other_pages %}
+    <div class="ap-pagination flex flex-wrap items-center justify-center gap-2">
+        {% if page_obj.has_previous %}<a href="?page={{ page_obj.previous_page_number }}" class="ap-btn ap-btn-neutral">Previous</a>{% endif %}
+        <span class="text-sm text-slate-600 py-1.5 px-2">Page {{ page_obj.number }} of {{ page_obj.paginator.num_pages }}</span>
+        {% if page_obj.has_next %}<a href="?page={{ page_obj.next_page_number }}" class="ap-btn ap-btn-neutral">Next</a>{% endif %}
+    </div>
+    {% endif %}
 </div>
-<div class="bg-white rounded-xl border overflow-hidden">
-    <table class="w-full ap-table">
-        <thead class="bg-slate-50 text-xs uppercase text-slate-500">
-            <tr><th>Name</th><th>Email</th><th>Phone</th><th>Subject</th><th>Date</th><th></th></tr>
-        </thead>
-        <tbody>
-            {% for i in inquiries %}
-            <tr class="{% if not i.is_read %}unread font-medium{% endif %}">
-                <td>{{ i.first_name }} {{ i.last_name }}</td>
-                <td>{{ i.email }}</td>
-                <td>{{ i.phone }}</td>
-                <td>{{ i.get_subject_display|default:"—" }}</td>
-                <td class="text-sm text-slate-500">{{ i.created_at|date:"M j, Y H:i" }}</td>
-                <td class="text-right">
-                    <div class="ap-row-actions">
-                        <a href="{% url 'admin_panel:inquiry_detail' i.pk %}" class="ap-btn ap-btn-edit">View</a>
-                        {% if not i.is_read %}
-                        <form method="post" action="{% url 'admin_panel:inquiry_mark_read' i.pk %}" class="inline">{% csrf_token %}<button type="submit" class="ap-btn ap-btn-neutral">Mark read</button></form>
-                        {% endif %}
-                    </div>
-                </td>
-            </tr>
-            {% empty %}
-            <tr><td colspan="6" class="text-center py-8 text-slate-500">No inquiries.</td></tr>
-            {% endfor %}
-        </tbody>
-    </table>
-</div>
-{% if page_obj.has_other_pages %}
-<div class="mt-4 flex justify-center gap-2">
-    {% if page_obj.has_previous %}<a href="?page={{ page_obj.previous_page_number }}" class="ap-btn ap-btn-neutral">Previous</a>{% endif %}
-    <span class="text-sm py-1">Page {{ page_obj.number }} of {{ page_obj.paginator.num_pages }}</span>
-    {% if page_obj.has_next %}<a href="?page={{ page_obj.next_page_number }}" class="ap-btn ap-btn-neutral">Next</a>{% endif %}
-</div>
-{% endif %}
 {% endblock %}

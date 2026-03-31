@@ -2,55 +2,57 @@
 {% block title %}Wishlist{% endblock %}
 {% block heading %}Wishlist{% endblock %}
 {% block content %}
-<p class="text-sm text-slate-600 mb-4 max-w-2xl">Cars saved by logged-in customers (newest first). Search by customer email or car title.</p>
-
-<div class="ap-sticky-toolbar">
-    <form method="get" class="bg-white rounded-xl border border-slate-200 p-4 flex flex-wrap gap-3 items-end shadow-sm">
-        <div>
-            <label class="block text-xs text-slate-500 mb-1">Search</label>
-            <input type="text" name="q" value="{{ search_q }}" placeholder="Email or car title" class="ap-input w-56">
-        </div>
-        <button type="submit" class="px-4 py-2 bg-slate-800 text-white text-sm rounded-lg">Apply</button>
-        <a href="{% url 'admin_panel:wishlist_list' %}" class="ap-btn ap-btn-neutral">Clear</a>
-    </form>
-</div>
-
-<div class="bg-white rounded-xl border border-slate-200 overflow-hidden shadow-sm">
-    <div class="overflow-x-auto">
-        <table class="ap-table w-full min-w-[720px]">
-            <thead>
-                <tr class="bg-slate-50 text-slate-600 text-xs uppercase tracking-wide">
-                    <th>Customer email</th>
-                    <th>Car</th>
-                    <th>Saved on</th>
-                </tr>
-            </thead>
-            <tbody>
-                {% for w in wishlists %}
-                <tr>
-                    <td class="font-medium text-slate-800">{{ w.user.email|default:w.user.username }}</td>
-                    <td>
-                        <a href="{% url 'car_detail' w.car.pk %}" target="_blank" rel="noopener" class="text-blue-600 hover:underline">{{ w.car.title }}</a>
-                    </td>
-                    <td class="text-slate-600">{{ w.created_at|date:"M j, Y, g:i a" }}</td>
-                </tr>
-                {% empty %}
-                <tr><td colspan="3" class="text-center text-slate-500 py-8">No wishlist activity from logged-in users yet.</td></tr>
-                {% endfor %}
-            </tbody>
-        </table>
+<div class="ap-page-list">
+    <div class="ap-sticky-toolbar space-y-3">
+        <p class="text-sm text-slate-600 leading-relaxed max-w-2xl">Cars saved by logged-in customers (newest first). Search by email or car title.</p>
+        <form method="get" class="flex flex-wrap gap-3 items-end bg-white rounded-xl border border-slate-200 p-4 shadow-sm">
+            <div class="min-w-[min(100%,16rem)] flex-1 sm:flex-none">
+                <label class="block text-xs font-medium text-slate-600 mb-1.5" for="id-wish-q">Search</label>
+                <input id="id-wish-q" type="search" name="q" value="{{ search_q }}" placeholder="Email or car title" autocomplete="off" class="ap-input w-full sm:w-72">
+            </div>
+            <button type="submit" class="ap-btn ap-btn-primary px-5 py-2 text-sm rounded-lg">Apply</button>
+            <a href="{% url 'admin_panel:wishlist_list' %}" class="ap-btn ap-btn-neutral py-2 px-4 text-sm rounded-lg">Clear</a>
+        </form>
     </div>
-</div>
 
-{% if page_obj.has_other_pages %}
-<div class="mt-4 flex justify-center gap-2">
-    {% if page_obj.has_previous %}
-    <a href="?page={{ page_obj.previous_page_number }}&q={{ search_q }}" class="ap-btn ap-btn-neutral">Previous</a>
-    {% endif %}
-    <span class="text-sm text-slate-600 py-1">Page {{ page_obj.number }} of {{ page_obj.paginator.num_pages }}</span>
-    {% if page_obj.has_next %}
-    <a href="?page={{ page_obj.next_page_number }}&q={{ search_q }}" class="ap-btn ap-btn-neutral">Next</a>
+    <div class="ap-table-outer flex-1 min-h-0 flex flex-col">
+        <div class="ap-table-panel ap-table-panel--tall flex-1 min-h-0 overflow-auto">
+            <table class="ap-table min-w-[720px]">
+                <thead>
+                    <tr class="text-slate-600 text-xs uppercase tracking-wide">
+                        <th scope="col" class="ap-col-email">Customer email</th>
+                        <th scope="col" class="min-w-[12rem]">Car</th>
+                        <th scope="col" class="min-w-[10rem] whitespace-nowrap">Saved on</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for w in wishlists %}
+                    <tr>
+                        <td class="font-medium text-slate-900 ap-col-email">{{ w.user.email|default:w.user.username }}</td>
+                        <td>
+                            <a href="{% url 'car_detail' w.car.pk %}" target="_blank" rel="noopener" class="text-blue-700 hover:text-blue-900 hover:underline font-medium">{{ w.car.title }}</a>
+                        </td>
+                        <td class="text-slate-600 tabular-nums">{{ w.created_at|date:"M j, Y, g:i a" }}</td>
+                    </tr>
+                    {% empty %}
+                    <tr><td colspan="3" class="text-center text-slate-500 py-12">No wishlist activity from logged-in users yet.</td></tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        <p class="ap-scroll-hint px-3 pb-2 sm:hidden">Swipe sideways to see all columns</p>
+    </div>
+
+    {% if page_obj.has_other_pages %}
+    <div class="ap-pagination flex flex-wrap items-center justify-center gap-2">
+        {% if page_obj.has_previous %}
+        <a href="?page={{ page_obj.previous_page_number }}&q={{ search_q }}" class="ap-btn ap-btn-neutral">Previous</a>
+        {% endif %}
+        <span class="text-sm text-slate-600 py-1.5 px-2">Page {{ page_obj.number }} of {{ page_obj.paginator.num_pages }}</span>
+        {% if page_obj.has_next %}
+        <a href="?page={{ page_obj.next_page_number }}&q={{ search_q }}" class="ap-btn ap-btn-neutral">Next</a>
+        {% endif %}
+    </div>
     {% endif %}
 </div>
-{% endif %}
 {% endblock %}

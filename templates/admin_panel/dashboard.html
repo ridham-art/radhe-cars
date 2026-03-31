@@ -2,6 +2,7 @@
 {% block title %}Dashboard{% endblock %}
 {% block heading %}Dashboard{% endblock %}
 {% block content %}
+<div class="flex flex-col flex-1 min-h-0 overflow-y-auto overscroll-contain -mr-1 pr-1 pb-2">
 <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
     <div class="bg-white rounded-xl border border-slate-200 p-5 shadow-sm">
         <p class="text-sm text-slate-500">Total cars</p>
@@ -43,4 +44,5 @@
 </div>
 
 <p class="mt-8 text-sm text-slate-500">Use the sidebar for detailed lists: <strong>Users</strong>, <strong>Wishlist</strong>, cars, inquiries, and sell form submissions.</p>
+</div>
 {% endblock %}

@@ -2,37 +2,50 @@
 {% block title %}Models{% endblock %}
 {% block heading %}Car models{% endblock %}
 {% block content %}
-<div class="flex flex-wrap gap-3 mb-4">
-    <a href="{% url 'admin_panel:carmodel_add' %}" class="px-4 py-2 bg-blue-600 text-white text-sm rounded-lg">Add model</a>
-    <a href="{% url 'admin_panel:carmodel_bulk_add' %}" class="px-4 py-2 bg-white border border-slate-200 text-slate-800 text-sm rounded-lg hover:bg-slate-50">Bulk add models</a>
-    <form method="get" class="flex items-center gap-2">
-        <select name="brand" class="ap-input w-48" onchange="this.form.submit()">
-            <option value="">All brands</option>
-            {% for b in brands %}
-            <option value="{{ b.pk }}" {% if filter_brand == b.pk %}selected{% endif %}>{{ b.name }}</option>
-            {% endfor %}
-        </select>
-    </form>
-</div>
-<div class="bg-white rounded-xl border overflow-hidden">
-    <table class="w-full ap-table">
-        <thead class="bg-slate-50 text-xs uppercase text-slate-500"><tr><th>Brand</th><th>Model</th><th></th></tr></thead>
-        <tbody>
-            {% for m in carmodels %}
-            <tr>
-                <td>{{ m.brand.name }}</td>
-                <td class="font-medium">{{ m.name }}</td>
-                <td class="text-right">
-                    <div class="ap-row-actions">
-                        <a href="{% url 'admin_panel:carmodel_edit' m.pk %}" class="ap-btn ap-btn-edit">Edit</a>
-                        <a href="{% url 'admin_panel:carmodel_delete' m.pk %}" class="ap-btn ap-btn-danger">Delete</a>
-                    </div>
-                </td>
-            </tr>
-            {% empty %}
-            <tr><td colspan="3" class="text-center py-8 text-slate-500">No models.</td></tr>
-            {% endfor %}
-        </tbody>
-    </table>
+<div class="ap-page-list">
+    <div class="ap-sticky-toolbar">
+        <div class="flex flex-wrap gap-2 sm:gap-3 items-center">
+            <a href="{% url 'admin_panel:carmodel_add' %}" class="inline-flex px-4 py-2.5 bg-blue-600 text-white text-sm font-medium rounded-lg hover:bg-blue-700 shadow-sm">Add model</a>
+            <a href="{% url 'admin_panel:carmodel_bulk_add' %}" class="inline-flex px-4 py-2.5 bg-white border border-slate-200 text-slate-800 text-sm font-medium rounded-lg hover:bg-slate-50">Bulk add models</a>
+            <form method="get" class="flex items-center gap-2">
+                <label for="id-cm-brand" class="sr-only">Filter by brand</label>
+                <select id="id-cm-brand" name="brand" class="ap-input w-48" onchange="this.form.submit()" aria-label="Filter by brand">
+                    <option value="">All brands</option>
+                    {% for b in brands %}
+                    <option value="{{ b.pk }}" {% if filter_brand == b.pk %}selected{% endif %}>{{ b.name }}</option>
+                    {% endfor %}
+                </select>
+            </form>
+        </div>
+    </div>
+    <div class="ap-table-outer flex-1 min-h-0 flex flex-col">
+        <div class="ap-table-panel ap-table-panel--tall flex-1 min-h-0 overflow-auto">
+            <table class="w-full ap-table min-w-[480px]">
+                <thead>
+                    <tr class="text-slate-600 text-xs uppercase tracking-wide">
+                        <th scope="col">Brand</th>
+                        <th scope="col">Model</th>
+                        <th scope="col" class="text-right min-w-[7rem]">Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for m in carmodels %}
+                    <tr>
+                        <td class="text-slate-700">{{ m.brand.name }}</td>
+                        <td class="font-medium text-slate-900">{{ m.name }}</td>
+                        <td class="text-right">
+                            <div class="ap-row-actions justify-end">
+                                <a href="{% url 'admin_panel:carmodel_edit' m.pk %}" class="ap-btn ap-btn-edit">Edit</a>
+                                <a href="{% url 'admin_panel:carmodel_delete' m.pk %}" class="ap-btn ap-btn-danger">Delete</a>
+                            </div>
+                        </td>
+                    </tr>
+                    {% empty %}
+                    <tr><td colspan="3" class="text-center py-12 text-slate-500">No models.</td></tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
 </div>
 {% endblock %}
