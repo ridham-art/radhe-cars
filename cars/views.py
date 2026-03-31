@@ -42,7 +42,6 @@ def home(request):
     recent_cars = _cars_with_related(
         Car.objects.filter(status='APPROVED').order_by('-created_at')
     )[:12]
-    brands = Brand.objects.all()
     testimonials = Testimonial.objects.filter(is_active=True)[:4]
     wishlisted_ids = set()
     if request.user.is_authenticated:
@@ -52,7 +51,6 @@ def home(request):
     context = {
         'featured_cars': featured_cars,
         'recent_cars': recent_cars,
-        'brands': brands,
         'testimonials': testimonials,
         'wishlisted_ids': wishlisted_ids,
     }

@@ -201,6 +201,16 @@ else:
         'SQLite is not used.'
     )
 
+# -----------------------------------------------------------------------------
+# Cache: in-memory (no extra packages). For multi-server, set REDIS_URL and add
+# redis + use django.core.cache.backends.redis.RedisCache in CACHES.
+# -----------------------------------------------------------------------------
+CACHES = {
+    'default': {
+        'BACKEND': 'django.core.cache.backends.locmem.LocMemCache',
+        'LOCATION': 'radhe-cars',
+    }
+}
 
 AUTH_PASSWORD_VALIDATORS = [
     {'NAME': 'django.contrib.auth.password_validation.UserAttributeSimilarityValidator'},
