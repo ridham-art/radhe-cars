@@ -55,7 +55,7 @@
                 <div class="flex items-start justify-between gap-4">
                     <h1 class="text-2xl font-semibold text-gray-900 tracking-tight leading-[1.2] flex-1 min-w-0">{{ car.title }}</h1>
                     {% if user.is_authenticated %}
-                    <button type="button" class="wishlist-toggle flex flex-col items-center gap-0.5 shrink-0 p-2 text-gray-500 hover:text-rose-500 transition-colors duration-200 ease-out group bg-transparent border-0 cursor-pointer" data-car-pk="{{ car.pk }}" data-in-wishlist="{{ in_wishlist|yesno:'1,0' }}" data-wishlist-count="{{ wishlist_count }}" data-url="{% url 'toggle_wishlist' car.pk %}">
+                    <button type="button" class="wishlist-toggle flex flex-col items-center gap-0.5 shrink-0 p-2 text-gray-500 hover:text-rose-500 transition-colors duration-150 ease-out group bg-transparent border-0 cursor-pointer touch-manipulation select-none" data-car-pk="{{ car.pk }}" data-in-wishlist="{{ in_wishlist|yesno:'1,0' }}" data-wishlist-count="{{ wishlist_count }}" data-url="{% url 'toggle_wishlist' car.pk %}">
                         <span class="wishlist-icon-filled {% if not in_wishlist %}hidden{% endif %}"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="currentColor" stroke="currentColor" stroke-width="1.5" class="w-8 h-8 text-rose-500"><path d="M19 14c1.49-1.46 3-3.21 3-5.5A5.5 5.5 0 0 0 16.5 3c-1.76 0-3 .5-4.5 2-1.5-1.5-2.74-2-4.5-2A5.5 5.5 0 0 0 2 8.5c0 2.3 1.5 4.05 3 5.5l7 7Z"></path></svg></span>
                         <span class="wishlist-icon-outline {% if in_wishlist %}hidden{% endif %}"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" class="w-8 h-8 group-hover:text-rose-500"><path d="M19 14c1.49-1.46 3-3.21 3-5.5A5.5 5.5 0 0 0 16.5 3c-1.76 0-3 .5-4.5 2-1.5-1.5-2.74-2-4.5-2A5.5 5.5 0 0 0 2 8.5c0 2.3 1.5 4.05 3 5.5l7 7Z"></path></svg></span>
                         <span class="wishlist-count text-xs text-gray-400 group-hover:text-gray-600">{{ wishlist_count }} {% if wishlist_count == 1 %}person{% else %}people{% endif %} shortlisted</span>
@@ -233,7 +233,7 @@
             <div class="flex items-start justify-between gap-4">
                 <h1 class="text-3xl font-semibold text-gray-900 tracking-tight leading-[1.2] flex-1 min-w-0">{{ car.title }}</h1>
                 {% if user.is_authenticated %}
-                <button type="button" class="wishlist-toggle flex flex-col items-center gap-0.5 shrink-0 p-2 text-gray-500 hover:text-rose-500 transition-colors duration-200 ease-out group bg-transparent border-0 cursor-pointer" data-car-pk="{{ car.pk }}" data-in-wishlist="{{ in_wishlist|yesno:'1,0' }}" data-wishlist-count="{{ wishlist_count }}" data-url="{% url 'toggle_wishlist' car.pk %}">
+                <button type="button" class="wishlist-toggle flex flex-col items-center gap-0.5 shrink-0 p-2 text-gray-500 hover:text-rose-500 transition-colors duration-150 ease-out group bg-transparent border-0 cursor-pointer touch-manipulation select-none" data-car-pk="{{ car.pk }}" data-in-wishlist="{{ in_wishlist|yesno:'1,0' }}" data-wishlist-count="{{ wishlist_count }}" data-url="{% url 'toggle_wishlist' car.pk %}">
                     <span class="wishlist-icon-filled {% if not in_wishlist %}hidden{% endif %}"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="currentColor" stroke="currentColor" stroke-width="1.5" class="w-8 h-8 text-rose-500"><path d="M19 14c1.49-1.46 3-3.21 3-5.5A5.5 5.5 0 0 0 16.5 3c-1.76 0-3 .5-4.5 2-1.5-1.5-2.74-2-4.5-2A5.5 5.5 0 0 0 2 8.5c0 2.3 1.5 4.05 3 5.5l7 7Z"></path></svg></span>
                     <span class="wishlist-icon-outline {% if in_wishlist %}hidden{% endif %}"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" class="w-8 h-8 group-hover:text-rose-500"><path d="M19 14c1.49-1.46 3-3.21 3-5.5A5.5 5.5 0 0 0 16.5 3c-1.76 0-3 .5-4.5 2-1.5-1.5-2.74-2-4.5-2A5.5 5.5 0 0 0 2 8.5c0 2.3 1.5 4.05 3 5.5l7 7Z"></path></svg></span>
                     <span class="wishlist-count text-xs text-gray-400 group-hover:text-gray-600">{{ wishlist_count }} {% if wishlist_count == 1 %}person{% else %}people{% endif %} shortlisted</span>
@@ -306,6 +306,12 @@
     var btns = document.querySelectorAll('.wishlist-toggle');
     if (!btns.length) return;
 
+    // Serial POST queue: server toggles stay ordered. UI updates synchronously on every tap;
+    // server truth is applied only when the queue drains (instant repeat taps, no "busy" wait).
+    var queue = Promise.resolve();
+    var pending = 0;
+    var batchStart = null;
+
     function getCsrfToken() {
         var el = document.querySelector('[name=csrfmiddlewaretoken]');
         if (el && el.value) return el.value;
@@ -341,7 +347,6 @@
             e.preventDefault();
             var url = btn.getAttribute('data-url');
             if (!url) return;
-            if (document.querySelector('.wishlist-toggle[data-wish-busy="1"]')) return;
 
             var wasIn = btn.getAttribute('data-in-wishlist') === '1';
             var prevCount = parseInt(btn.getAttribute('data-wishlist-count') || '0', 10);
@@ -350,32 +355,40 @@
             var optimisticAdded = !wasIn;
             var optimisticCount = optimisticAdded ? prevCount + 1 : Math.max(0, prevCount - 1);
 
-            document.querySelectorAll('.wishlist-toggle').forEach(function(t){ t.setAttribute('data-wish-busy', '1'); });
+            if (pending === 0) {
+                batchStart = { in: wasIn, count: prevCount };
+            }
+            pending++;
             applyWishlistVisual(optimisticAdded, optimisticCount);
 
             var csrf = getCsrfToken();
-            fetch(url, {
-                method: 'POST',
-                headers: {
-                    'X-Requested-With': 'XMLHttpRequest',
-                    'X-CSRFToken': csrf
-                },
-                credentials: 'same-origin',
-                cache: 'no-store'
-            })
-            .then(function(r){
-                if (!r.ok) throw new Error('bad status');
-                return r.json();
-            })
-            .then(function(data){
-                var n = typeof data.wishlist_count === 'number' ? data.wishlist_count : optimisticCount;
-                applyWishlistVisual(!!data.added, n);
-            })
-            .catch(function(){
-                applyWishlistVisual(wasIn, prevCount);
-            })
-            .finally(function(){
-                document.querySelectorAll('.wishlist-toggle').forEach(function(t){ t.removeAttribute('data-wish-busy'); });
+            queue = queue.then(function() {
+                return fetch(url, {
+                    method: 'POST',
+                    headers: {
+                        'X-Requested-With': 'XMLHttpRequest',
+                        'X-CSRFToken': csrf
+                    },
+                    credentials: 'same-origin',
+                    cache: 'no-store'
+                })
+                    .then(function(r) {
+                        if (!r.ok) throw new Error('bad status');
+                        return r.json();
+                    })
+                    .then(function(data) {
+                        pending--;
+                        if (pending === 0) {
+                            var n = typeof data.wishlist_count === 'number' ? data.wishlist_count : 0;
+                            applyWishlistVisual(!!data.added, n);
+                        }
+                    })
+                    .catch(function() {
+                        pending--;
+                        if (pending === 0 && batchStart) {
+                            applyWishlistVisual(batchStart.in, batchStart.count);
+                        }
+                    });
             });
         });
     });
