@@ -55,7 +55,7 @@
                 <div class="flex items-start justify-between gap-4">
                     <h1 class="text-2xl font-semibold text-gray-900 tracking-tight leading-[1.2] flex-1 min-w-0">{{ car.title }}</h1>
                     {% if user.is_authenticated %}
-                    <button type="button" class="wishlist-toggle flex flex-col items-center gap-0.5 shrink-0 p-2 text-gray-500 hover:text-rose-500 transition-colors group bg-transparent border-0 cursor-pointer" data-car-pk="{{ car.pk }}" data-in-wishlist="{{ in_wishlist|yesno:'1,0' }}" data-url="{% url 'toggle_wishlist' car.pk %}">
+                    <button type="button" class="wishlist-toggle flex flex-col items-center gap-0.5 shrink-0 p-2 text-gray-500 hover:text-rose-500 transition-colors duration-200 ease-out group bg-transparent border-0 cursor-pointer" data-car-pk="{{ car.pk }}" data-in-wishlist="{{ in_wishlist|yesno:'1,0' }}" data-wishlist-count="{{ wishlist_count }}" data-url="{% url 'toggle_wishlist' car.pk %}">
                         <span class="wishlist-icon-filled {% if not in_wishlist %}hidden{% endif %}"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="currentColor" stroke="currentColor" stroke-width="1.5" class="w-8 h-8 text-rose-500"><path d="M19 14c1.49-1.46 3-3.21 3-5.5A5.5 5.5 0 0 0 16.5 3c-1.76 0-3 .5-4.5 2-1.5-1.5-2.74-2-4.5-2A5.5 5.5 0 0 0 2 8.5c0 2.3 1.5 4.05 3 5.5l7 7Z"></path></svg></span>
                         <span class="wishlist-icon-outline {% if in_wishlist %}hidden{% endif %}"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" class="w-8 h-8 group-hover:text-rose-500"><path d="M19 14c1.49-1.46 3-3.21 3-5.5A5.5 5.5 0 0 0 16.5 3c-1.76 0-3 .5-4.5 2-1.5-1.5-2.74-2-4.5-2A5.5 5.5 0 0 0 2 8.5c0 2.3 1.5 4.05 3 5.5l7 7Z"></path></svg></span>
                         <span class="wishlist-count text-xs text-gray-400 group-hover:text-gray-600">{{ wishlist_count }} {% if wishlist_count == 1 %}person{% else %}people{% endif %} shortlisted</span>
@@ -233,7 +233,7 @@
             <div class="flex items-start justify-between gap-4">
                 <h1 class="text-3xl font-semibold text-gray-900 tracking-tight leading-[1.2] flex-1 min-w-0">{{ car.title }}</h1>
                 {% if user.is_authenticated %}
-                <button type="button" class="wishlist-toggle flex flex-col items-center gap-0.5 shrink-0 p-2 text-gray-500 hover:text-rose-500 transition-colors group bg-transparent border-0 cursor-pointer" data-car-pk="{{ car.pk }}" data-in-wishlist="{{ in_wishlist|yesno:'1,0' }}" data-url="{% url 'toggle_wishlist' car.pk %}">
+                <button type="button" class="wishlist-toggle flex flex-col items-center gap-0.5 shrink-0 p-2 text-gray-500 hover:text-rose-500 transition-colors duration-200 ease-out group bg-transparent border-0 cursor-pointer" data-car-pk="{{ car.pk }}" data-in-wishlist="{{ in_wishlist|yesno:'1,0' }}" data-wishlist-count="{{ wishlist_count }}" data-url="{% url 'toggle_wishlist' car.pk %}">
                     <span class="wishlist-icon-filled {% if not in_wishlist %}hidden{% endif %}"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="currentColor" stroke="currentColor" stroke-width="1.5" class="w-8 h-8 text-rose-500"><path d="M19 14c1.49-1.46 3-3.21 3-5.5A5.5 5.5 0 0 0 16.5 3c-1.76 0-3 .5-4.5 2-1.5-1.5-2.74-2-4.5-2A5.5 5.5 0 0 0 2 8.5c0 2.3 1.5 4.05 3 5.5l7 7Z"></path></svg></span>
                     <span class="wishlist-icon-outline {% if in_wishlist %}hidden{% endif %}"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" class="w-8 h-8 group-hover:text-rose-500"><path d="M19 14c1.49-1.46 3-3.21 3-5.5A5.5 5.5 0 0 0 16.5 3c-1.76 0-3 .5-4.5 2-1.5-1.5-2.74-2-4.5-2A5.5 5.5 0 0 0 2 8.5c0 2.3 1.5 4.05 3 5.5l7 7Z"></path></svg></span>
                     <span class="wishlist-count text-xs text-gray-400 group-hover:text-gray-600">{{ wishlist_count }} {% if wishlist_count == 1 %}person{% else %}people{% endif %} shortlisted</span>
@@ -306,42 +306,65 @@
     var btns = document.querySelectorAll('.wishlist-toggle');
     if (!btns.length) return;
 
+    function applyWishlistVisual(added, count) {
+        document.querySelectorAll('.wishlist-toggle').forEach(function(t){
+            var filled = t.querySelector('.wishlist-icon-filled');
+            var outline = t.querySelector('.wishlist-icon-outline');
+            var countEl = t.querySelector('.wishlist-count');
+            if (filled && outline) {
+                if (added) {
+                    filled.classList.remove('hidden');
+                    outline.classList.add('hidden');
+                } else {
+                    filled.classList.add('hidden');
+                    outline.classList.remove('hidden');
+                }
+            }
+            if (countEl && typeof count === 'number') {
+                var n = Math.max(0, count);
+                countEl.textContent = n + ' ' + (n === 1 ? 'person' : 'people') + ' shortlisted';
+            }
+            t.setAttribute('data-in-wishlist', added ? '1' : '0');
+            if (typeof count === 'number') t.setAttribute('data-wishlist-count', String(count));
+        });
+    }
+
     btns.forEach(function(btn){
         btn.addEventListener('click', function(e){
             e.preventDefault();
             var url = btn.getAttribute('data-url');
             if (!url) return;
-            if (btn.disabled) return;
-            btn.disabled = true;
+            if (document.querySelector('.wishlist-toggle[data-wish-busy="1"]')) return;
+
+            var wasIn = btn.getAttribute('data-in-wishlist') === '1';
+            var prevCount = parseInt(btn.getAttribute('data-wishlist-count') || '0', 10);
+            if (isNaN(prevCount)) prevCount = 0;
+
+            var optimisticAdded = !wasIn;
+            var optimisticCount = optimisticAdded ? prevCount + 1 : Math.max(0, prevCount - 1);
+
+            document.querySelectorAll('.wishlist-toggle').forEach(function(t){ t.setAttribute('data-wish-busy', '1'); });
+            applyWishlistVisual(optimisticAdded, optimisticCount);
 
             fetch(url, {
                 method: 'GET',
-                headers: { 'X-Requested-With': 'XMLHttpRequest' }
+                headers: { 'X-Requested-With': 'XMLHttpRequest' },
+                credentials: 'same-origin'
             })
-            .then(function(r){ return r.json(); })
+            .then(function(r){
+                if (!r.ok) throw new Error('bad status');
+                return r.json();
+            })
             .then(function(data){
-                var allToggles = document.querySelectorAll('.wishlist-toggle');
-                allToggles.forEach(function(t){
-                    var filled = t.querySelector('.wishlist-icon-filled');
-                    var outline = t.querySelector('.wishlist-icon-outline');
-                    var countEl = t.querySelector('.wishlist-count');
-                    if (filled && outline) {
-                        if (data.added) {
-                            filled.classList.remove('hidden');
-                            outline.classList.add('hidden');
-                        } else {
-                            filled.classList.add('hidden');
-                            outline.classList.remove('hidden');
-                        }
-                    }
-                    if (countEl) {
-                        var n = data.wishlist_count || 0;
-                        countEl.textContent = n + ' ' + (n === 1 ? 'person' : 'people') + ' shortlisted';
-                    }
-                });
+                var n = typeof data.wishlist_count === 'number' ? data.wishlist_count : optimisticCount;
+                applyWishlistVisual(!!data.added, n);
             })
-            .catch(function(){})
-            .finally(function(){ btn.disabled = false; });
+            .catch(function(){
+                applyWishlistVisual(wasIn, prevCount);
+            })
+            .finally(function(){
+                document.querySelectorAll('.wishlist-toggle').forEach(function(t){ t.removeAttribute('data-wish-busy'); });
+            });
         });
     });
 })();
