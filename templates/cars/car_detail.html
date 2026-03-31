@@ -183,7 +183,7 @@
             <h2 class="text-2xl font-semibold text-gray-900 tracking-tight mb-6 lg:mb-8">Similar Cars</h2>
             <div class="flex gap-4 overflow-x-auto scrollbar-hide snap-x snap-mandatory pb-2 lg:grid lg:grid-cols-2 xl:grid-cols-3 lg:overflow-visible lg:gap-6" style="-webkit-overflow-scrolling: touch;">
                 {% for scar in similar_cars %}
-                <article class="w-[280px] min-w-[280px] shrink-0 snap-start bg-white rounded-2xl border border-gray-100 overflow-hidden flex flex-col shadow-sm hover:shadow-lg transition-all duration-300 hover:-translate-y-0 lg:hover:-translate-y-1 group lg:w-auto lg:min-w-0 lg:shrink">
+                <article class="w-[280px] min-w-[280px] shrink-0 snap-start bg-white rounded-2xl border border-gray-100 overflow-hidden flex flex-col shadow-sm hover:shadow-lg transition-all duration-300 hover:-translate-y-0 lg:hover:-translate-y-1 group lg:w-auto lg:min-w-0 lg:shrink cursor-pointer" data-car-url="{% url 'car_detail' scar.pk %}" onclick="var u=this.getAttribute('data-car-url');if(u)location.href=u;">
                     <div class="relative aspect-[4/3] bg-slate-100 overflow-hidden">
                         {% if scar.primary_image %}
                         <img src="{{ scar.primary_image.display_url }}" alt="{{ scar.title }}" width="800" height="600" loading="lazy" decoding="async" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500">
@@ -195,7 +195,7 @@
                         <h3 class="text-lg font-semibold text-gray-900 mb-1 tracking-tight">{{ scar.title }}</h3>
                         <p class="text-sm text-gray-500 mb-4">{{ scar.specs_short }}</p>
                         <p class="text-xl font-semibold text-gray-900 tracking-tight mb-6">{{ scar.price_display }}</p>
-                        <div class="mt-auto flex gap-3">
+                        <div class="mt-auto flex gap-3" onclick="event.stopPropagation()">
                             <a href="{% url 'car_detail' scar.pk %}" class="flex-1 bg-blue-600 hover:bg-blue-700 text-white py-2.5 rounded-xl text-sm font-medium transition-colors shadow-sm text-center no-underline">Book Now</a>
                             <button type="button" class="share-btn px-5 bg-white border border-gray-200 hover:bg-gray-50 text-gray-700 py-2.5 rounded-xl text-sm font-medium transition-colors" data-share-url="{% url 'car_detail' scar.pk %}" data-share-title="{{ scar.title }} - {{ scar.price_display }}" onclick="event.stopPropagation(); event.preventDefault(); if(window.doShare) window.doShare(this); return false;">Share</button>
                         </div>
