@@ -15,8 +15,8 @@
     {# Built Tailwind (run: npm run build:css) — avoids CDN JIT + large render-blocking script #}
     <link rel="stylesheet" href="{% static 'css/tailwind.css' %}">
     {# Non-blocking font CSS; Inter uses font-display: swap in the Google Fonts URL #}
-    <link rel="preload" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&amp;display=swap" as="style" onload="this.onload=null;this.rel='stylesheet'">
-    <noscript><link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&amp;display=swap" rel="stylesheet"></noscript>
+    <link rel="preload" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&amp;subset=latin&amp;display=swap" as="style" onload="this.onload=null;this.rel='stylesheet'">
+    <noscript><link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&amp;subset=latin&amp;display=swap" rel="stylesheet"></noscript>
     <style>
         body {
             font-family: 'Inter', system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
@@ -27,11 +27,21 @@
             flex-shrink: 0;
         }
         .carousel-row-stable {
-            min-height: 24rem;
+            min-height: 20rem;
         }
         @media (min-width: 768px) {
             .carousel-row-stable {
                 min-height: 26rem;
+            }
+        }
+        /* Below-fold home sections: defer layout/paint until near viewport (helps mobile Speed Index) */
+        .cf-home-below {
+            content-visibility: auto;
+            contain-intrinsic-size: auto 420px;
+        }
+        @media (min-width: 768px) {
+            .cf-home-below {
+                contain-intrinsic-size: auto 480px;
             }
         }
         .hero-bg {
