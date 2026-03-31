@@ -1,0 +1,120 @@
+{% extends "admin_panel/base.html" %}
+{% block title %}Sell car inquiries{% endblock %}
+{% block heading %}Sell car inquiries{% endblock %}
+{% block content %}
+<p class="text-sm text-slate-600 mb-4 max-w-3xl">
+    Listings submitted from the public <strong>Sell your car</strong> page. <strong>Approve</strong> to show the car on the website (same as the main Cars list).
+    <strong>Featured</strong> highlights it on the home page when approved.
+</p>
+
+<form method="get" class="bg-white rounded-xl border border-slate-200 p-4 mb-6 flex flex-wrap gap-3 items-end">
+    <div>
+        <label class="block text-xs text-slate-500 mb-1">Search</label>
+        <input type="text" name="q" value="{{ search_q }}" placeholder="Title or phone" class="ap-input w-48">
+    </div>
+    <div>
+        <label class="block text-xs text-slate-500 mb-1">Status</label>
+        <select name="status" class="ap-input w-40">
+            <option value="">All</option>
+            {% for v,l in statuses %}
+            <option value="{{ v }}" {% if filter_status == v %}selected{% endif %}>{{ l }}</option>
+            {% endfor %}
+        </select>
+    </div>
+    <button type="submit" class="px-4 py-2 bg-slate-800 text-white text-sm rounded-lg">Apply</button>
+    <a href="{% url 'admin_panel:sell_car_inquiry_list' %}" class="ap-btn ap-btn-neutral">Clear</a>
+</form>
+
+<form id="bulk-sell" method="post" action="{% url 'admin_panel:sell_car_inquiry_bulk_delete' %}">
+    {% csrf_token %}
+    <div class="flex items-center gap-3 mb-3">
+        <button type="submit" class="ap-btn ap-btn-danger" onclick="return confirm('Delete selected sell listings? Cars will be removed completely.');">Bulk delete</button>
+    </div>
+</form>
+
+<div class="bg-white rounded-xl border border-slate-200 overflow-hidden shadow-sm">
+    <div class="overflow-x-auto">
+        <table class="w-full ap-table min-w-[900px]">
+            <thead class="bg-slate-50 text-slate-600 text-xs uppercase tracking-wide">
+                <tr>
+                    <th class="w-10"><input type="checkbox" id="select-all-sell" title="Select all"></th>
+                    <th>Image</th>
+                    <th>Car</th>
+                    <th>Contact</th>
+                    <th>User</th>
+                    <th>Status</th>
+                    <th>Featured</th>
+                    <th>Submitted</th>
+                    <th></th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for car in cars %}
+                <tr class="{% if car.is_featured and car.status == 'APPROVED' %}bg-amber-50/80{% endif %}">
+                    <td><input type="checkbox" name="ids" value="{{ car.pk }}" form="bulk-sell" class="row-check-sell"></td>
+                    <td class="w-16">
+                        {% with img=car.primary_image %}
+                        {% if img and img.display_url %}
+                        <img src="{{ img.display_url }}" alt="" width="56" height="40" loading="lazy" decoding="async" class="w-14 h-10 object-cover rounded border border-slate-200">
+                        {% else %}
+                        <span class="text-xs text-slate-400">—</span>
+                        {% endif %}
+                        {% endwith %}
+                    </td>
+                    <td class="font-medium text-slate-900">{{ car.title }}</td>
+                    <td class="text-sm text-slate-700">{{ car.contact_number|default:"—" }}</td>
+                    <td class="text-sm text-slate-600">
+                        {% if car.seller %}
+                            {{ car.seller.email|default:car.seller.username }}
+                        {% else %}
+                            <span class="text-slate-400">Guest</span>
+                        {% endif %}
+                    </td>
+                    <td><span class="text-xs px-2 py-0.5 rounded-full bg-slate-100">{{ car.get_status_display }}</span></td>
+                    <td>
+                        {% if car.status == 'APPROVED' %}
+                            {% if car.is_featured %}<span class="text-amber-600 text-xs font-semibold">★ Yes</span>{% else %}<span class="text-slate-400 text-xs">No</span>{% endif %}
+                        {% else %}
+                            <span class="text-xs text-slate-400">—</span>
+                        {% endif %}
+                    </td>
+                    <td class="text-xs text-slate-500 whitespace-nowrap">{{ car.created_at|date:"M j, Y g:i a" }}</td>
+                    <td class="text-right">
+                        <div class="ap-row-actions flex-wrap justify-end">
+                            {% if car.status != 'APPROVED' %}
+                            <form method="post" action="{% url 'admin_panel:sell_car_inquiry_approve' car.pk %}" class="inline">{% csrf_token %}<button type="submit" class="ap-btn ap-btn-edit border-green-200 text-green-800 hover:bg-green-50">Approve</button></form>
+                            {% endif %}
+                            {% if car.status == 'APPROVED' %}
+                            <form method="post" action="{% url 'admin_panel:sell_car_inquiry_toggle_featured' car.pk %}" class="inline">{% csrf_token %}<button type="submit" class="ap-btn ap-btn-warn">{% if car.is_featured %}Unfeature{% else %}Feature{% endif %}</button></form>
+                            {% endif %}
+                            <a href="{% url 'admin_panel:car_edit' car.pk %}?return=sell" class="ap-btn ap-btn-edit">Edit</a>
+                            <a href="{% url 'admin_panel:car_delete' car.pk %}?return=sell" class="ap-btn ap-btn-danger">Delete</a>
+                        </div>
+                    </td>
+                </tr>
+                {% empty %}
+                <tr><td colspan="9" class="text-center text-slate-500 py-8">No sell form submissions yet.</td></tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+
+{% if page_obj.has_other_pages %}
+<div class="mt-4 flex justify-center gap-2">
+    {% if page_obj.has_previous %}
+    <a href="?page={{ page_obj.previous_page_number }}&q={{ search_q }}&status={{ filter_status }}" class="ap-btn ap-btn-neutral">Previous</a>
+    {% endif %}
+    <span class="text-sm text-slate-600 py-1">Page {{ page_obj.number }} of {{ page_obj.paginator.num_pages }}</span>
+    {% if page_obj.has_next %}
+    <a href="?page={{ page_obj.next_page_number }}&q={{ search_q }}&status={{ filter_status }}" class="ap-btn ap-btn-neutral">Next</a>
+    {% endif %}
+</div>
+{% endif %}
+
+<script>
+document.getElementById('select-all-sell')?.addEventListener('change', function(e){
+    document.querySelectorAll('.row-check-sell').forEach(function(c){ c.checked = e.target.checked; });
+});
+</script>
+{% endblock %}

@@ -182,6 +182,12 @@ class Car(models.Model):
 
     is_featured = models.BooleanField(default=False)
     status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='APPROVED')
+    # Sell form (public /sell/) — staff reviews under "Sell car inquiries", not main Cars list
+    submit_via_sell_form = models.BooleanField(default=False)
+    sell_inquiry_seen = models.BooleanField(
+        default=False,
+        help_text='Staff has opened Sell car inquiries; used for sidebar badge.',
+    )
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 

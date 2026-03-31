@@ -338,6 +338,8 @@ def sell_car(request):
                         contact_number=contact_number,
                         description=description,
                         status='PENDING',
+                        submit_via_sell_form=True,
+                        sell_inquiry_seen=False,
                     )
                     if request.user.is_authenticated:
                         car.seller = request.user

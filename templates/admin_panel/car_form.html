@@ -4,6 +4,7 @@
 {% block content %}
 <form method="post" enctype="multipart/form-data" class="max-w-4xl space-y-6">
     {% csrf_token %}
+    {% if return_to_sell %}<input type="hidden" name="return" value="sell">{% endif %}
     {% if form.non_field_errors %}<div class="text-red-600 text-sm">{{ form.non_field_errors }}</div>{% endif %}
     <div class="bg-white rounded-xl border border-slate-200 p-6">
         <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -23,7 +24,7 @@
     </div>
     <div class="flex flex-wrap gap-2 items-center">
         <button type="submit" class="inline-flex items-center px-5 py-2.5 bg-blue-600 text-white text-sm font-medium rounded-lg border border-blue-700 shadow-sm hover:bg-blue-700">Save</button>
-        <a href="{% url 'admin_panel:car_list' %}" class="ap-btn ap-btn-neutral text-sm px-5 py-2.5">Cancel</a>
+        <a href="{{ cancel_url }}" class="ap-btn ap-btn-neutral text-sm px-5 py-2.5">Cancel</a>
     </div>
 </form>
 <script>

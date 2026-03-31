@@ -25,7 +25,7 @@ from django.views.generic import (
     FormView,
 )
 
-from cars.models import Brand, Car, CarModel, CarImage, Inquiry
+from cars.models import Brand, Car, CarModel, CarImage, Inquiry, Wishlist
 from cars.admin_panel.forms import (
     BrandBulkForm,
     BrandForm,
@@ -71,6 +71,9 @@ class AdminPanelContextMixin:
     def get_context_data(self, **kwargs):
         ctx = super().get_context_data(**kwargs)
         ctx['unread_inquiry_count'] = Inquiry.objects.filter(is_read=False).count()
+        ctx['sell_inquiry_unread_count'] = Car.objects.filter(
+            submit_via_sell_form=True, sell_inquiry_seen=False
+        ).count()
         return ctx
 
 
@@ -145,6 +148,9 @@ class DashboardView(StaffRequiredMixin, AdminPanelContextMixin, TemplateView):
 
     def get_context_data(self, **kwargs):
         ctx = super().get_context_data(**kwargs)
+        User = get_user_model()
+        customers = User.objects.filter(is_staff=False)
+        wish_qs = Wishlist.objects.filter(user__isnull=False)
         ctx.update(
             {
                 'total_cars': Car.objects.count(),
@@ -152,6 +158,11 @@ class DashboardView(StaffRequiredMixin, AdminPanelContextMixin, TemplateView):
                 'sold_cars': Car.objects.filter(status='SOLD').count(),
                 'total_inquiries': Inquiry.objects.count(),
                 'unread_inquiries': Inquiry.objects.filter(is_read=False).count(),
+                'total_customers': customers.count(),
+                'total_wishlist_saves': wish_qs.count(),
+                'customers_with_wishlist': wish_qs.values('user_id').distinct().count(),
+                'recent_customers': customers.order_by('-date_joined')[:25],
+                'recent_wishlists': wish_qs.select_related('user', 'car').order_by('-created_at')[:30],
             }
         )
         return ctx
@@ -164,7 +175,11 @@ class CarListView(StaffRequiredMixin, AdminPanelContextMixin, ListView):
     paginate_by = 25
 
     def get_queryset(self):
-        qs = Car.objects.select_related('brand', 'model').prefetch_related('images')
+        qs = (
+            Car.objects.select_related('brand', 'model')
+            .prefetch_related('images')
+            .exclude(submit_via_sell_form=True)
+        )
         q = self.request.GET.get('q', '').strip()
         if q:
             qs = qs.filter(Q(title__icontains=q) | Q(model__name__icontains=q))
@@ -197,6 +212,12 @@ class CarCreateView(StaffRequiredMixin, AdminPanelContextMixin, CreateView):
     form_class = CarStaffForm
     template_name = 'admin_panel/car_form.html'
 
+    def get_context_data(self, **kwargs):
+        ctx = super().get_context_data(**kwargs)
+        ctx['cancel_url'] = reverse_lazy('admin_panel:car_list')
+        ctx['return_to_sell'] = False
+        return ctx
+
     def get_success_url(self):
         return reverse_lazy('admin_panel:car_list')
 
@@ -226,7 +247,19 @@ class CarUpdateView(StaffRequiredMixin, AdminPanelContextMixin, UpdateView):
     form_class = CarStaffForm
     template_name = 'admin_panel/car_form.html'
 
+    def get_context_data(self, **kwargs):
+        ctx = super().get_context_data(**kwargs)
+        ctx['return_to_sell'] = self.request.GET.get('return') == 'sell'
+        ctx['cancel_url'] = (
+            reverse_lazy('admin_panel:sell_car_inquiry_list')
+            if ctx['return_to_sell']
+            else reverse_lazy('admin_panel:car_list')
+        )
+        return ctx
+
     def get_success_url(self):
+        if self.request.POST.get('return') == 'sell':
+            return reverse_lazy('admin_panel:sell_car_inquiry_list')
         return reverse_lazy('admin_panel:car_list')
 
     def form_valid(self, form):
@@ -257,6 +290,21 @@ class CarDeleteView(StaffRequiredMixin, AdminPanelContextMixin, DeleteView):
     template_name = 'admin_panel/car_confirm_delete.html'
     success_url = reverse_lazy('admin_panel:car_list')
 
+    def get_context_data(self, **kwargs):
+        ctx = super().get_context_data(**kwargs)
+        ctx['return_to_sell'] = self.request.GET.get('return') == 'sell'
+        ctx['cancel_url'] = (
+            reverse_lazy('admin_panel:sell_car_inquiry_list')
+            if ctx['return_to_sell']
+            else reverse_lazy('admin_panel:car_list')
+        )
+        return ctx
+
+    def get_success_url(self):
+        if self.request.POST.get('return') == 'sell':
+            return reverse_lazy('admin_panel:sell_car_inquiry_list')
+        return reverse_lazy('admin_panel:car_list')
+
     def delete(self, request, *args, **kwargs):
         messages.success(request, 'Car deleted.')
         return super().delete(request, *args, **kwargs)
@@ -268,9 +316,76 @@ class CarBulkDeleteView(StaffRequiredMixin, View):
         if not ids:
             messages.warning(request, 'No cars selected.')
             return redirect('admin_panel:car_list')
-        Car.objects.filter(pk__in=ids).delete()
+        Car.objects.filter(pk__in=ids).exclude(submit_via_sell_form=True).delete()
         messages.success(request, f'Deleted {len(ids)} car(s).')
         return redirect('admin_panel:car_list')
+
+
+class SellCarInquiryListView(StaffRequiredMixin, AdminPanelContextMixin, ListView):
+    """Cars submitted via the public Sell Car form (pending review)."""
+
+    model = Car
+    template_name = 'admin_panel/sell_car_inquiry_list.html'
+    context_object_name = 'cars'
+    paginate_by = 25
+
+    def dispatch(self, request, *args, **kwargs):
+        if request.method == 'GET':
+            Car.objects.filter(submit_via_sell_form=True, sell_inquiry_seen=False).update(
+                sell_inquiry_seen=True
+            )
+        return super().dispatch(request, *args, **kwargs)
+
+    def get_queryset(self):
+        qs = Car.objects.filter(submit_via_sell_form=True).select_related(
+            'brand', 'model', 'seller'
+        ).prefetch_related('images')
+        q = self.request.GET.get('q', '').strip()
+        if q:
+            qs = qs.filter(Q(title__icontains=q) | Q(contact_number__icontains=q))
+        st = self.request.GET.get('status', '').strip()
+        if st:
+            qs = qs.filter(status=st)
+        return qs.order_by('-created_at')
+
+    def get_context_data(self, **kwargs):
+        ctx = super().get_context_data(**kwargs)
+        ctx['search_q'] = self.request.GET.get('q', '')
+        ctx['filter_status'] = self.request.GET.get('status', '')
+        ctx['statuses'] = Car.STATUS_CHOICES
+        return ctx
+
+
+class SellCarInquiryBulkDeleteView(StaffRequiredMixin, View):
+    def post(self, request):
+        ids = request.POST.getlist('ids')
+        if not ids:
+            messages.warning(request, 'No listings selected.')
+            return redirect('admin_panel:sell_car_inquiry_list')
+        n, _ = Car.objects.filter(pk__in=ids, submit_via_sell_form=True).delete()
+        messages.success(request, f'Deleted {n} listing(s).')
+        return redirect('admin_panel:sell_car_inquiry_list')
+
+
+class SellCarInquiryApproveView(StaffRequiredMixin, View):
+    """Publish listing on the website (same as main car list visibility)."""
+
+    def post(self, request, pk):
+        car = get_object_or_404(Car, pk=pk, submit_via_sell_form=True)
+        car.status = 'APPROVED'
+        car.save()
+        messages.success(request, f'Approved: {car.title} is now visible on the site.')
+        return redirect('admin_panel:sell_car_inquiry_list')
+
+
+class SellCarInquiryToggleFeaturedView(StaffRequiredMixin, View):
+    def post(self, request, pk):
+        car = get_object_or_404(Car, pk=pk, submit_via_sell_form=True)
+        car.is_featured = not car.is_featured
+        car.save()
+        state = 'featured' if car.is_featured else 'removed from featured'
+        messages.success(request, f'{car.title}: {state}.')
+        return redirect('admin_panel:sell_car_inquiry_list')
 
 
 class BrandListView(StaffRequiredMixin, AdminPanelContextMixin, ListView):
@@ -517,8 +632,15 @@ class InquiryDeleteView(StaffRequiredMixin, View):
 
 class UnreadInquiryCountJsonView(StaffRequiredMixin, View):
     def get(self, request):
-        n = Inquiry.objects.filter(is_read=False).count()
-        return JsonResponse({'count': n})
+        inquiries = Inquiry.objects.filter(is_read=False).count()
+        sell = Car.objects.filter(submit_via_sell_form=True, sell_inquiry_seen=False).count()
+        return JsonResponse(
+            {
+                'count': inquiries,
+                'inquiries': inquiries,
+                'sell_inquiries': sell,
+            }
+        )
 
 
 class BrandModelsJsonView(StaffRequiredMixin, View):

@@ -43,7 +43,9 @@
             </div>
             <nav class="flex-1 py-4 space-y-1 px-2">
                 <a href="{% url 'admin_panel:dashboard' %}" class="block px-3 py-2 rounded-lg hover:bg-slate-800 text-sm {% if request.resolver_match.url_name == 'dashboard' %}bg-slate-800{% endif %}">Dashboard</a>
-                <a href="{% url 'admin_panel:car_list' %}" class="block px-3 py-2 rounded-lg hover:bg-slate-800 text-sm {% if 'car' in request.resolver_match.url_name %}bg-slate-800{% endif %}">Cars</a>
+                {% with n=request.resolver_match.url_name %}
+                <a href="{% url 'admin_panel:car_list' %}" class="block px-3 py-2 rounded-lg hover:bg-slate-800 text-sm {% if n == 'car_list' or n == 'car_add' or n == 'car_edit' or n == 'car_delete' or n == 'car_bulk_delete' %}bg-slate-800{% endif %}">Cars</a>
+                {% endwith %}
                 <a href="{% url 'admin_panel:brand_list' %}" class="block px-3 py-2 rounded-lg hover:bg-slate-800 text-sm {% if 'brand' in request.resolver_match.url_name %}bg-slate-800{% endif %}">Brands</a>
                 <a href="{% url 'admin_panel:carmodel_list' %}" class="block px-3 py-2 rounded-lg hover:bg-slate-800 text-sm {% if 'carmodel' in request.resolver_match.url_name %}bg-slate-800{% endif %}">Models</a>
                 <a href="{% url 'admin_panel:inquiry_list' %}" class="block px-3 py-2 rounded-lg hover:bg-slate-800 text-sm flex items-center justify-between {% if 'inquiry' in request.resolver_match.url_name %}bg-slate-800{% endif %}">
@@ -52,6 +54,14 @@
                     <span id="nav-inquiry-badge" class="bg-red-500 text-white text-xs font-bold px-2 py-0.5 rounded-full">{{ unread_inquiry_count }}</span>
                     {% else %}
                     <span id="nav-inquiry-badge" class="hidden bg-red-500 text-white text-xs font-bold px-2 py-0.5 rounded-full">0</span>
+                    {% endif %}
+                </a>
+                <a href="{% url 'admin_panel:sell_car_inquiry_list' %}" class="block px-3 py-2 rounded-lg hover:bg-slate-800 text-sm flex items-center justify-between {% if 'sell_car_inquiry' in request.resolver_match.url_name %}bg-slate-800{% endif %}">
+                    <span>Sell car inquiries</span>
+                    {% if sell_inquiry_unread_count %}
+                    <span id="nav-sell-badge" class="bg-emerald-500 text-white text-xs font-bold min-w-[1.25rem] text-center px-1.5 py-0.5 rounded-full">{{ sell_inquiry_unread_count }}</span>
+                    {% else %}
+                    <span id="nav-sell-badge" class="hidden bg-emerald-500 text-white text-xs font-bold min-w-[1.25rem] text-center px-1.5 py-0.5 rounded-full">0</span>
                     {% endif %}
                 </a>
                 <a href="{% url 'admin_panel:csv_import' %}" class="block px-3 py-2 rounded-lg hover:bg-slate-800 text-sm {% if 'csv' in request.resolver_match.url_name %}bg-slate-800{% endif %}">CSV Import</a>
@@ -87,11 +97,18 @@
             fetch('{% url "admin_panel:api_unread_count" %}', { credentials: 'same-origin', headers: { 'Accept': 'application/json' }})
                 .then(function(r){ return r.json(); })
                 .then(function(d){
+                    var n = (typeof d.inquiries === 'number' ? d.inquiries : d.count) || 0;
                     var el = document.getElementById('nav-inquiry-badge');
-                    if (!el) return;
-                    var n = d.count || 0;
-                    el.textContent = n;
-                    el.classList.toggle('hidden', n === 0);
+                    if (el) {
+                        el.textContent = n;
+                        el.classList.toggle('hidden', n === 0);
+                    }
+                    var s = (typeof d.sell_inquiries === 'number' ? d.sell_inquiries : 0) || 0;
+                    var sellEl = document.getElementById('nav-sell-badge');
+                    if (sellEl) {
+                        sellEl.textContent = s;
+                        sellEl.classList.toggle('hidden', s === 0);
+                    }
                 }).catch(function(){});
         }
         setInterval(pollUnread, 10000);

@@ -8,6 +8,26 @@ urlpatterns = [
     path('login/', views.StaffLoginView.as_view(), name='login'),
     path('logout/', views.StaffLogoutView.as_view(), name='logout'),
     path('', views.DashboardView.as_view(), name='dashboard'),
+    path(
+        'sell-car-inquiries/',
+        views.SellCarInquiryListView.as_view(),
+        name='sell_car_inquiry_list',
+    ),
+    path(
+        'sell-car-inquiries/bulk-delete/',
+        views.SellCarInquiryBulkDeleteView.as_view(),
+        name='sell_car_inquiry_bulk_delete',
+    ),
+    path(
+        'sell-car-inquiries/<int:pk>/approve/',
+        views.SellCarInquiryApproveView.as_view(),
+        name='sell_car_inquiry_approve',
+    ),
+    path(
+        'sell-car-inquiries/<int:pk>/toggle-featured/',
+        views.SellCarInquiryToggleFeaturedView.as_view(),
+        name='sell_car_inquiry_toggle_featured',
+    ),
     path('cars/', views.CarListView.as_view(), name='car_list'),
     path('cars/add/', views.CarCreateView.as_view(), name='car_add'),
     path('cars/<int:pk>/edit/', views.CarUpdateView.as_view(), name='car_edit'),
