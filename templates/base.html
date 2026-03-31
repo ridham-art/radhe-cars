@@ -10,157 +10,21 @@
     <link rel="dns-prefetch" href="https://images.unsplash.com">
     <link rel="preconnect" href="https://images.unsplash.com" crossorigin>
     {% block head_extra %}{% endblock %}
-    {# Full Tailwind + Inter CSS: non-blocking via print-media trick (broad browser support). #}
-    <link rel="stylesheet" href="{% static 'css/tailwind.css' %}" media="print" onload="this.media='all'">
-    <noscript><link rel="stylesheet" href="{% static 'css/tailwind.css' %}"></noscript>
-    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap" media="print" onload="this.media='all'">
+    {# Hint browser to fetch CSS early; keep stylesheet link for correct cascade #}
+    <link rel="preload" href="{% static 'css/tailwind.css' %}" as="style">
+    {# Built Tailwind (run: npm run build:css) — avoids CDN JIT + large render-blocking script #}
+    <link rel="stylesheet" href="{% static 'css/tailwind.css' %}">
+    {# Non-blocking font CSS; Inter uses font-display: swap in the Google Fonts URL #}
+    <link rel="preload" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap" as="style" onload="this.onload=null;this.rel='stylesheet'">
     <noscript><link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap" rel="stylesheet"></noscript>
     <style>
-        /* Critical above-the-fold: layout before async Tailwind + fonts paint */
         body {
-            margin: 0;
-            -webkit-font-smoothing: antialiased;
             font-family: 'Inter', system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
-            display: flex;
-            flex-direction: column;
-            min-height: 100vh;
-            width: 100%;
-            overflow-x: hidden;
-            background: #f9fafb;
-            color: #111827;
         }
         #main-header {
             min-height: 4.75rem;
             box-sizing: border-box;
             flex-shrink: 0;
-            display: flex;
-            flex-wrap: wrap;
-            align-items: center;
-            gap: 0.75rem 1rem;
-            position: sticky;
-            top: 0;
-            z-index: 50;
-            background: #f8fafc;
-            padding: 1rem;
-        }
-        @media (min-width: 640px) {
-            #main-header { padding-left: 1.5rem; padding-right: 1.5rem; gap: 1.5rem; }
-        }
-        #header-search-form {
-            flex: 1;
-            min-width: 0;
-            max-width: 42rem;
-            margin-left: 0.5rem;
-            margin-right: 0.5rem;
-            position: relative;
-        }
-        @media (min-width: 640px) {
-            #header-search-form { margin-left: 1rem; margin-right: 1rem; }
-        }
-        #header-search {
-            width: 100%;
-            box-sizing: border-box;
-            border-radius: 9999px;
-            border: 1px solid #d1d5db;
-            background: #fff;
-            padding: 0.5rem 2.5rem 0.5rem 1rem;
-            font-size: 0.875rem;
-            color: #111827;
-        }
-        @media (min-width: 640px) {
-            #header-search { padding-top: 0.625rem; padding-bottom: 0.625rem; padding-left: 1.5rem; }
-        }
-        #mobile-menu-btn { flex-shrink: 0; }
-        #header-desktop-nav { display: none; }
-        @media (max-width: 1023px) {
-            #mobile-menu-btn { display: block; }
-            #header-desktop-nav { display: none !important; }
-        }
-        @media (min-width: 1024px) {
-            #mobile-menu-btn { display: none !important; }
-            #header-desktop-nav { display: flex !important; align-items: center; gap: 1.5rem; flex-shrink: 0; }
-        }
-        #mobile-menu {
-            position: fixed;
-            inset: 0;
-            z-index: 60;
-        }
-        #mobile-menu.hidden { display: none !important; }
-        .home-hero {
-            position: relative;
-            width: 100%;
-            background: #0f172a;
-            min-height: 300px;
-            height: 300px;
-            overflow: hidden;
-        }
-        @media (min-width: 768px) {
-            .home-hero { min-height: 450px; height: 450px; }
-        }
-        .home-hero #hero-track {
-            display: flex;
-            width: 100%;
-            height: 100%;
-            will-change: transform;
-        }
-        .home-hero #hero-track > div {
-            flex: 0 0 100%;
-            width: 100%;
-            min-height: 100%;
-            position: relative;
-        }
-        .home-hero #hero-track > div > img {
-            width: 100%;
-            height: 100%;
-            object-fit: cover;
-            display: block;
-        }
-        .home-hero #hero-track > div > div {
-            position: absolute;
-            left: 0;
-            top: 0;
-            right: 0;
-            bottom: 0;
-            display: flex;
-            align-items: center;
-            background: linear-gradient(to right, rgba(0,0,0,.5), transparent);
-        }
-        .home-hero #hero-track > div > div > div {
-            margin-left: 2rem;
-            max-width: 32rem;
-            padding-right: 1rem;
-        }
-        @media (min-width: 768px) {
-            .home-hero #hero-track > div > div > div { margin-left: 5rem; }
-        }
-        .home-hero #hero-track h1 {
-            color: #fff;
-            font-size: 1.875rem;
-            font-weight: 700;
-            line-height: 1.25;
-            margin: 0;
-        }
-        @media (min-width: 768px) {
-            .home-hero #hero-track h1 { font-size: 3rem; }
-        }
-        .home-hero #hero-track p {
-            color: rgba(255,255,255,.92);
-            margin: 0.75rem 0 0;
-            font-size: 1rem;
-            line-height: 1.5;
-        }
-        @media (min-width: 768px) {
-            .home-hero #hero-track p { font-size: 1.125rem; }
-        }
-        #main-content {
-            flex: 1 1 auto;
-            min-width: 0;
-            display: flex;
-            flex-direction: column;
-        }
-        .home-below-fold {
-            content-visibility: auto;
-            contain-intrinsic-size: 720px 480px;
         }
         .carousel-row-stable {
             min-height: 24rem;
