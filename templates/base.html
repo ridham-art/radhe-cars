@@ -117,6 +117,19 @@
             line-height: 1;
         }
         .site-toast__btn:hover { color: #0f172a; background: rgba(0,0,0,.06); }
+        /* Wishlist saved heart: solid red (#dc2626) — scoped to .wishlist-toggle--saved */
+        .wishlist-toggle.wishlist-toggle--saved { color: #dc2626; }
+        .wishlist-toggle.wishlist-toggle--saved .wishlist-icon-filled svg {
+            color: #dc2626;
+            fill: #dc2626;
+            stroke: #dc2626;
+        }
+        .wishlist-toggle .wishlist-icon-outline svg {
+            color: #9ca3af;
+            fill: none;
+            stroke: currentColor;
+        }
+        .wishlist-toggle:hover .wishlist-icon-outline svg { color: #e11d48; }
     </style>
     {% block extra_css %}{% endblock %}
 </head>
@@ -163,6 +176,28 @@
             });
         }
 
+        /* SVG path clicks: closest() missing or unreliable on some browsers — walk up / composedPath */
+        function findWishlistToggleFromEvent(e) {
+            var path = typeof e.composedPath === 'function' ? e.composedPath() : null;
+            if (path && path.length) {
+                for (var i = 0; i < path.length; i++) {
+                    var el = path[i];
+                    if (el && el.classList && el.classList.contains('wishlist-toggle')) return el;
+                }
+            }
+            var t = e.target;
+            if (t && typeof t.closest === 'function') {
+                var c = t.closest('.wishlist-toggle');
+                if (c) return c;
+            }
+            var cur = t && t.nodeType === 1 ? t : t && t.parentElement;
+            while (cur && cur !== document.body && cur !== document.documentElement) {
+                if (cur.classList && cur.classList.contains('wishlist-toggle')) return cur;
+                cur = cur.parentElement;
+            }
+            return null;
+        }
+
         function applyWishlistVisualForPk(carPk, added, count) {
             var sel = '.wishlist-toggle[data-car-pk="' + String(carPk) + '"]';
             document.querySelectorAll(sel).forEach(function (t) {
@@ -173,9 +208,11 @@
                     if (added) {
                         filled.classList.remove('hidden');
                         outline.classList.add('hidden');
+                        t.classList.add('wishlist-toggle--saved');
                     } else {
                         filled.classList.add('hidden');
                         outline.classList.remove('hidden');
+                        t.classList.remove('wishlist-toggle--saved');
                     }
                 }
                 if (countEl && typeof count === 'number') {
@@ -188,12 +225,15 @@
             });
         }
 
+        /* Capture phase: only .wishlist-toggle is handled here (heart stays on page).
+           Other card clicks are untouched and still use the card’s onclick → detail page. */
         document.addEventListener('click', function (e) {
-            var btn = e.target.closest('.wishlist-toggle');
+            var btn = findWishlistToggleFromEvent(e);
             if (!btn) return;
             var url = btn.getAttribute('data-url');
             if (!url) return;
             e.preventDefault();
+            e.stopPropagation();
 
             var carPk = btn.getAttribute('data-car-pk');
             if (!carPk) return;
@@ -240,6 +280,10 @@
                         bumpNavWishlistCount(optimisticAdded ? -1 : 1);
                     });
             });
+        }, true);
+
+        document.querySelectorAll('.wishlist-toggle[data-in-wishlist="1"]').forEach(function (btn) {
+            btn.classList.add('wishlist-toggle--saved');
         });
     })();
     </script>
