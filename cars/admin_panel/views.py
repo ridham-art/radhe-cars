@@ -3,6 +3,8 @@ import logging
 import os
 import re
 import tempfile
+from datetime import datetime, time
+from urllib.parse import urlencode
 
 from django.contrib import messages
 from django.contrib.auth import get_user_model, login, logout
@@ -15,6 +17,7 @@ from django.db.models import Q, Count
 from django.http import HttpResponse, JsonResponse
 from django.shortcuts import get_object_or_404, redirect, render
 from django.urls import reverse, reverse_lazy
+from django.utils import timezone
 from django.views import View
 from django.views.generic import (
     TemplateView,
@@ -39,6 +42,59 @@ from cars.admin_panel.forms import (
 from cars.admin_panel import csv_io
 
 logger = logging.getLogger('cars.admin_panel.auth')
+
+
+def filter_car_list_queryset(request):
+    """
+    Cars shown on the staff panel list (excludes sell-form inquiries).
+    Supports search, brand, fuel, status, not_sold, and listed_at date range (date_from / date_to, YYYY-MM-DD).
+    """
+    qs = (
+        Car.objects.select_related('brand', 'model')
+        .prefetch_related('images')
+        .exclude(submit_via_sell_form=True)
+    )
+    q = request.GET.get('q', '').strip()
+    if q:
+        qs = qs.filter(Q(title__icontains=q) | Q(model__name__icontains=q))
+    brand = request.GET.get('brand')
+    if brand:
+        qs = qs.filter(brand_id=brand)
+    fuel = request.GET.get('fuel')
+    if fuel:
+        qs = qs.filter(fuel_type=fuel)
+    status = request.GET.get('status')
+    if status:
+        qs = qs.filter(status=status)
+    elif request.GET.get('not_sold') == '1':
+        qs = qs.exclude(status='SOLD')
+
+    tz = timezone.get_current_timezone()
+    date_from = request.GET.get('date_from', '').strip()
+    date_to = request.GET.get('date_to', '').strip()
+    if date_from:
+        try:
+            d = datetime.strptime(date_from, '%Y-%m-%d').date()
+            start_dt = timezone.make_aware(datetime.combine(d, time.min), tz)
+            qs = qs.filter(listed_at__gte=start_dt)
+        except ValueError:
+            pass
+    if date_to:
+        try:
+            d = datetime.strptime(date_to, '%Y-%m-%d').date()
+            end_dt = timezone.make_aware(datetime.combine(d, time.max), tz)
+            qs = qs.filter(listed_at__lte=end_dt)
+        except ValueError:
+            pass
+
+    return qs.order_by('-created_at')
+
+
+def car_list_querystring_except_page(request):
+    """Preserve filters for pagination and CSV links (drops page)."""
+    p = request.GET.copy()
+    p.pop('page', None)
+    return urlencode(p)
 
 
 def _parse_bulk_list(text):
@@ -272,26 +328,7 @@ class CarListView(
     paginate_by = 25
 
     def get_queryset(self):
-        qs = (
-            Car.objects.select_related('brand', 'model')
-            .prefetch_related('images')
-            .exclude(submit_via_sell_form=True)
-        )
-        q = self.request.GET.get('q', '').strip()
-        if q:
-            qs = qs.filter(Q(title__icontains=q) | Q(model__name__icontains=q))
-        brand = self.request.GET.get('brand')
-        if brand:
-            qs = qs.filter(brand_id=brand)
-        fuel = self.request.GET.get('fuel')
-        if fuel:
-            qs = qs.filter(fuel_type=fuel)
-        status = self.request.GET.get('status')
-        if status:
-            qs = qs.filter(status=status)
-        elif self.request.GET.get('not_sold') == '1':
-            qs = qs.exclude(status='SOLD')
-        return qs.order_by('-created_at')
+        return filter_car_list_queryset(self.request)
 
     def get_context_data(self, **kwargs):
         ctx = super().get_context_data(**kwargs)
@@ -304,6 +341,9 @@ class CarListView(
         ctx['filter_fuel'] = self.request.GET.get('fuel', '')
         ctx['filter_status'] = self.request.GET.get('status', '')
         ctx['filter_not_sold'] = self.request.GET.get('not_sold') == '1'
+        ctx['filter_date_from'] = self.request.GET.get('date_from', '')
+        ctx['filter_date_to'] = self.request.GET.get('date_to', '')
+        ctx['car_list_querystring'] = car_list_querystring_except_page(self.request)
         return ctx
 
 
@@ -852,8 +892,21 @@ class CSVConfirmView(StaffRequiredMixin, View):
 
 
 class CSVExportView(StaffRequiredMixin, View):
+    """Export every car (used from CSV tools)."""
+
     def get(self, request):
         data = csv_io.export_cars_csv()
         resp = HttpResponse(data, content_type='text/csv; charset=utf-8')
         resp['Content-Disposition'] = 'attachment; filename="cars_export.csv"'
+        return resp
+
+
+class CarListCSVExportView(StaffRequiredMixin, View):
+    """Export cars matching the staff car list filters (including date range on listed_at)."""
+
+    def get(self, request):
+        qs = filter_car_list_queryset(request)
+        data = csv_io.export_cars_csv(queryset=qs)
+        resp = HttpResponse(data, content_type='text/csv; charset=utf-8')
+        resp['Content-Disposition'] = 'attachment; filename="cars_filtered.csv"'
         return resp

@@ -27,6 +27,8 @@ CSV_HEADERS = [
     'description',
     'is_featured',
     'original_price',
+    'created_at',
+    'listed_at',
 ]
 
 
@@ -222,32 +224,39 @@ def apply_import(rows_dicts, replace_all=False):
     return {'created': created, 'updated': updated, 'skipped': skipped}
 
 
-def export_cars_csv():
-    """Return UTF-8 CSV bytes for all cars."""
+def _car_to_csv_row(car):
+    return {
+        'id': car.pk,
+        'title': car.title,
+        'brand': car.brand.name,
+        'model': car.model.name,
+        'year': car.year,
+        'variant': car.variant,
+        'price': str(car.price),
+        'mileage': car.mileage,
+        'fuel_type': car.fuel_type,
+        'transmission': car.transmission,
+        'body_type': car.body_type,
+        'ownership': car.ownership,
+        'status': car.status,
+        'city': car.city,
+        'color': car.color,
+        'description': car.description,
+        'is_featured': '1' if car.is_featured else '0',
+        'original_price': str(car.original_price) if car.original_price is not None else '',
+        'created_at': car.created_at.isoformat() if car.created_at else '',
+        'listed_at': car.listed_at.isoformat() if car.listed_at else '',
+    }
+
+
+def export_cars_csv(queryset=None):
+    """Return UTF-8 CSV bytes. If queryset is None, export all cars (newest id first)."""
+    qs = queryset
+    if qs is None:
+        qs = Car.objects.select_related('brand', 'model').order_by('-id')
     out = io.StringIO()
     w = csv.DictWriter(out, fieldnames=CSV_HEADERS, extrasaction='ignore')
     w.writeheader()
-    for car in Car.objects.select_related('brand', 'model').order_by('-id'):
-        w.writerow(
-            {
-                'id': car.pk,
-                'title': car.title,
-                'brand': car.brand.name,
-                'model': car.model.name,
-                'year': car.year,
-                'variant': car.variant,
-                'price': str(car.price),
-                'mileage': car.mileage,
-                'fuel_type': car.fuel_type,
-                'transmission': car.transmission,
-                'body_type': car.body_type,
-                'ownership': car.ownership,
-                'status': car.status,
-                'city': car.city,
-                'color': car.color,
-                'description': car.description,
-                'is_featured': '1' if car.is_featured else '0',
-                'original_price': str(car.original_price) if car.original_price is not None else '',
-            }
-        )
+    for car in qs.select_related('brand', 'model').iterator(chunk_size=500):
+        w.writerow(_car_to_csv_row(car))
     return ('\ufeff' + out.getvalue()).encode('utf-8')

@@ -191,9 +191,23 @@ class Car(models.Model):
     )
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
+    listed_at = models.DateTimeField(
+        null=True,
+        blank=True,
+        db_index=True,
+        editable=False,
+        help_text='When the car was first approved / listed (set automatically; not shown on the public site).',
+    )
 
     def __str__(self):
         return f"{self.year} {self.brand.name} {self.model.name} - {self.title}"
+
+    def save(self, *args, **kwargs):
+        from django.utils import timezone as dj_tz
+
+        if self.status == 'APPROVED' and self.listed_at is None:
+            self.listed_at = dj_tz.now()
+        super().save(*args, **kwargs)
 
     def clean(self):
         super().clean()

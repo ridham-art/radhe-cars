@@ -4,7 +4,8 @@
 {% block content %}
 <div class="flex flex-wrap gap-3 mb-6">
     <a href="{% url 'admin_panel:car_add' %}" class="inline-flex items-center px-4 py-2 bg-blue-600 text-white text-sm font-medium rounded-lg hover:bg-blue-700">Add car</a>
-    <a href="{% url 'admin_panel:csv_export' %}" class="inline-flex items-center px-4 py-2 bg-white border border-slate-200 text-sm font-medium rounded-lg hover:bg-slate-50">Export CSV</a>
+    <a href="{% url 'admin_panel:car_list_csv' %}{% if car_list_querystring %}?{{ car_list_querystring }}{% endif %}" class="inline-flex items-center px-4 py-2 bg-slate-800 text-white text-sm font-medium rounded-lg hover:bg-slate-900">Download CSV (filtered)</a>
+    <a href="{% url 'admin_panel:csv_export' %}" class="inline-flex items-center px-4 py-2 bg-white border border-slate-200 text-sm font-medium rounded-lg hover:bg-slate-50">Export all cars</a>
 </div>
 <form method="get" class="bg-white rounded-xl border border-slate-200 p-4 mb-6 flex flex-wrap gap-3 items-end">
     {% if filter_not_sold %}<input type="hidden" name="not_sold" value="1">{% endif %}
@@ -39,6 +40,14 @@
             {% endfor %}
         </select>
     </div>
+    <div>
+        <label class="block text-xs text-slate-500 mb-1">Listed from</label>
+        <input type="date" name="date_from" value="{{ filter_date_from }}" class="ap-input w-40" title="First approved / listed date (inclusive)">
+    </div>
+    <div>
+        <label class="block text-xs text-slate-500 mb-1">Listed to</label>
+        <input type="date" name="date_to" value="{{ filter_date_to }}" class="ap-input w-40" title="First approved / listed date (inclusive)">
+    </div>
     <button type="submit" class="px-4 py-2 bg-slate-800 text-white text-sm rounded-lg">Apply</button>
     <a href="{% url 'admin_panel:car_list' %}" class="ap-btn ap-btn-neutral">Clear</a>
 </form>
@@ -63,6 +72,7 @@
                         <th>Model</th>
                         <th>Price</th>
                         <th>Status</th>
+                        <th>Listed</th>
                         <th></th>
                     </tr>
                 </thead>
@@ -84,6 +94,7 @@
                         <td>{{ car.model.name }}</td>
                         <td>₹{{ car.price }}</td>
                         <td><span class="text-xs px-2 py-0.5 rounded-full bg-slate-100">{{ car.get_status_display }}</span></td>
+                        <td class="text-xs text-slate-600 whitespace-nowrap">{% if car.listed_at %}{{ car.listed_at|date:"d M Y, H:i" }}{% else %}—{% endif %}</td>
                         <td class="text-right">
                             <div class="ap-row-actions">
                                 <a href="{% url 'admin_panel:car_edit' car.pk %}" class="ap-btn ap-btn-edit">Edit</a>
@@ -102,11 +113,11 @@
 {% if page_obj.has_other_pages %}
 <div class="mt-4 flex justify-center gap-2">
     {% if page_obj.has_previous %}
-    <a href="?page={{ page_obj.previous_page_number }}&q={{ search_q }}&brand={{ filter_brand|default_if_none:'' }}&fuel={{ filter_fuel }}&status={{ filter_status }}{% if filter_not_sold %}&not_sold=1{% endif %}" class="ap-btn ap-btn-neutral">Previous</a>
+    <a href="?{% if car_list_querystring %}{{ car_list_querystring }}&{% endif %}page={{ page_obj.previous_page_number }}" class="ap-btn ap-btn-neutral">Previous</a>
     {% endif %}
     <span class="text-sm text-slate-600 py-1">Page {{ page_obj.number }} of {{ page_obj.paginator.num_pages }}</span>
     {% if page_obj.has_next %}
-    <a href="?page={{ page_obj.next_page_number }}&q={{ search_q }}&brand={{ filter_brand|default_if_none:'' }}&fuel={{ filter_fuel }}&status={{ filter_status }}{% if filter_not_sold %}&not_sold=1{% endif %}" class="ap-btn ap-btn-neutral">Next</a>
+    <a href="?{% if car_list_querystring %}{{ car_list_querystring }}&{% endif %}page={{ page_obj.next_page_number }}" class="ap-btn ap-btn-neutral">Next</a>
     {% endif %}
 </div>
 {% endif %}

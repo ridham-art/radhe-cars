@@ -1,4 +1,5 @@
 from django.contrib import admin
+from django.contrib.admin import DateFieldListFilter
 from django.http import JsonResponse
 from django.urls import path, reverse
 from .models import Brand, CarModel, Car, CarImage, Inquiry, Testimonial, Wishlist
@@ -26,10 +27,21 @@ class CarImageInline(admin.TabularInline):
 
 @admin.register(Car)
 class CarAdmin(admin.ModelAdmin):
-    list_display = ['title', 'brand', 'model', 'year', 'price', 'fuel_type', 'transmission', 'status', 'is_featured', 'created_at']
-    list_filter = ['status', 'is_featured', 'fuel_type', 'transmission', 'body_type', 'brand', 'ownership']
+    list_display = ['title', 'brand', 'model', 'year', 'price', 'fuel_type', 'transmission', 'status', 'is_featured', 'listed_at', 'created_at']
+    list_filter = [
+        'status',
+        'is_featured',
+        'fuel_type',
+        'transmission',
+        'body_type',
+        'brand',
+        'ownership',
+        ('listed_at', DateFieldListFilter),
+        ('created_at', DateFieldListFilter),
+    ]
     search_fields = ['title', 'brand__name', 'model__name', 'variant']
     list_editable = ['status', 'is_featured']
+    readonly_fields = ['created_at', 'updated_at', 'listed_at']
     inlines = [CarImageInline]
     change_form_template = 'admin/cars/car/change_form.html'
 
@@ -95,6 +107,10 @@ class CarAdmin(admin.ModelAdmin):
         }),
         ('Status', {
             'fields': ('status', 'is_featured')
+        }),
+        ('Timestamps (admin only)', {
+            'fields': ('listed_at', 'created_at', 'updated_at'),
+            'classes': ('collapse',),
         }),
     )
 
