@@ -23,10 +23,10 @@
 {% else %}
 <ul class="space-y-4">
     {% for car in cars %}
-    <li class="sell-dash-card bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden flex flex-col sm:flex-row sm:items-stretch">
+    <li class="sell-dash-card bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden flex flex-col sm:flex-row sm:items-start">
         <div class="sell-dash-thumb">
             {% if car.primary_image %}
-            <img src="{{ car.primary_image.display_url }}" alt="{{ car.title }}" width="200" height="160" loading="lazy" decoding="async" class="sell-dash-thumb-img">
+            <img src="{{ car.primary_image.display_url }}" alt="{{ car.title }}" width="880" height="495" loading="lazy" decoding="async" class="sell-dash-thumb-img">
             {% else %}
             <div class="sell-dash-thumb-empty">No photo</div>
             {% endif %}

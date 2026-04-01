@@ -5,9 +5,10 @@
 {% block extra_css %}
 <style>
 /*
- * Sell dashboard thumbs: scale the real photo to full column width with height:auto so the
- * full image is visible (no crop). Avoids fixed-height + object-fit:contain letterboxing
- * (“side bezels”) on mobile and object-fit:cover cropping on desktop.
+ * Mobile: full-width image, natural height (no crop) — same as before.
+ * Desktop: fixed 16:9 tile + object-fit cover so the thumb fills the column edge-to-edge.
+ *   (Previously sm:items-stretch made the thumb as tall as the text column, so gray showed
+ *   below the image; a fixed-aspect tile avoids that.)
  */
 .sell-dash-thumb {
     flex-shrink: 0;
@@ -16,7 +17,6 @@
     overflow: hidden;
     display: flex;
     flex-direction: column;
-    align-self: stretch;
     justify-content: flex-start;
 }
 .sell-dash-thumb-img {
@@ -36,10 +36,29 @@
 }
 @media (min-width: 640px) {
     .sell-dash-thumb {
-        width: 200px;
-        max-width: 200px;
-        min-width: 200px;
-        flex: 0 0 200px;
+        width: 220px;
+        max-width: 220px;
+        min-width: 220px;
+        flex: 0 0 220px;
+        align-self: flex-start;
+        position: relative;
+        aspect-ratio: 16 / 9;
+        height: auto;
+    }
+    .sell-dash-thumb-img {
+        position: absolute;
+        left: 0;
+        top: 0;
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+        object-position: center;
+    }
+    .sell-dash-thumb-empty {
+        position: absolute;
+        inset: 0;
+        min-height: 0;
+        flex: none;
     }
 }
 </style>
