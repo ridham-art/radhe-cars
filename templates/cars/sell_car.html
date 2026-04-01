@@ -104,6 +104,9 @@
 .variant-custom-label{font-size:12px;font-weight:600;color:#64748b;text-transform:uppercase;letter-spacing:.05em;margin-bottom:10px}
 .variant-custom .sell-input{margin-bottom:14px}
 .variant-continue-btn{width:100%;padding:14px;font-size:16px;font-weight:600}
+/* Price field: .sell-input shorthand padding was overriding pl-10 and squeezing text under the ₹ */
+.sell-price-field .sell-input{padding-left:3rem}
+.sell-price-field .sell-price-prefix{position:absolute;left:1rem;top:50%;transform:translateY(-50%);color:#64748b;font-weight:600;pointer-events:none;z-index:1;line-height:1}
 .sell-scroll::-webkit-scrollbar{width:5px}
 .sell-scroll::-webkit-scrollbar-track{background:#f1f5f9;border-radius:3px}
 .sell-scroll::-webkit-scrollbar-thumb{background:#cbd5e1;border-radius:3px}
@@ -368,9 +371,9 @@
             </div>
             <div>
               <div class="sell-label">Expected price (₹)</div>
-              <div class="relative">
-                <span class="absolute left-4 top-1/2 -translate-y-1/2 text-slate-500 font-semibold">₹</span>
-                <input type="number" name="price" placeholder="e.g. 450000" class="sell-input pl-10" required>
+              <div class="relative sell-price-field">
+                <span class="sell-price-prefix" aria-hidden="true">₹</span>
+                <input type="number" name="price" placeholder="e.g. 450000" class="sell-input" inputmode="numeric" required>
               </div>
             </div>
             <div>
