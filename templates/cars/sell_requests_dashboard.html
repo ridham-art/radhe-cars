@@ -89,7 +89,23 @@
         rejected: TAB_BASE + 'bg-red-100 text-red-900 ring-2 ring-red-300'
     };
 
-    var abortCtrl = null;
+    var listRoot = shell.querySelector('#sell-dash-list-root');
+    if (!listRoot) return;
+
+    var bucketHref = {};
+    shell.querySelectorAll('a.sell-dash-tab[data-bucket]').forEach(function (tab) {
+        var b = tab.getAttribute('data-bucket');
+        if (b) bucketHref[b] = tab.getAttribute('href');
+    });
+
+    var activeTab = shell.querySelector('a.sell-dash-tab[aria-selected="true"]');
+    var currentBucket = (activeTab && activeTab.getAttribute('data-bucket')) || 'pending';
+
+    var cache = Object.create(null);
+    cache[currentBucket] = listRoot.innerHTML;
+
+    var inflight = Object.create(null);
+    var refreshAbort = null;
 
     function listPartialUrl(href) {
         var u = new URL(href, window.location.origin);
@@ -105,6 +121,44 @@
             tab.setAttribute('aria-selected', on ? 'true' : 'false');
         });
     }
+
+    function fetchListHtml(bucket, href, signal) {
+        return fetch(listPartialUrl(href), {
+            method: 'GET',
+            headers: { 'X-Requested-With': 'XMLHttpRequest' },
+            credentials: 'same-origin',
+            cache: 'default',
+            signal: signal
+        }).then(function (r) {
+            if (!r.ok) throw new Error('bad');
+            return r.text();
+        });
+    }
+
+    function ensureBucketHtml(bucket, href, signal) {
+        if (cache[bucket]) return Promise.resolve(cache[bucket]);
+        if (inflight[bucket]) return inflight[bucket];
+        inflight[bucket] = fetchListHtml(bucket, href, signal)
+            .then(function (html) {
+                cache[bucket] = html;
+                delete inflight[bucket];
+                return html;
+            })
+            .catch(function (err) {
+                delete inflight[bucket];
+                throw err;
+            });
+        return inflight[bucket];
+    }
+
+    function prefetchAllBuckets() {
+        Object.keys(bucketHref).forEach(function (b) {
+            if (cache[b]) return;
+            ensureBucketHtml(b, bucketHref[b], undefined).catch(function () {});
+        });
+    }
+
+    setTimeout(prefetchAllBuckets, 0);
 
     shell.addEventListener('click', function (e) {
         var a = e.target.closest('a.sell-dash-tab');
@@ -122,37 +176,40 @@
             }
         }
 
+        currentBucket = bucket;
         setActiveTab(bucket);
         try {
             history.replaceState(null, '', href);
         } catch (err) {}
 
-        if (abortCtrl) abortCtrl.abort();
-        abortCtrl = new AbortController();
+        if (refreshAbort) refreshAbort.abort();
+        refreshAbort = new AbortController();
 
-        var listRoot = shell.querySelector('#sell-dash-list-root');
-        if (!listRoot) return;
+        if (cache[bucket]) {
+            listRoot.innerHTML = cache[bucket];
+            listRoot.removeAttribute('aria-busy');
+            fetchListHtml(bucket, href, refreshAbort.signal)
+                .then(function (html) {
+                    cache[bucket] = html;
+                    if (currentBucket === bucket) listRoot.innerHTML = html;
+                })
+                .catch(function (err) {
+                    if (err && err.name === 'AbortError') return;
+                });
+            return;
+        }
+
         listRoot.setAttribute('aria-busy', 'true');
-
-        fetch(listPartialUrl(href), {
-            method: 'GET',
-            headers: { 'X-Requested-With': 'XMLHttpRequest' },
-            credentials: 'same-origin',
-            cache: 'no-store',
-            signal: abortCtrl.signal
-        })
-            .then(function (r) {
-                if (!r.ok) throw new Error('bad');
-                return r.text();
-            })
+        ensureBucketHtml(bucket, href, refreshAbort.signal)
             .then(function (html) {
+                if (currentBucket !== bucket) return;
                 listRoot.innerHTML = html;
             })
             .catch(function (err) {
                 if (err && err.name === 'AbortError') return;
             })
             .finally(function () {
-                listRoot.removeAttribute('aria-busy');
+                if (currentBucket === bucket) listRoot.removeAttribute('aria-busy');
             });
     });
 })();
