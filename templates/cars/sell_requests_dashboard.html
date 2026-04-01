@@ -151,14 +151,53 @@
         return inflight[bucket];
     }
 
-    function prefetchAllBuckets() {
-        Object.keys(bucketHref).forEach(function (b) {
-            if (cache[b]) return;
-            ensureBucketHtml(b, bucketHref[b], undefined).catch(function () {});
+    function shouldBackgroundPrefetch() {
+        try {
+            var c = navigator.connection;
+            if (c && c.saveData) return false;
+            if (c && (c.effectiveType === 'slow-2g' || c.effectiveType === '2g')) return false;
+        } catch (err) {}
+        return true;
+    }
+
+    function prefetchAllBucketsStaggered() {
+        var keys = Object.keys(bucketHref).filter(function (b) {
+            return !cache[b];
+        });
+        keys.forEach(function (b, idx) {
+            setTimeout(function () {
+                ensureBucketHtml(b, bucketHref[b], undefined).catch(function () {});
+            }, idx * 500);
         });
     }
 
-    setTimeout(prefetchAllBuckets, 0);
+    function scheduleIdlePrefetch() {
+        if (!shouldBackgroundPrefetch()) return;
+        var run = function () {
+            prefetchAllBucketsStaggered();
+        };
+        if (typeof requestIdleCallback !== 'undefined') {
+            requestIdleCallback(run, { timeout: 8000 });
+        } else {
+            setTimeout(run, 2500);
+        }
+    }
+
+    if (document.readyState === 'complete') {
+        scheduleIdlePrefetch();
+    } else {
+        window.addEventListener('load', scheduleIdlePrefetch);
+    }
+
+    shell.querySelectorAll('a.sell-dash-tab[data-bucket]').forEach(function (tab) {
+        function prefetchThis() {
+            var b = tab.getAttribute('data-bucket');
+            if (!b || cache[b] || inflight[b]) return;
+            ensureBucketHtml(b, bucketHref[b], undefined).catch(function () {});
+        }
+        tab.addEventListener('pointerenter', prefetchThis, { passive: true });
+        tab.addEventListener('focus', prefetchThis);
+    });
 
     shell.addEventListener('click', function (e) {
         var a = e.target.closest('a.sell-dash-tab');
