@@ -5,10 +5,9 @@
 {% block extra_css %}
 <style>
 /*
- * Mobile: full-width image, natural height (no crop) — same as before.
- * Desktop: fixed 16:9 tile + object-fit cover so the thumb fills the column edge-to-edge.
- *   (Previously sm:items-stretch made the thumb as tall as the text column, so gray showed
- *   below the image; a fixed-aspect tile avoids that.)
+ * Mobile: full-width image, natural height (uncropped).
+ * Desktop: thumb column stretches to the full card row height (same as text column);
+ *   image fills the column with object-fit: cover (landscape uploads — no empty band below).
  */
 .sell-dash-thumb {
     flex-shrink: 0;
@@ -40,10 +39,9 @@
         max-width: 220px;
         min-width: 220px;
         flex: 0 0 220px;
-        align-self: flex-start;
+        align-self: stretch;
         position: relative;
-        aspect-ratio: 16 / 9;
-        height: auto;
+        min-height: 0;
     }
     .sell-dash-thumb-img {
         position: absolute;
