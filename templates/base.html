@@ -153,6 +153,16 @@
             return m ? decodeURIComponent(m[2].trim()) : '';
         }
 
+        function bumpNavWishlistCount(delta) {
+            ['nav-wishlist-count', 'nav-wishlist-count-mobile'].forEach(function (id) {
+                var el = document.getElementById(id);
+                if (!el) return;
+                var cur = parseInt(el.textContent.trim() || '0', 10);
+                if (isNaN(cur)) cur = 0;
+                el.textContent = String(Math.max(0, cur + delta));
+            });
+        }
+
         function applyWishlistVisualForPk(carPk, added, count) {
             var sel = '.wishlist-toggle[data-car-pk="' + String(carPk) + '"]';
             document.querySelectorAll(sel).forEach(function (t) {
@@ -197,6 +207,7 @@
             var snap = { pk: carPk, in: wasIn, count: prevCount };
 
             applyWishlistVisualForPk(carPk, optimisticAdded, optimisticCount);
+            bumpNavWishlistCount(optimisticAdded ? 1 : -1);
 
             var csrf = getCsrfToken();
             queue = queue.then(function () {
@@ -216,9 +227,17 @@
                     .then(function (data) {
                         var n = typeof data.wishlist_count === 'number' ? data.wishlist_count : 0;
                         applyWishlistVisualForPk(carPk, !!data.added, n);
+                        if (typeof data.user_wishlist_total === 'number') {
+                            var t = String(Math.max(0, data.user_wishlist_total));
+                            ['nav-wishlist-count', 'nav-wishlist-count-mobile'].forEach(function (id) {
+                                var el = document.getElementById(id);
+                                if (el) el.textContent = t;
+                            });
+                        }
                     })
                     .catch(function () {
                         applyWishlistVisualForPk(snap.pk, snap.in, snap.count);
+                        bumpNavWishlistCount(optimisticAdded ? -1 : 1);
                     });
             });
         });

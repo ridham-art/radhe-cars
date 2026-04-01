@@ -146,6 +146,7 @@ _template_context_processors = [
     'django.template.context_processors.request',
     'django.contrib.auth.context_processors.auth',
     'django.contrib.messages.context_processors.messages',
+    'cars.context_processors.nav_wishlist',
 ]
 if DEBUG:
     _template_context_processors.insert(0, 'django.template.context_processors.debug')

@@ -34,10 +34,20 @@
             </span>
         </a>
         <a href="{% url 'car_list' %}" class="no-underline hover:text-gray-600 transition-colors text-sm font-medium text-slate-950">Buy Car</a>
-        <a href="{% url 'wishlist' %}" class="flex flex-col gap-0.5 cursor-pointer group text-slate-950 items-center no-underline" aria-label="Wishlist">
+        {% if user.is_authenticated %}
+        <a href="{% url 'wishlist' %}" id="nav-wishlist-link" class="flex flex-col gap-0.5 cursor-pointer group text-slate-950 items-center no-underline relative" aria-label="Wishlist">
+            <span class="relative inline-flex">
+                <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" class="group-hover:text-rose-400 transition-colors text-rose-400"><path d="M19 14c1.49-1.46 3-3.21 3-5.5A5.5 5.5 0 0 0 16.5 3c-1.76 0-3 .5-4.5 2-1.5-1.5-2.74-2-4.5-2A5.5 5.5 0 0 0 2 8.5c0 2.3 1.5 4.05 3 5.5l7 7Z"></path></svg>
+                <span id="nav-wishlist-count" class="absolute -top-1.5 -right-2 min-w-[1.125rem] h-[1.125rem] px-0.5 flex items-center justify-center rounded-full bg-rose-500 text-[10px] font-bold text-white leading-none" aria-live="polite">{{ nav_wishlist_count }}</span>
+            </span>
+            <span class="text-xs text-gray-600">Wishlist</span>
+        </a>
+        {% else %}
+        <a href="{% url 'login' %}?next={{ request.get_full_path|urlencode }}" class="flex flex-col gap-0.5 cursor-pointer group text-slate-950 items-center no-underline" aria-label="Log in to use wishlist">
             <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" class="group-hover:text-rose-400 transition-colors text-rose-400"><path d="M19 14c1.49-1.46 3-3.21 3-5.5A5.5 5.5 0 0 0 16.5 3c-1.76 0-3 .5-4.5 2-1.5-1.5-2.74-2-4.5-2A5.5 5.5 0 0 0 2 8.5c0 2.3 1.5 4.05 3 5.5l7 7Z"></path></svg>
             <span class="text-xs text-gray-600">Wishlist</span>
         </a>
+        {% endif %}
         {% if user.is_authenticated %}
         <div class="relative group">
             <div class="flex flex-col gap-0.5 cursor-pointer text-slate-950 items-center">
@@ -89,10 +99,20 @@
                 <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 5v14"/><path d="M5 12h14"/></svg>
                 Sell Car
             </a>
-            <a href="{% url 'wishlist' %}" class="flex items-center gap-3 py-3 px-4 rounded-xl hover:bg-gray-50 text-gray-700 font-medium no-underline">
+            {% if user.is_authenticated %}
+            <a href="{% url 'wishlist' %}" id="nav-wishlist-link-mobile" class="flex items-center gap-3 py-3 px-4 rounded-xl hover:bg-gray-50 text-gray-700 font-medium no-underline">
+                <span class="relative inline-flex shrink-0">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 14c1.49-1.46 3-3.21 3-5.5A5.5 5.5 0 0 0 16.5 3c-1.76 0-3 .5-4.5 2-1.5-1.5-2.74-2-4.5-2A5.5 5.5 0 0 0 2 8.5c0 2.3 1.5 4.05 3 5.5l7 7Z"/></svg>
+                    <span id="nav-wishlist-count-mobile" class="absolute -top-1 -right-1.5 min-w-[1.125rem] h-[1.125rem] px-0.5 flex items-center justify-center rounded-full bg-rose-500 text-[10px] font-bold text-white leading-none">{{ nav_wishlist_count }}</span>
+                </span>
+                Wishlist
+            </a>
+            {% else %}
+            <a href="{% url 'login' %}?next={{ request.get_full_path|urlencode }}" class="flex items-center gap-3 py-3 px-4 rounded-xl hover:bg-gray-50 text-gray-700 font-medium no-underline">
                 <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 14c1.49-1.46 3-3.21 3-5.5A5.5 5.5 0 0 0 16.5 3c-1.76 0-3 .5-4.5 2-1.5-1.5-2.74-2-4.5-2A5.5 5.5 0 0 0 2 8.5c0 2.3 1.5 4.05 3 5.5l7 7Z"/></svg>
                 Wishlist
             </a>
+            {% endif %}
             {% if user.is_authenticated %}
             <div class="flex items-center gap-3 py-3 px-4 rounded-xl text-gray-700 font-medium">
                 <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>

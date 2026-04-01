@@ -473,7 +473,14 @@ def toggle_wishlist(request, pk):
 
     if is_ajax:
         wishlist_count = car.wishlisted_by.count()
-        resp = JsonResponse({'added': added, 'wishlist_count': wishlist_count})
+        user_wishlist_total = Wishlist.objects.filter(user=request.user).count()
+        resp = JsonResponse(
+            {
+                'added': added,
+                'wishlist_count': wishlist_count,
+                'user_wishlist_total': user_wishlist_total,
+            }
+        )
         resp['Cache-Control'] = 'no-store, no-cache, must-revalidate, private'
         resp['Pragma'] = 'no-cache'
         return resp
