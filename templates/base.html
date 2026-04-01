@@ -142,6 +142,88 @@
     <div class="hidden" aria-hidden="true">{% csrf_token %}</div>
 
     <script src="{% static 'js/base-app.js' %}" defer></script>
+    <script>
+    (function () {
+        var queue = Promise.resolve();
+
+        function getCsrfToken() {
+            var el = document.querySelector('[name=csrfmiddlewaretoken]');
+            if (el && el.value) return el.value;
+            var m = document.cookie.match(/(^|;\s)csrftoken=([^;]+)/);
+            return m ? decodeURIComponent(m[2].trim()) : '';
+        }
+
+        function applyWishlistVisualForPk(carPk, added, count) {
+            var sel = '.wishlist-toggle[data-car-pk="' + String(carPk) + '"]';
+            document.querySelectorAll(sel).forEach(function (t) {
+                var filled = t.querySelector('.wishlist-icon-filled');
+                var outline = t.querySelector('.wishlist-icon-outline');
+                var countEl = t.querySelector('.wishlist-count');
+                if (filled && outline) {
+                    if (added) {
+                        filled.classList.remove('hidden');
+                        outline.classList.add('hidden');
+                    } else {
+                        filled.classList.add('hidden');
+                        outline.classList.remove('hidden');
+                    }
+                }
+                if (countEl && typeof count === 'number') {
+                    var n = Math.max(0, count);
+                    countEl.textContent = n + ' ' + (n === 1 ? 'person' : 'people') + ' shortlisted';
+                }
+                t.setAttribute('data-in-wishlist', added ? '1' : '0');
+                t.setAttribute('aria-pressed', added ? 'true' : 'false');
+                if (typeof count === 'number') t.setAttribute('data-wishlist-count', String(count));
+            });
+        }
+
+        document.addEventListener('click', function (e) {
+            var btn = e.target.closest('.wishlist-toggle');
+            if (!btn) return;
+            var url = btn.getAttribute('data-url');
+            if (!url) return;
+            e.preventDefault();
+
+            var carPk = btn.getAttribute('data-car-pk');
+            if (!carPk) return;
+
+            var wasIn = btn.getAttribute('data-in-wishlist') === '1';
+            var prevCount = parseInt(btn.getAttribute('data-wishlist-count') || '0', 10);
+            if (isNaN(prevCount)) prevCount = 0;
+
+            var optimisticAdded = !wasIn;
+            var optimisticCount = optimisticAdded ? prevCount + 1 : Math.max(0, prevCount - 1);
+            var snap = { pk: carPk, in: wasIn, count: prevCount };
+
+            applyWishlistVisualForPk(carPk, optimisticAdded, optimisticCount);
+
+            var csrf = getCsrfToken();
+            queue = queue.then(function () {
+                return fetch(url, {
+                    method: 'POST',
+                    headers: {
+                        'X-Requested-With': 'XMLHttpRequest',
+                        'X-CSRFToken': csrf
+                    },
+                    credentials: 'same-origin',
+                    cache: 'no-store'
+                })
+                    .then(function (r) {
+                        if (!r.ok) throw new Error('bad status');
+                        return r.json();
+                    })
+                    .then(function (data) {
+                        var n = typeof data.wishlist_count === 'number' ? data.wishlist_count : 0;
+                        applyWishlistVisualForPk(carPk, !!data.added, n);
+                    })
+                    .catch(function () {
+                        applyWishlistVisualForPk(snap.pk, snap.in, snap.count);
+                    });
+            });
+        });
+    })();
+    </script>
     {% block extra_js %}{% endblock %}
 </body>
 </html>

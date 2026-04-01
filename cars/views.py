@@ -38,10 +38,10 @@ def health_check(request):
 
 def home(request):
     featured_cars = _cars_with_related(
-        Car.objects.filter(status='APPROVED', is_featured=True)
+        Car.objects.filter(status='APPROVED', is_featured=True).annotate(wishlist_entry_count=Count('wishlisted_by'))
     )[:12]
     recent_cars = _cars_with_related(
-        Car.objects.filter(status='APPROVED').order_by('-created_at')
+        Car.objects.filter(status='APPROVED').order_by('-created_at').annotate(wishlist_entry_count=Count('wishlisted_by'))
     )[:12]
     testimonials = Testimonial.objects.filter(is_active=True)[:4]
     wishlisted_ids = set()
@@ -61,7 +61,9 @@ def home(request):
 def home_cars_api(request):
     """AJAX: Return cars filtered by body_type for home page Recently Added section."""
     from django.template.loader import render_to_string
-    cars = _cars_with_related(Car.objects.filter(status='APPROVED').order_by('-created_at'))
+    cars = _cars_with_related(
+        Car.objects.filter(status='APPROVED').order_by('-created_at').annotate(wishlist_entry_count=Count('wishlisted_by'))
+    )
     body_type = request.GET.get('body_type', '').strip()
     if body_type:
         cars = cars.filter(body_type__iexact=body_type)
@@ -136,7 +138,7 @@ def car_list(request):
     else:
         cars = cars.order_by('-created_at')
 
-    cars = _cars_with_related(cars)
+    cars = _cars_with_related(cars.annotate(wishlist_entry_count=Count('wishlisted_by')))
 
     import datetime
     current_year = datetime.datetime.now().year
@@ -486,7 +488,17 @@ def wishlist_view(request):
         .select_related('car', 'car__brand', 'car__model')
         .prefetch_related(_WISHLIST_CAR_IMAGES)
     )
-    cars = [item.car for item in wishlist_items]
+    car_ids = list(wishlist_items.values_list('car_id', flat=True))
+    count_map = dict(
+        Car.objects.filter(pk__in=car_ids)
+        .annotate(wishlist_entry_count=Count('wishlisted_by'))
+        .values_list('pk', 'wishlist_entry_count')
+    )
+    cars = []
+    for item in wishlist_items:
+        c = item.car
+        c.wishlist_entry_count = count_map.get(c.pk, 0)
+        cars.append(c)
     return render(request, 'cars/wishlist.html', {'cars': cars})
 
 
