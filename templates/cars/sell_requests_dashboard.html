@@ -81,33 +81,78 @@
     var shell = document.getElementById('sell-dashboard-shell');
     if (!shell) return;
 
+    var TAB_BASE = 'sell-dash-tab px-4 py-2 rounded-full text-sm font-medium no-underline transition-colors ';
+    var INACTIVE = TAB_BASE + 'bg-gray-100 text-gray-700 hover:bg-gray-200';
+    var ACTIVE = {
+        pending: TAB_BASE + 'bg-amber-100 text-amber-900 ring-2 ring-amber-300',
+        approved: TAB_BASE + 'bg-emerald-100 text-emerald-900 ring-2 ring-emerald-300',
+        rejected: TAB_BASE + 'bg-red-100 text-red-900 ring-2 ring-red-300'
+    };
+
+    var abortCtrl = null;
+
+    function listPartialUrl(href) {
+        var u = new URL(href, window.location.origin);
+        u.searchParams.set('partial', 'list');
+        return u.pathname + u.search;
+    }
+
+    function setActiveTab(bucket) {
+        shell.querySelectorAll('a.sell-dash-tab[data-bucket]').forEach(function (tab) {
+            var b = tab.getAttribute('data-bucket');
+            var on = b === bucket;
+            tab.className = on ? ACTIVE[b] : INACTIVE;
+            tab.setAttribute('aria-selected', on ? 'true' : 'false');
+        });
+    }
+
     shell.addEventListener('click', function (e) {
         var a = e.target.closest('a.sell-dash-tab');
         if (!a || !shell.contains(a)) return;
         e.preventDefault();
-        var url = a.getAttribute('href');
-        if (!url) return;
+        var href = a.getAttribute('href');
+        if (!href) return;
 
-        shell.classList.add('opacity-60', 'pointer-events-none');
-        fetch(url, {
+        var bucket = a.getAttribute('data-bucket');
+        if (!bucket) {
+            try {
+                bucket = new URL(href, window.location.origin).searchParams.get('bucket') || 'pending';
+            } catch (err) {
+                bucket = 'pending';
+            }
+        }
+
+        setActiveTab(bucket);
+        try {
+            history.replaceState(null, '', href);
+        } catch (err) {}
+
+        if (abortCtrl) abortCtrl.abort();
+        abortCtrl = new AbortController();
+
+        var listRoot = shell.querySelector('#sell-dash-list-root');
+        if (!listRoot) return;
+        listRoot.setAttribute('aria-busy', 'true');
+
+        fetch(listPartialUrl(href), {
             method: 'GET',
             headers: { 'X-Requested-With': 'XMLHttpRequest' },
             credentials: 'same-origin',
-            cache: 'no-store'
+            cache: 'no-store',
+            signal: abortCtrl.signal
         })
             .then(function (r) {
                 if (!r.ok) throw new Error('bad');
                 return r.text();
             })
             .then(function (html) {
-                shell.innerHTML = html;
-                try {
-                    history.replaceState(null, '', url);
-                } catch (err) {}
+                listRoot.innerHTML = html;
             })
-            .catch(function () {})
+            .catch(function (err) {
+                if (err && err.name === 'AbortError') return;
+            })
             .finally(function () {
-                shell.classList.remove('opacity-60', 'pointer-events-none');
+                listRoot.removeAttribute('aria-busy');
             });
     });
 })();

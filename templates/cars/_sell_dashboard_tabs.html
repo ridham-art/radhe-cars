@@ -1,0 +1,11 @@
+<div class="flex flex-wrap gap-2 mb-8" role="tablist" aria-label="Filter by status">
+    <a href="{% url 'sell_requests_dashboard' %}?bucket=pending" data-bucket="pending" role="tab" aria-selected="{% if bucket == 'pending' %}true{% else %}false{% endif %}" class="sell-dash-tab px-4 py-2 rounded-full text-sm font-medium no-underline transition-colors {% if bucket == 'pending' %}bg-amber-100 text-amber-900 ring-2 ring-amber-300{% else %}bg-gray-100 text-gray-700 hover:bg-gray-200{% endif %}">
+        Pending{% if count_pending %} ({{ count_pending }}){% endif %}
+    </a>
+    <a href="{% url 'sell_requests_dashboard' %}?bucket=approved" data-bucket="approved" role="tab" aria-selected="{% if bucket == 'approved' %}true{% else %}false{% endif %}" class="sell-dash-tab px-4 py-2 rounded-full text-sm font-medium no-underline transition-colors {% if bucket == 'approved' %}bg-emerald-100 text-emerald-900 ring-2 ring-emerald-300{% else %}bg-gray-100 text-gray-700 hover:bg-gray-200{% endif %}">
+        Approved{% if count_approved %} ({{ count_approved }}){% endif %}
+    </a>
+    <a href="{% url 'sell_requests_dashboard' %}?bucket=rejected" data-bucket="rejected" role="tab" aria-selected="{% if bucket == 'rejected' %}true{% else %}false{% endif %}" class="sell-dash-tab px-4 py-2 rounded-full text-sm font-medium no-underline transition-colors {% if bucket == 'rejected' %}bg-red-100 text-red-900 ring-2 ring-red-300{% else %}bg-gray-100 text-gray-700 hover:bg-gray-200{% endif %}">
+        Rejected{% if count_rejected %} ({{ count_rejected }}){% endif %}
+    </a>
+</div>

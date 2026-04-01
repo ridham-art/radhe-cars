@@ -6,7 +6,7 @@ from django.contrib.auth.decorators import login_required
 from django.views.decorators.cache import never_cache
 from django.contrib import messages
 from django.core.paginator import Paginator
-from django.db.models import Q, F, Prefetch
+from django.db.models import Q, F, Prefetch, Count
 from django.db.models.functions import Coalesce
 from django.http import HttpResponse, JsonResponse
 from .models import Car, Brand, CarModel, CarImage, Testimonial, Wishlist
@@ -490,16 +490,24 @@ def wishlist_view(request):
     return render(request, 'cars/wishlist.html', {'cars': cars})
 
 
-def _sell_dashboard_context(request):
-    """Shared by full page and AJAX partial (same queries, one round-trip)."""
+def _sell_dashboard_context(request, skip_counts=False):
+    """Shared by full page and AJAX partials. Counts use one aggregate query when needed."""
     bucket = request.GET.get('bucket', 'pending')
     if bucket not in ('pending', 'approved', 'rejected'):
         bucket = 'pending'
 
     base = Car.objects.filter(seller=request.user, submit_via_sell_form=True)
-    count_pending = base.filter(status='PENDING').count()
-    count_approved = base.filter(status__in=('APPROVED', 'ON_HOLD', 'SOLD')).count()
-    count_rejected = base.filter(status='REJECTED').count()
+    if not skip_counts:
+        stats = base.aggregate(
+            cp=Count('pk', filter=Q(status='PENDING')),
+            ca=Count('pk', filter=Q(status__in=('APPROVED', 'ON_HOLD', 'SOLD'))),
+            cr=Count('pk', filter=Q(status='REJECTED')),
+        )
+        count_pending = stats['cp']
+        count_approved = stats['ca']
+        count_rejected = stats['cr']
+    else:
+        count_pending = count_approved = count_rejected = 0
 
     qs = base
     if bucket == 'pending':
@@ -522,8 +530,12 @@ def _sell_dashboard_context(request):
 
 @login_required
 def sell_requests_dashboard(request):
-    """Cars submitted via /sell/ — Pending / Approved / Rejected tabs; AJAX swaps fragment without full reload."""
+    """Cars submitted via /sell/ — Pending / Approved / Rejected tabs; AJAX swaps list only (no full reload)."""
+    is_xhr = request.headers.get('x-requested-with') == 'XMLHttpRequest'
+    if is_xhr and request.GET.get('partial') == 'list':
+        ctx = _sell_dashboard_context(request, skip_counts=True)
+        return render(request, 'cars/_sell_dashboard_list_inner.html', ctx)
     ctx = _sell_dashboard_context(request)
-    if request.headers.get('x-requested-with') == 'XMLHttpRequest':
+    if is_xhr:
         return render(request, 'cars/_sell_dashboard_fragment.html', ctx)
     return render(request, 'cars/sell_requests_dashboard.html', ctx)

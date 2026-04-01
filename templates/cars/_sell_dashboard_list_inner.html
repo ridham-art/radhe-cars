@@ -1,0 +1,62 @@
+{% if not cars %}
+<div class="text-center py-16 px-4 rounded-2xl border border-dashed border-gray-200 bg-gray-50 min-h-[200px] flex flex-col items-center justify-center">
+    <p class="text-gray-600 mb-2">No listings in this category.</p>
+    {% if bucket == 'pending' %}
+    <p class="text-sm text-gray-500 mb-4">When you submit a car for sale, it appears here until we review it.</p>
+    {% endif %}
+    <a href="{% url 'sell_car' %}" class="inline-flex items-center justify-center px-5 py-2.5 rounded-xl bg-blue-600 text-white text-sm font-medium hover:bg-blue-700 no-underline">Sell a car</a>
+</div>
+{% else %}
+<ul class="space-y-4">
+    {% for car in cars %}
+    <li class="sell-dash-card bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden flex flex-col sm:flex-row sm:items-stretch">
+        <div class="sell-dash-thumb">
+            {% if car.primary_image %}
+            <img src="{{ car.primary_image.display_url }}" alt="{{ car.title }}" width="880" height="495" loading="lazy" decoding="async" class="sell-dash-thumb-img">
+            {% else %}
+            <div class="sell-dash-thumb-empty">No photo</div>
+            {% endif %}
+        </div>
+        <div class="sell-dash-body p-4 sm:p-5 flex-1 flex flex-col min-w-0 justify-between">
+            <div>
+                <div class="flex flex-wrap items-start justify-between gap-2 mb-2">
+                    <h2 class="text-lg font-semibold text-gray-900 leading-snug pr-2">{{ car.title }}</h2>
+                    {% if car.status == 'PENDING' %}
+                    <span class="shrink-0 px-2.5 py-1 rounded-lg text-xs font-semibold bg-amber-100 text-amber-900">Pending</span>
+                    {% elif car.status == 'REJECTED' %}
+                    <span class="shrink-0 px-2.5 py-1 rounded-lg text-xs font-semibold bg-red-100 text-red-900">Rejected</span>
+                    {% else %}
+                    <span class="shrink-0 px-2.5 py-1 rounded-lg text-xs font-semibold bg-emerald-100 text-emerald-900">Approved</span>
+                    {% endif %}
+                </div>
+                <p class="text-sm text-gray-500 mb-1 line-clamp-2">{{ car.specs_short }}</p>
+                <p class="text-base font-semibold text-gray-900">{{ car.price_display }}</p>
+            </div>
+            <div class="mt-3 pt-3 border-t border-gray-50">
+                <div class="flex flex-wrap items-center gap-x-4 gap-y-1 text-xs text-gray-500 mb-2">
+                    <span>Submitted {{ car.created_at|date:"M j, Y, g:i a" }}</span>
+                    {% if car.status == 'ON_HOLD' %}
+                    <span class="text-amber-700 font-medium">Staff: on hold</span>
+                    {% elif car.status == 'SOLD' %}
+                    <span class="text-slate-600 font-medium">Listed as sold</span>
+                    {% endif %}
+                </div>
+                <div class="flex flex-wrap gap-2">
+                    {% if car.status == 'APPROVED' %}
+                    <a href="{% url 'car_detail' car.pk %}" class="inline-flex items-center justify-center px-4 py-2 rounded-xl bg-blue-600 text-white text-sm font-medium hover:bg-blue-700 no-underline">View live listing</a>
+                    {% elif car.status == 'SOLD' %}
+                    <span class="text-sm text-gray-500">This car is marked sold — thank you for using Radhe Cars.</span>
+                    {% elif car.status == 'ON_HOLD' %}
+                    <span class="text-sm text-gray-500">Our team has paused this listing. We’ll contact you if needed.</span>
+                    {% elif car.status == 'REJECTED' %}
+                    <span class="text-sm text-gray-500">This submission was not approved. You can submit another car anytime.</span>
+                    {% else %}
+                    <span class="text-sm text-gray-500">We’ll notify you when your car is reviewed.</span>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </li>
+    {% endfor %}
+</ul>
+{% endif %}
