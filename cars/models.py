@@ -182,7 +182,7 @@ class Car(models.Model):
     description = models.TextField(blank=True)
 
     is_featured = models.BooleanField(default=False)
-    status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='APPROVED')
+    status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='PENDING')
     # Sell form (public /sell/) — staff reviews under "Sell car inquiries", not main Cars list
     submit_via_sell_form = models.BooleanField(default=False)
     sell_inquiry_seen = models.BooleanField(
