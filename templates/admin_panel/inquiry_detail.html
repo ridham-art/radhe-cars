@@ -11,7 +11,10 @@
         <span class="text-xs px-2 py-1 rounded bg-slate-100">{{ inquiry.get_subject_display|default:"General" }}</span>
     </div>
     {% if inquiry.car %}
-    <p class="text-sm"><a href="{% url 'car_detail' inquiry.car.pk %}" class="ap-btn ap-btn-edit" target="_blank">Open related car</a></p>
+    <div class="rounded-lg border border-slate-200 bg-slate-50 px-4 py-3 text-sm">
+        <span class="text-slate-600">Related listing:</span>
+        <a href="{% url 'car_detail' inquiry.car.pk %}" class="font-medium text-blue-600 hover:underline ml-1" target="_blank" rel="noopener">{{ inquiry.car.title }}</a>
+    </div>
     {% endif %}
     <div class="border-t pt-4">
         <p class="text-sm text-slate-700 whitespace-pre-wrap">{{ inquiry.message }}</p>

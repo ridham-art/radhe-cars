@@ -207,22 +207,40 @@ def car_detail(request, pk):
     return render(request, 'cars/car_detail.html', context)
 
 
+def _approved_car_for_contact(pk):
+    if pk is None or pk == '':
+        return None
+    try:
+        pk = int(pk)
+    except (TypeError, ValueError):
+        return None
+    return Car.objects.filter(pk=pk, status='APPROVED').first()
+
+
 def contact(request):
+    selected_car = None
     if request.method == 'POST':
         is_ajax = request.headers.get('x-requested-with') == 'XMLHttpRequest'
         form = ContactForm(request.POST)
         if form.is_valid():
-            form.save()
+            inquiry = form.save()
             if is_ajax:
                 return JsonResponse({'success': True, 'message': 'Your message has been sent successfully! We will get back to you soon.'})
             messages.success(request, 'Your message has been sent successfully! We will get back to you soon.')
+            if inquiry.car_id:
+                return redirect(f"{reverse('contact')}?car={inquiry.car_id}")
             return redirect('contact')
         else:
+            selected_car = _approved_car_for_contact(request.POST.get('car'))
             if is_ajax:
                 return JsonResponse({'success': False, 'errors': form.errors}, status=400)
     else:
-        form = ContactForm()
-    return render(request, 'cars/contact.html', {'form': form})
+        selected_car = _approved_car_for_contact(request.GET.get('car'))
+        initial = {}
+        if selected_car:
+            initial['car'] = selected_car.pk
+        form = ContactForm(initial=initial)
+    return render(request, 'cars/contact.html', {'form': form, 'selected_car': selected_car})
 
 
 def _km_range_to_mileage(km_range):

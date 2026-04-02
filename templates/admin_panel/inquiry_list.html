@@ -15,7 +15,7 @@
     <div class="overflow-x-auto overscroll-x-contain" style="-webkit-overflow-scrolling:touch">
         <table class="w-full ap-table min-w-[720px]">
         <thead class="bg-slate-50 text-xs uppercase text-slate-500">
-            <tr><th>Name</th><th>Email</th><th>Phone</th><th>Subject</th><th>Date</th><th></th></tr>
+            <tr><th>Name</th><th>Email</th><th>Phone</th><th>Subject</th><th>Car</th><th>Date</th><th></th></tr>
         </thead>
         <tbody>
             {% for i in inquiries %}
@@ -24,6 +24,13 @@
                 <td>{{ i.email }}</td>
                 <td>{{ i.phone }}</td>
                 <td>{{ i.get_subject_display|default:"—" }}</td>
+                <td class="text-sm max-w-[200px]">
+                    {% if i.car %}
+                    <a href="{% url 'car_detail' i.car.pk %}" target="_blank" rel="noopener" class="text-blue-600 hover:underline">{{ i.car.title }}</a>
+                    {% else %}
+                    <span class="text-slate-400">—</span>
+                    {% endif %}
+                </td>
                 <td class="text-sm text-slate-500">{{ i.created_at|date:"M j, Y H:i" }}</td>
                 <td class="text-right">
                     <div class="ap-row-actions">
@@ -35,7 +42,7 @@
                 </td>
             </tr>
             {% empty %}
-            <tr><td colspan="6" class="text-center py-8 text-slate-500">{% if filter_unread %}No unread inquiries.{% else %}No inquiries yet.{% endif %}</td></tr>
+            <tr><td colspan="7" class="text-center py-8 text-slate-500">{% if filter_unread %}No unread inquiries.{% else %}No inquiries yet.{% endif %}</td></tr>
             {% endfor %}
         </tbody>
     </table>

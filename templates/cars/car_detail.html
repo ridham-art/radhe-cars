@@ -94,7 +94,7 @@
                 {% endif %}
             </div>
             <div class="flex flex-col gap-3">
-                <a href="{% url 'contact' %}" class="w-full bg-[#ea580c] hover:bg-[#c2410c] text-white py-4 rounded-xl text-lg font-semibold transition-all shadow-sm hover:shadow-md hover:-translate-y-0.5 text-center no-underline flex items-center justify-center">
+                <a href="{% url 'contact' %}?car={{ car.pk }}" class="w-full bg-[#ea580c] hover:bg-[#c2410c] text-white py-4 rounded-xl text-lg font-semibold transition-all shadow-sm hover:shadow-md hover:-translate-y-0.5 text-center no-underline flex items-center justify-center">
                     Contact Us
                 </a>
                 <button type="button" class="share-btn w-full bg-white border border-gray-200 hover:bg-gray-50 text-gray-700 py-4 rounded-xl text-lg font-semibold transition-all flex items-center justify-center gap-2" data-share-url="{{ request.build_absolute_uri }}" data-share-title="{{ car.title }} - {{ car.price_display }}" onclick="event.stopPropagation(); event.preventDefault(); if(window.doShare) window.doShare(this); return false;">
@@ -277,7 +277,7 @@
 
         <!-- Action Buttons -->
         <div class="flex flex-col gap-3">
-            <a href="{% url 'contact' %}" class="w-full bg-[#ea580c] hover:bg-[#c2410c] text-white py-4 rounded-xl text-lg font-semibold transition-all shadow-sm hover:shadow-md hover:-translate-y-0.5 text-center no-underline flex items-center justify-center">
+            <a href="{% url 'contact' %}?car={{ car.pk }}" class="w-full bg-[#ea580c] hover:bg-[#c2410c] text-white py-4 rounded-xl text-lg font-semibold transition-all shadow-sm hover:shadow-md hover:-translate-y-0.5 text-center no-underline flex items-center justify-center">
                 Contact Us
             </a>
             <button type="button" class="share-btn w-full bg-white border border-gray-200 hover:bg-gray-50 text-gray-700 py-4 rounded-xl text-lg font-semibold transition-all flex items-center justify-center gap-2" data-share-url="{{ request.build_absolute_uri }}" data-share-title="{{ car.title }} - {{ car.price_display }}" onclick="event.stopPropagation(); event.preventDefault(); if(window.doShare) window.doShare(this); return false;">

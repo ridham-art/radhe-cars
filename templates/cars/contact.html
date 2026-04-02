@@ -68,6 +68,13 @@
             </div>
             <form id="contact-form" class="space-y-5 sm:space-y-6">
                 {% csrf_token %}
+                {{ form.car }}
+                {% if selected_car %}
+                <div class="rounded-xl border border-blue-100 bg-blue-50/80 px-4 py-3 text-sm text-gray-800">
+                    <span class="text-gray-600">You’re asking about:</span>
+                    <a href="{% url 'car_detail' selected_car.pk %}" class="font-medium text-blue-700 hover:text-blue-800 ml-1">{{ selected_car.title }}</a>
+                </div>
+                {% endif %}
                 <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-5">
                     <div>
                         <label class="block text-sm font-medium text-gray-900 mb-1.5">First Name</label>
@@ -169,6 +176,9 @@ document.getElementById('contact-form').addEventListener('submit', function(e) {
             form.reset();
             var pd = document.getElementById('contact-phone-digits');
             if (pd) pd.value = '';
+            var carPk = new URLSearchParams(window.location.search).get('car');
+            var carHidden = form.querySelector('input[name="car"]');
+            if (carHidden && carPk) carHidden.value = carPk;
             window.scrollTo({top: 0, behavior: 'smooth'});
         } else {
             var msg = res.data.message || 'Please fix the errors and try again.';

@@ -742,7 +742,7 @@ class InquiryListView(
     paginate_by = 30
 
     def get_queryset(self):
-        qs = Inquiry.objects.order_by('is_read', '-created_at')
+        qs = Inquiry.objects.select_related('car', 'car__brand', 'car__model').order_by('is_read', '-created_at')
         if self.request.GET.get('unread') == '1':
             qs = qs.filter(is_read=False)
         return qs
@@ -757,6 +757,9 @@ class InquiryDetailView(StaffRequiredMixin, AdminPanelContextMixin, DetailView):
     model = Inquiry
     template_name = 'admin_panel/inquiry_detail.html'
     context_object_name = 'inquiry'
+
+    def get_queryset(self):
+        return Inquiry.objects.select_related('car', 'car__brand', 'car__model')
 
     def get(self, request, *args, **kwargs):
         response = super().get(request, *args, **kwargs)

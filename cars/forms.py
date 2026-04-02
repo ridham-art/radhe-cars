@@ -22,10 +22,13 @@ class SignUpForm(UserCreationForm):
 class ContactForm(forms.ModelForm):
     class Meta:
         model = Inquiry
-        fields = ['first_name', 'last_name', 'email', 'phone', 'subject', 'message']
+        fields = ['first_name', 'last_name', 'email', 'phone', 'subject', 'message', 'car']
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
+        self.fields['car'].queryset = Car.objects.filter(status='APPROVED')
+        self.fields['car'].required = False
+        self.fields['car'].widget = forms.HiddenInput()
         base_class = 'w-full bg-white border border-gray-200 rounded-xl py-3 px-4 text-sm text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors shadow-sm min-h-[44px]'
         self.fields['first_name'].widget.attrs.update({'class': base_class, 'placeholder': 'John'})
         self.fields['last_name'].widget.attrs.update({'class': base_class, 'placeholder': 'Doe'})
