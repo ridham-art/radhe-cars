@@ -13,7 +13,7 @@ from django.contrib.auth.views import LoginView, LogoutView
 from django.http import HttpResponseRedirect
 from django.contrib.auth.mixins import LoginRequiredMixin, UserPassesTestMixin
 from django.core.paginator import EmptyPage
-from django.db.models import Q, Count, Prefetch
+from django.db.models import Q, Count
 from django.http import HttpResponse, JsonResponse
 from django.shortcuts import get_object_or_404, redirect, render
 from django.urls import reverse, reverse_lazy
@@ -40,7 +40,6 @@ from cars.admin_panel.forms import (
     StaffAuthenticationForm,
 )
 from cars.admin_panel import csv_io
-from cars.admin_panel.perf import admin_nav_counts_one_query
 
 logger = logging.getLogger('cars.admin_panel.auth')
 
@@ -50,24 +49,9 @@ def filter_car_list_queryset(request):
     Cars shown on the staff panel list (excludes sell-form inquiries).
     Supports search, brand, fuel, status, not_sold, and listed_at date range (date_from / date_to, YYYY-MM-DD).
     """
-    _img_qs = CarImage.objects.only(
-        'id', 'car_id', 'image', 'image_url', 'is_primary', 'created_at'
-    ).order_by('-is_primary', 'id')
     qs = (
         Car.objects.select_related('brand', 'model')
-        .prefetch_related(Prefetch('images', queryset=_img_qs))
-        .defer(
-            'description',
-            'contact_name',
-            'contact_number',
-            'village_area',
-            'sell_timeline',
-            'insurance_validity',
-            'insurance_type',
-            'registration_state',
-            'registration_year',
-            'rto',
-        )
+        .prefetch_related('images')
         .exclude(submit_via_sell_form=True)
     )
     q = request.GET.get('q', '').strip()
@@ -143,9 +127,10 @@ class StaffRequiredMixin(LoginRequiredMixin, UserPassesTestMixin):
 class AdminPanelContextMixin:
     def get_context_data(self, **kwargs):
         ctx = super().get_context_data(**kwargs)
-        u, s = admin_nav_counts_one_query()
-        ctx['unread_inquiry_count'] = u
-        ctx['sell_inquiry_unread_count'] = s
+        ctx['unread_inquiry_count'] = Inquiry.objects.filter(is_read=False).count()
+        ctx['sell_inquiry_unread_count'] = Car.objects.filter(
+            submit_via_sell_form=True, sell_inquiry_seen=False
+        ).count()
         return ctx
 
 
@@ -246,25 +231,18 @@ class DashboardView(StaffRequiredMixin, AdminPanelContextMixin, TemplateView):
     def get_context_data(self, **kwargs):
         ctx = super().get_context_data(**kwargs)
         User = get_user_model()
-        cars_agg = Car.objects.aggregate(
-            total_cars=Count('id'),
-            active_cars=Count('id', filter=~Q(status='SOLD')),
-            sold_cars=Count('id', filter=Q(status='SOLD')),
-        )
-        inq_agg = Inquiry.objects.aggregate(
-            total_inquiries=Count('id'),
-            unread_inquiries=Count('id', filter=Q(is_read=False)),
-        )
-        wish_agg = Wishlist.objects.filter(user__isnull=False).aggregate(
-            total_wishlist_saves=Count('id'),
-            customers_with_wishlist=Count('user_id', distinct=True),
-        )
+        customers = User.objects.filter(is_staff=False)
+        wish_qs = Wishlist.objects.filter(user__isnull=False)
         ctx.update(
             {
-                **cars_agg,
-                **inq_agg,
-                'total_customers': User.objects.filter(is_staff=False).count(),
-                **wish_agg,
+                'total_cars': Car.objects.count(),
+                'active_cars': Car.objects.exclude(status='SOLD').count(),
+                'sold_cars': Car.objects.filter(status='SOLD').count(),
+                'total_inquiries': Inquiry.objects.count(),
+                'unread_inquiries': Inquiry.objects.filter(is_read=False).count(),
+                'total_customers': customers.count(),
+                'total_wishlist_saves': wish_qs.count(),
+                'customers_with_wishlist': wish_qs.values('user_id').distinct().count(),
             }
         )
         return ctx
@@ -354,7 +332,7 @@ class CarListView(
 
     def get_context_data(self, **kwargs):
         ctx = super().get_context_data(**kwargs)
-        ctx['brands'] = Brand.objects.only('id', 'name').order_by('name')
+        ctx['brands'] = Brand.objects.all()
         ctx['fuel_types'] = Car.FUEL_CHOICES
         ctx['statuses'] = Car.STATUS_CHOICES
         ctx['search_q'] = self.request.GET.get('q', '')
@@ -504,25 +482,9 @@ class SellCarInquiryListView(
         return super().dispatch(request, *args, **kwargs)
 
     def get_queryset(self):
-        _img_qs = CarImage.objects.only(
-            'id', 'car_id', 'image', 'image_url', 'is_primary', 'created_at'
-        ).order_by('-is_primary', 'id')
-        qs = (
-            Car.objects.filter(submit_via_sell_form=True)
-            .select_related('brand', 'model', 'seller')
-            .prefetch_related(Prefetch('images', queryset=_img_qs))
-            .defer(
-                'description',
-                'contact_name',
-                'village_area',
-                'insurance_validity',
-                'insurance_type',
-                'registration_year',
-                'registration_state',
-                'rto',
-                'sell_timeline',
-            )
-        )
+        qs = Car.objects.filter(submit_via_sell_form=True).select_related(
+            'brand', 'model', 'seller'
+        ).prefetch_related('images')
         q = self.request.GET.get('q', '').strip()
         if q:
             qs = qs.filter(Q(title__icontains=q) | Q(contact_number__icontains=q))
@@ -727,7 +689,7 @@ class CarModelListView(StaffRequiredMixin, AdminPanelContextMixin, ListView):
 
     def get_context_data(self, **kwargs):
         ctx = super().get_context_data(**kwargs)
-        ctx['brands'] = Brand.objects.only('id', 'name').order_by('name')
+        ctx['brands'] = Brand.objects.all()
         _b = self.request.GET.get('brand')
         ctx['filter_brand'] = int(_b) if _b and str(_b).isdigit() else None
         return ctx
@@ -828,7 +790,8 @@ class InquiryDeleteView(StaffRequiredMixin, View):
 
 class UnreadInquiryCountJsonView(StaffRequiredMixin, View):
     def get(self, request):
-        inquiries, sell = admin_nav_counts_one_query()
+        inquiries = Inquiry.objects.filter(is_read=False).count()
+        sell = Car.objects.filter(submit_via_sell_form=True, sell_inquiry_seen=False).count()
         return JsonResponse(
             {
                 'count': inquiries,
@@ -840,7 +803,7 @@ class UnreadInquiryCountJsonView(StaffRequiredMixin, View):
 
 class BrandModelsJsonView(StaffRequiredMixin, View):
     def get(self, request, pk):
-        models = CarModel.objects.filter(brand_id=pk).only('id', 'name').order_by('name')
+        models = CarModel.objects.filter(brand_id=pk).order_by('name')
         return JsonResponse({'models': [{'id': m.id, 'name': m.name} for m in models]})
 
 
