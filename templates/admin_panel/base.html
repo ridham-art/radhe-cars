@@ -41,13 +41,30 @@
         @media (max-width: 767.98px) {
             #ap-sidebar { max-width: min(18rem, calc(100vw - 1rem)); }
         }
+        /* Nav items: mobile active = slate-800; desktop active = blue pill (reference) */
+        #ap-sidebar nav a.ap-nav-item--active {
+            background-color: rgb(30 41 59);
+            color: #fff;
+            font-weight: 500;
+        }
+        @media (min-width: 768px) {
+            #ap-sidebar nav a.ap-nav-item--active {
+                background-color: rgba(59, 130, 246, 0.18);
+                color: #fff;
+                font-weight: 500;
+                box-shadow: inset 0 0 0 1px rgba(96, 165, 250, 0.22);
+            }
+            #ap-sidebar nav a.ap-nav-item:not(.ap-nav-item--active):hover {
+                background-color: rgba(30, 41, 59, 0.9);
+            }
+        }
     </style>
     {% block extra_css %}{% endblock %}
 </head>
 <body class="bg-slate-100 text-slate-900 min-h-screen">
     <div id="ap-sidebar-backdrop" class="fixed inset-0 z-40 bg-slate-900/50 md:hidden opacity-0 pointer-events-none transition-opacity duration-200" aria-hidden="true"></div>
     <div class="flex min-h-screen">
-        <aside id="ap-sidebar" class="fixed md:static inset-y-0 left-0 z-50 w-72 bg-slate-900 text-white flex flex-col shrink-0 -translate-x-full md:translate-x-0 transition-transform duration-200 ease-out shadow-xl md:shadow-none touch-manipulation">
+        <aside id="ap-sidebar" class="fixed md:sticky md:top-0 md:h-screen md:min-h-screen md:max-h-screen md:overflow-y-auto md:overflow-x-hidden md:self-start inset-y-0 left-0 z-50 w-72 md:w-56 bg-slate-900 text-white flex flex-col shrink-0 -translate-x-full md:translate-x-0 transition-transform duration-200 ease-out shadow-xl md:shadow-none touch-manipulation border-r border-slate-800/80 md:border-slate-700/50">
             <div class="p-4 border-b border-slate-700 flex items-start justify-between gap-2">
                 <div class="min-w-0">
                     <p class="font-semibold text-lg">Radhe Cars</p>
@@ -58,31 +75,31 @@
                 </button>
             </div>
             <nav class="flex-1 py-4 space-y-1 px-2 overflow-y-auto overscroll-contain pb-[env(safe-area-inset-bottom)]">
-                <a href="{% url 'admin_panel:dashboard' %}" class="block px-3 py-2.5 md:py-2 rounded-lg hover:bg-slate-800 text-sm {% if request.resolver_match.url_name == 'dashboard' %}bg-slate-800{% endif %}">Dashboard</a>
                 {% with n=request.resolver_match.url_name %}
-                <a href="{% url 'admin_panel:car_list' %}" class="block px-3 py-2.5 md:py-2 rounded-lg hover:bg-slate-800 text-sm {% if n == 'car_list' or n == 'car_add' or n == 'car_edit' or n == 'car_delete' or n == 'car_bulk_delete' %}bg-slate-800{% endif %}">Cars</a>
-                {% endwith %}
-                <a href="{% url 'admin_panel:brand_list' %}" class="block px-3 py-2.5 md:py-2 rounded-lg hover:bg-slate-800 text-sm {% if 'brand' in request.resolver_match.url_name %}bg-slate-800{% endif %}">Brands</a>
-                <a href="{% url 'admin_panel:carmodel_list' %}" class="block px-3 py-2.5 md:py-2 rounded-lg hover:bg-slate-800 text-sm {% if 'carmodel' in request.resolver_match.url_name %}bg-slate-800{% endif %}">Models</a>
-                <a href="{% url 'admin_panel:customer_list' %}" class="block px-3 py-2.5 md:py-2 rounded-lg hover:bg-slate-800 text-sm {% if request.resolver_match.url_name == 'customer_list' %}bg-slate-800{% endif %}">Customers</a>
-                <a href="{% url 'admin_panel:wishlist_list' %}" class="block px-3 py-2.5 md:py-2 rounded-lg hover:bg-slate-800 text-sm {% if request.resolver_match.url_name == 'wishlist_list' %}bg-slate-800{% endif %}">Wishlist</a>
-                <a href="{% url 'admin_panel:inquiry_list' %}" class="block px-3 py-2.5 md:py-2 rounded-lg hover:bg-slate-800 text-sm flex items-center justify-between {% if 'inquiry' in request.resolver_match.url_name %}bg-slate-800{% endif %}">
+                <a href="{% url 'admin_panel:dashboard' %}" class="ap-nav-item block px-3 py-2.5 md:py-2 rounded-lg text-sm text-slate-200 hover:bg-slate-800 md:hover:bg-transparent {% if n == 'dashboard' %}ap-nav-item--active{% endif %}">Dashboard</a>
+                <a href="{% url 'admin_panel:car_list' %}" class="ap-nav-item block px-3 py-2.5 md:py-2 rounded-lg text-sm text-slate-200 hover:bg-slate-800 md:hover:bg-transparent {% if n == 'car_list' or n == 'car_add' or n == 'car_edit' or n == 'car_delete' or n == 'car_bulk_delete' %}ap-nav-item--active{% endif %}">Cars</a>
+                <a href="{% url 'admin_panel:brand_list' %}" class="ap-nav-item block px-3 py-2.5 md:py-2 rounded-lg text-sm text-slate-200 hover:bg-slate-800 md:hover:bg-transparent {% if 'brand' in n %}ap-nav-item--active{% endif %}">Brands</a>
+                <a href="{% url 'admin_panel:carmodel_list' %}" class="ap-nav-item block px-3 py-2.5 md:py-2 rounded-lg text-sm text-slate-200 hover:bg-slate-800 md:hover:bg-transparent {% if 'carmodel' in n %}ap-nav-item--active{% endif %}">Models</a>
+                <a href="{% url 'admin_panel:customer_list' %}" class="ap-nav-item block px-3 py-2.5 md:py-2 rounded-lg text-sm text-slate-200 hover:bg-slate-800 md:hover:bg-transparent {% if n == 'customer_list' %}ap-nav-item--active{% endif %}">Customers</a>
+                <a href="{% url 'admin_panel:wishlist_list' %}" class="ap-nav-item block px-3 py-2.5 md:py-2 rounded-lg text-sm text-slate-200 hover:bg-slate-800 md:hover:bg-transparent {% if n == 'wishlist_list' %}ap-nav-item--active{% endif %}">Wishlist</a>
+                <a href="{% url 'admin_panel:inquiry_list' %}" class="ap-nav-item flex items-center justify-between gap-2 px-3 py-2.5 md:py-2 rounded-lg text-sm text-slate-200 hover:bg-slate-800 md:hover:bg-transparent {% if 'inquiry' in n %}ap-nav-item--active{% endif %}">
                     <span>Inquiries</span>
                     {% if unread_inquiry_count %}
-                    <span id="nav-inquiry-badge" class="bg-red-500 text-white text-xs font-bold px-2 py-0.5 rounded-full">{{ unread_inquiry_count }}</span>
+                    <span id="nav-inquiry-badge" class="shrink-0 bg-red-500 text-white text-xs font-bold px-2 py-0.5 rounded-full">{{ unread_inquiry_count }}</span>
                     {% else %}
-                    <span id="nav-inquiry-badge" class="hidden bg-red-500 text-white text-xs font-bold px-2 py-0.5 rounded-full">0</span>
+                    <span id="nav-inquiry-badge" class="hidden shrink-0 bg-red-500 text-white text-xs font-bold px-2 py-0.5 rounded-full">0</span>
                     {% endif %}
                 </a>
-                <a href="{% url 'admin_panel:sell_car_inquiry_list' %}" class="block px-3 py-2.5 md:py-2 rounded-lg hover:bg-slate-800 text-sm flex items-center justify-between {% if 'sell_car_inquiry' in request.resolver_match.url_name %}bg-slate-800{% endif %}">
+                <a href="{% url 'admin_panel:sell_car_inquiry_list' %}" class="ap-nav-item flex items-center justify-between gap-2 px-3 py-2.5 md:py-2 rounded-lg text-sm text-slate-200 hover:bg-slate-800 md:hover:bg-transparent {% if 'sell_car_inquiry' in n %}ap-nav-item--active{% endif %}">
                     <span>Sell car inquiries</span>
                     {% if sell_inquiry_unread_count %}
-                    <span id="nav-sell-badge" class="bg-emerald-500 text-white text-xs font-bold min-w-[1.25rem] text-center px-1.5 py-0.5 rounded-full">{{ sell_inquiry_unread_count }}</span>
+                    <span id="nav-sell-badge" class="shrink-0 bg-emerald-500 text-white text-xs font-bold min-w-[1.25rem] text-center px-1.5 py-0.5 rounded-full">{{ sell_inquiry_unread_count }}</span>
                     {% else %}
-                    <span id="nav-sell-badge" class="hidden bg-emerald-500 text-white text-xs font-bold min-w-[1.25rem] text-center px-1.5 py-0.5 rounded-full">0</span>
+                    <span id="nav-sell-badge" class="hidden shrink-0 bg-emerald-500 text-white text-xs font-bold min-w-[1.25rem] text-center px-1.5 py-0.5 rounded-full">0</span>
                     {% endif %}
                 </a>
-                <a href="{% url 'admin_panel:csv_import' %}" class="block px-3 py-2.5 md:py-2 rounded-lg hover:bg-slate-800 text-sm {% if 'csv' in request.resolver_match.url_name %}bg-slate-800{% endif %}">CSV Import</a>
+                <a href="{% url 'admin_panel:csv_import' %}" class="ap-nav-item block px-3 py-2.5 md:py-2 rounded-lg text-sm text-slate-200 hover:bg-slate-800 md:hover:bg-transparent {% if 'csv' in n %}ap-nav-item--active{% endif %}">CSV Import</a>
+                {% endwith %}
             </nav>
             <div class="p-3 border-t border-slate-700 pb-[max(0.75rem,env(safe-area-inset-bottom))]">
                 <form method="post" action="{% url 'admin_panel:logout' %}" id="ap-logout-form">
