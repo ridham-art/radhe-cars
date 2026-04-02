@@ -537,7 +537,7 @@ class BrandListView(StaffRequiredMixin, AdminPanelContextMixin, ListView):
     model = Brand
     template_name = 'admin_panel/brand_list.html'
     context_object_name = 'brands'
-    queryset = Brand.objects.annotate(car_count=Count('models__car', distinct=True)).order_by('name')
+    queryset = Brand.objects.annotate(car_count=Count('car', distinct=True)).order_by('name')
 
 
 class BrandCreateView(StaffRequiredMixin, AdminPanelContextMixin, CreateView):

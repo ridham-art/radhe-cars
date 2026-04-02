@@ -173,7 +173,8 @@ def apply_import(rows_dicts, replace_all=False):
             'transmission': row.get('transmission') or 'MT',
             'body_type': row.get('body_type') or 'Hatchback',
             'ownership': row.get('ownership') or '1st Owner',
-            'status': row.get('status') or 'PENDING',
+            # CSV import is always draft: staff approves in the panel (ignore status column).
+            'status': 'PENDING',
             'city': row.get('city') or 'Ahmedabad',
             'color': row.get('color') or '',
             'registration_year': '',
