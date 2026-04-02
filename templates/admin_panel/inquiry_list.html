@@ -11,8 +11,9 @@
         <button type="submit" class="px-4 py-2 bg-white border border-slate-200 text-sm rounded-lg hover:bg-slate-50">Mark all as read</button>
     </form>
 </div>
-<div class="bg-white rounded-xl border overflow-hidden">
-    <table class="w-full ap-table">
+<div class="bg-white rounded-xl border border-slate-200 overflow-hidden shadow-sm">
+    <div class="overflow-x-auto overscroll-x-contain" style="-webkit-overflow-scrolling:touch">
+        <table class="w-full ap-table min-w-[720px]">
         <thead class="bg-slate-50 text-xs uppercase text-slate-500">
             <tr><th>Name</th><th>Email</th><th>Phone</th><th>Subject</th><th>Date</th><th></th></tr>
         </thead>
@@ -38,6 +39,7 @@
             {% endfor %}
         </tbody>
     </table>
+    </div>
 </div>
 {% if page_obj.has_other_pages %}
 <div class="mt-4 flex justify-center gap-2">
