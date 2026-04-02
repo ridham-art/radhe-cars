@@ -3,15 +3,21 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+    <meta name="theme-color" content="#f1f5f9">
     <title>Staff login · Radhe Cars</title>
     <link rel="stylesheet" href="{% static 'css/tailwind.css' %}">
     <link rel="preload" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap" as="style" onload="this.onload=null;this.rel='stylesheet'">
     <noscript><link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap" rel="stylesheet"></noscript>
-    <style>body { font-family: 'Inter', sans-serif; }</style>
+    <style>
+        body { font-family: 'Inter', sans-serif; -webkit-tap-highlight-color: transparent; }
+        .login-field input { width: 100%; min-height: 2.75rem; padding: 0.625rem 0.75rem; font-size: 1rem; border-radius: 0.5rem; border: 1px solid #e2e8f0; }
+        @media (min-width: 640px) { .login-field input { min-height: auto; font-size: 0.875rem; } }
+        .login-field input:focus { outline: none; border-color: #3b82f6; box-shadow: 0 0 0 2px rgba(59,130,246,.2); }
+    </style>
 </head>
-<body class="bg-slate-100 min-h-screen flex items-center justify-center p-4">
-    <div class="bg-white rounded-2xl shadow-lg border border-slate-200 w-full max-w-md p-8">
+<body class="bg-slate-100 min-h-screen min-h-[100dvh] flex items-center justify-center p-4 sm:p-6" style="padding: max(1rem, env(safe-area-inset-top)) max(1rem, env(safe-area-inset-right)) max(1rem, env(safe-area-inset-bottom)) max(1rem, env(safe-area-inset-left));">
+    <div class="bg-white rounded-2xl shadow-lg border border-slate-200 w-full max-w-md p-6 sm:p-8">
         <h1 class="text-xl font-semibold text-slate-900 mb-1">Staff sign in</h1>
         <p class="text-sm text-slate-500 mb-6">Radhe Cars admin panel</p>
         <p class="text-xs text-slate-600 bg-slate-100 border border-slate-200 rounded-lg px-3 py-2 mb-4 leading-relaxed">
@@ -34,16 +40,16 @@
         <form method="post" action="{% url 'admin_panel:login' %}">
             {% csrf_token %}
             {% if request.GET.next %}<input type="hidden" name="next" value="{{ request.GET.next }}">{% endif %}
-            <div class="mb-4">
+            <div class="mb-4 login-field">
                 <label class="block text-sm font-medium text-slate-700 mb-1" for="id_username">Username</label>
                 {{ form.username }}
             </div>
-            <div class="mb-2">
+            <div class="mb-2 login-field">
                 <label class="block text-sm font-medium text-slate-700 mb-1" for="id_password">Password</label>
                 {{ form.password }}
             </div>
             <p class="text-xs text-slate-500 mb-6">If login fails, this field is left blank on purpose (security). Enter your password again.</p>
-            <button type="submit" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-medium py-2.5 rounded-lg text-sm">Sign in</button>
+            <button type="submit" class="w-full min-h-[2.75rem] touch-manipulation bg-blue-600 hover:bg-blue-700 active:bg-blue-800 text-white font-medium py-3 sm:py-2.5 rounded-xl sm:rounded-lg text-base sm:text-sm">Sign in</button>
         </form>
     </div>
 </body>
