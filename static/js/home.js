@@ -226,7 +226,7 @@
         var track = document.getElementById('hero-track');
         if (track) {
         var dots = document.querySelectorAll('.hero-dot');
-        var pos = 1,
+        var pos = 0,
             real = 0,
             total = 3,
             moving = false,
@@ -237,7 +237,8 @@
             track.style.transform = 'translateX(-' + p * 100 + '%)';
         }
 
-        track.addEventListener('transitionend', function () {
+        track.addEventListener('transitionend', function (e) {
+            if (e.target !== track || e.propertyName !== 'transform') return;
             moving = false;
             if (pos === 0) {
                 pos = total;
@@ -246,12 +247,16 @@
                 pos = 1;
                 move(pos, false);
             }
+            real = ((pos % total) + total) % total;
+            updateDots();
         });
 
         function updateDots() {
             for (var i = 0; i < dots.length; i++) {
                 var on = i === real;
                 dots[i].style.opacity = on ? '1' : '0.5';
+                dots[i].classList.toggle('bg-white', on);
+                dots[i].classList.toggle('bg-white/50', !on);
                 dots[i].setAttribute('aria-selected', on ? 'true' : 'false');
                 dots[i].setAttribute('tabindex', on ? '0' : '-1');
             }
@@ -261,7 +266,8 @@
             if (moving) return;
             moving = true;
             pos += dir;
-            real = ((pos - 1) % total + total) % total;
+            if (pos < 0) pos = 2;
+            real = ((pos % total) + total) % total;
             updateDots();
             move(pos, true);
             resetTimer();
@@ -270,7 +276,7 @@
         window.heroGoTo = function (i) {
             if (moving) return;
             moving = true;
-            pos = i + 1;
+            pos = i;
             real = i;
             updateDots();
             move(pos, true);
