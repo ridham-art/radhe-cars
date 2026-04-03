@@ -1,248 +1,313 @@
 # Radhe Cars
 
-A used car marketplace web application focused on Gujarat, India. Buy and sell pre-owned cars with an easy-to-use interface.
+A production-oriented **used-car marketplace** for **Gujarat, India** (Ahmedabad area). Customers browse approved inventory, submit **buy** and **sell** inquiries, use a **wishlist**, and contact the dealership. **Staff** manage listings, brands/models, customers, and inquiries through a dedicated **admin panel** (separate from Django’s built-in `/admin/`).
+
+---
+
+## Table of contents
+
+1. [Features](#features)  
+2. [Tech stack](#tech-stack)  
+3. [Architecture](#architecture)  
+4. [Repository layout](#repository-layout)  
+5. [Prerequisites](#prerequisites)  
+6. [Local development](#local-development)  
+7. [Environment variables](#environment-variables)  
+8. [Frontend (Tailwind CSS)](#frontend-tailwind-css)  
+9. [Database](#database)  
+10. [Authentication](#authentication)  
+11. [URLs overview](#urls-overview)  
+12. [Deployment](#deployment)  
+13. [Operations checklist](#operations-checklist)  
+14. [Troubleshooting](#troubleshooting)  
+15. [License](#license)
+
+---
 
 ## Features
 
-- **Browse Cars** – Filter by brand, fuel type, transmission, price, year, and more
-- **Car Details** – Image gallery, specifications, price, seller contact
-- **Sell Car** – Step-by-step form to list your car (brand, model, variant, photos, price)
-- **Wishlist** – Save cars for later (requires login)
-- **User Auth** – Email/password signup and Google OAuth login
-- **Responsive UI** – Mobile-friendly design with sticky filters
+### Public site
 
-## Tech Stack
+| Area | Description |
+|------|-------------|
+| **Home** | Hero carousel, featured/recent cars, body-type filter (AJAX), testimonials |
+| **Inventory** | `/cars/` — filters (brand, price, fuel, transmission, year, etc.) |
+| **Car detail** | Gallery, specs, wishlist, **Contact us** pre-selects the listing on the contact form |
+| **Contact** | Inquiry form; optional **linked car** for staff (approved listings only) |
+| **Sell** | Multi-step listing with images; flows into staff **sell car inquiries** |
+| **Auth** | Email/password signup/login and **Google** (django-allauth) |
+| **Wishlist** | Per-user saved cars |
 
-- **Backend:** Django 5.x
-- **Database:** PostgreSQL
-- **Auth:** django-allauth (email + Google OAuth)
-- **Frontend:** HTML, Tailwind CSS, vanilla JavaScript
+### Staff (`/admin-panel/`)
 
-## Prerequisites
+Staff-only UI for day-to-day operations: dashboard, **cars** (CRUD, bulk actions, CSV export), **brands** / **models**, **customers**, **wishlist** activity, **buy car inquiries** (contact form), **sell car inquiries**, **CSV import**, etc. Uses Django permissions (`is_staff`).
 
-- Python 3.10+
-- PostgreSQL 12+
-- pip / venv
+### Django admin (`/admin/`)
 
-## Local Setup
-
-### 1. Clone and enter project
-
-```bash
-cd "Radhe Auto Project 1"
-```
-
-### 2. Create virtual environment
-
-```bash
-python -m venv venv
-# Windows
-venv\Scripts\activate
-# Linux/macOS
-source venv/bin/activate
-```
-
-### 3. Install dependencies
-
-```bash
-pip install -r requirements.txt
-pip install psycopg2-binary
-```
-
-### 4. Configure environment
-
-Copy `.env.example` to `.env` and fill in your values (optional for local dev):
-
-```bash
-cp .env.example .env
-```
-
-Or create a `.env` file manually:
-
-```env
-SECRET_KEY=your-secret-key-here
-DEBUG=True
-ALLOWED_HOSTS=localhost,127.0.0.1
-
-# Database (PostgreSQL)
-DB_NAME=radhe_auto
-DB_USER=postgres
-DB_PASSWORD=your_password
-DB_HOST=localhost
-DB_PORT=5432
-
-# Google OAuth (for login)
-GOOGLE_CLIENT_ID=your-google-client-id
-GOOGLE_CLIENT_SECRET=your-google-client-secret
-```
-
-### 5. Create database
-
-```bash
-# In PostgreSQL
-createdb radhe_auto
-```
-
-### 6. Run migrations
-
-```bash
-python manage.py migrate
-```
-
-### 7. Create superuser (optional)
-
-```bash
-python manage.py createsuperuser
-```
-
-### 8. Collect static files (for production-style run)
-
-```bash
-python manage.py collectstatic --noinput
-```
-
-### 9. Run development server
-
-```bash
-python manage.py runserver
-```
-
-Open http://127.0.0.1:8000
+Standard Django admin for models; use for low-level data fixes if needed.
 
 ---
 
-## Deployment
+## Tech stack
 
-### Production checklist
-
-Before deploying:
-
-1. Set `DEBUG=False`
-2. Set a strong `SECRET_KEY` (e.g. from `python -c "from django.core.management.utils import get_random_secret_key; print(get_random_secret_key())"`)
-3. Set `ALLOWED_HOSTS` to your domain(s)
-4. Use environment variables for DB credentials and OAuth
-5. Serve static files (Whitenoise or CDN)
-6. Use a production WSGI server (Gunicorn)
-7. Use HTTPS
-
-### Option A: Railway / Render / Fly.io
-
-1. Add `requirements.txt` (already present). Add for production:
-
-   ```
-   gunicorn
-   whitenoise
-   psycopg2-binary
-   ```
-
-2. Create `Procfile` (Railway/Render):
-
-   ```
-   web: gunicorn radhe_cars.wsgi --bind 0.0.0.0:$PORT
-   ```
-
-3. Set environment variables in the platform dashboard:
-   - `SECRET_KEY`
-   - `DEBUG=False`
-   - `ALLOWED_HOSTS=your-domain.com`
-   - `DATABASE_URL` (if supported) or `DB_NAME`, `DB_USER`, `DB_PASSWORD`, `DB_HOST`, `DB_PORT`
-   - `GOOGLE_CLIENT_ID`, `GOOGLE_CLIENT_SECRET`
-
-4. Add build command: `python manage.py collectstatic --noinput`
-5. Add start command: `gunicorn radhe_cars.wsgi`
-
-### Option B: VPS (Ubuntu) with Nginx + Gunicorn
-
-1. Install Python, PostgreSQL, Nginx
-2. Clone project and set up venv
-3. Install: `pip install gunicorn whitenoise psycopg2-binary`
-4. Update `settings.py` for production (see below)
-5. Run Gunicorn: `gunicorn radhe_cars.wsgi:application --bind 0.0.0.0:8000`
-6. Configure Nginx as reverse proxy
-7. Use systemd or supervisor to keep Gunicorn running
-
-### Option C: PythonAnywhere
-
-1. Upload project
-2. Create virtualenv and install requirements
-3. Add `radhe-cars.pythonanywhere.com` to `ALLOWED_HOSTS`
-4. Configure PostgreSQL (or use SQLite for small scale)
-5. Set up static files and media in Web app config
-6. Point WSGI to `radhe_cars.wsgi`
+| Layer | Choice |
+|-------|--------|
+| **Runtime** | Python 3.11+ (see `runtime.txt` for pinned example) |
+| **Framework** | Django 5.2 |
+| **Database** | **PostgreSQL only** (local `DB_*` or `DATABASE_URL`, e.g. Supabase) |
+| **Auth** | django-allauth (email + Google OAuth) |
+| **Static files** | WhiteNoise (production); optional Nginx for `/media/` |
+| **WSGI** | Gunicorn |
+| **Frontend** | Server-rendered templates, **Tailwind CSS** (built locally), vanilla JS |
 
 ---
 
-## Production settings example
+## Architecture
 
-Add to `radhe_cars/settings.py` or use a separate `settings_production.py`:
-
-```python
-import os
-
-DEBUG = os.environ.get('DEBUG', 'False').lower() == 'true'
-SECRET_KEY = os.environ.get('SECRET_KEY', 'change-me-in-production')
-ALLOWED_HOSTS = os.environ.get('ALLOWED_HOSTS', 'localhost').split(',')
-
-# Static files with Whitenoise
-MIDDLEWARE = [
-    'django.middleware.security.SecurityMiddleware',
-    'whitenoise.middleware.WhiteNoiseMiddleware',  # Add this
-    # ... rest
-]
-
-STATIC_ROOT = os.path.join(BASE_DIR, 'staticfiles')
-STATICFILES_STORAGE = 'whitenoise.storage.CompressedManifestStaticFilesStorage'
-
-# Database from env
-DATABASES = {
-    'default': {
-        'ENGINE': 'django.db.backends.postgresql',
-        'NAME': os.environ.get('DB_NAME', 'radhe_auto'),
-        'USER': os.environ.get('DB_USER', 'postgres'),
-        'PASSWORD': os.environ.get('DB_PASSWORD', ''),
-        'HOST': os.environ.get('DB_HOST', 'localhost'),
-        'PORT': os.environ.get('DB_PORT', '5432'),
-    }
-}
+```mermaid
+flowchart LR
+  subgraph clients [Clients]
+    Browser[Browser]
+  end
+  subgraph edge [Edge]
+    Nginx[Nginx TLS + /media]
+  end
+  subgraph app [Application]
+    Gunicorn[Gunicorn WSGI]
+    Django[Django]
+  end
+  subgraph data [Data]
+    Postgres[(PostgreSQL)]
+    Media[Media files on disk]
+  end
+  Browser --> Nginx
+  Nginx --> Gunicorn
+  Gunicorn --> Django
+  Django --> Postgres
+  Django --> Media
 ```
+
+- **HTTPS** is typically terminated at Nginx; Django trusts `X-Forwarded-Proto` when `USE_X_FORWARDED_HEADERS` is enabled (default in production).  
+- **SQLite is not supported** — settings require PostgreSQL configuration.
 
 ---
 
-## Project structure
+## Repository layout
 
 ```
-Radhe Auto Project 1/
-├── cars/                 # Main app (models, views, urls)
-├── radhe_cars/           # Project settings, urls, wsgi
-├── templates/            # HTML templates
-│   ├── partials/         # Header, footer, car card, CTA
-│   └── cars/             # Car list, detail, sell, etc.
-├── media/                # User uploads (car images)
-├── static/               # CSS, JS, images
-├── requirements.txt
+.
+├── cars/                    # Main application (models, views, forms, admin_panel)
+├── radhe_cars/            # Project settings, root URLconf, WSGI, middleware
+├── templates/             # Global + app templates (cars/, admin_panel/, partials/)
+├── static/                # Built CSS, JS, assets (commit built tailwind.css or CI-build)
+├── static_src/            # Tailwind input CSS source
+├── media/                 # User uploads (car images) — not for secrets
+├── deploy/lightsail/      # Example Nginx + systemd unit for VPS deploys
 ├── manage.py
+├── requirements.txt
+├── package.json           # npm scripts for Tailwind build
+├── .env.example           # Copy to .env — never commit real secrets
 └── README.md
 ```
 
 ---
 
-## Environment variables reference
+## Prerequisites
 
-| Variable | Description | Default |
-|----------|-------------|---------|
-| `SECRET_KEY` | Django secret key | (dev key) |
-| `DEBUG` | Debug mode | `True` |
-| `ALLOWED_HOSTS` | Comma-separated hosts | `*` |
-| `DB_NAME` | PostgreSQL database name | `radhe_auto` |
-| `DB_USER` | PostgreSQL user | `postgres` |
-| `DB_PASSWORD` | PostgreSQL password | - |
-| `DB_HOST` | Database host | `localhost` |
-| `DB_PORT` | Database port | `5432` |
-| `GOOGLE_CLIENT_ID` | Google OAuth client ID | - |
-| `GOOGLE_CLIENT_SECRET` | Google OAuth secret | - |
+- **Python** 3.11+ (3.10+ may work; project targets 3.11)
+- **PostgreSQL** 12+ (local or remote URI)
+- **Node.js** + **npm** (only to build Tailwind CSS)
+- **Google Cloud** OAuth credentials (web application) for login — required by `settings.py`
+
+---
+
+## Local development
+
+### 1. Clone and virtualenv
+
+```bash
+git clone <your-repo-url> radhe-cars
+cd radhe-cars
+python -m venv venv
+```
+
+**Windows:** `venv\Scripts\activate`  
+**Linux/macOS:** `source venv/bin/activate`
+
+### 2. Install Python dependencies
+
+```bash
+pip install -r requirements.txt
+```
+
+### 3. Environment file
+
+```bash
+cp .env.example .env
+```
+
+Edit `.env` at minimum:
+
+- `SECRET_KEY` — generate, e.g.  
+  `python -c "from django.core.management.utils import get_random_secret_key; print(get_random_secret_key())"`
+- `DEBUG=True`
+- `ALLOWED_HOSTS=localhost,127.0.0.1`
+- **Database:** either `DATABASE_URL=postgresql://...` **or** `DB_HOST`, `DB_NAME`, `DB_USER`, `DB_PASSWORD` (and optional `DB_PORT`)
+- `GOOGLE_CLIENT_ID` and `GOOGLE_CLIENT_SECRET` from Google Cloud Console (OAuth consent + OAuth 2.0 Client IDs)
+
+### 4. Build CSS (required for styled pages)
+
+```bash
+npm install
+npm run build:css
+```
+
+For active UI work:
+
+```bash
+npm run watch:css
+```
+
+### 5. Database
+
+Create an empty PostgreSQL database matching your `.env`, then:
+
+```bash
+python manage.py migrate
+python manage.py createsuperuser   # optional: Django admin + staff access
+```
+
+Set **Sites** in Django admin (`/admin/sites/site/`) to your local domain if you test OAuth redirects.
+
+### 6. Run the server
+
+```bash
+python manage.py runserver
+```
+
+Open **http://127.0.0.1:8000**
+
+---
+
+## Environment variables
+
+| Variable | Purpose |
+|----------|---------|
+| `SECRET_KEY` | **Required.** Django cryptographic signing |
+| `DEBUG` | `True` locally; `False` or omit in production |
+| `ALLOWED_HOSTS` | Comma-separated hostnames (defaults include production domain in code) |
+| `DATABASE_URL` | Single PostgreSQL URI (e.g. Supabase pooler) — preferred in production |
+| `DATABASE_SSL_REQUIRE` | Default `true` for remote TLS |
+| `DB_HOST`, `DB_NAME`, `DB_USER`, `DB_PASSWORD`, `DB_PORT` | Alternative to `DATABASE_URL` for local Postgres |
+| `GOOGLE_CLIENT_ID`, `GOOGLE_CLIENT_SECRET` | **Required** — Google OAuth |
+| `CSRF_TRUSTED_ORIGINS` | Extra comma-separated origins (merged with production HTTPS defaults) |
+| `USE_X_FORWARDED_HEADERS` | Default `true` when `DEBUG=False` — behind Nginx |
+| `SECURE_SSL_REDIRECT` | Default `true` in production unless Nginx handles HTTPS only |
+
+See **`.env.example`** for comments and Supabase notes.
+
+---
+
+## Frontend (Tailwind CSS)
+
+- **Source:** `static_src/tailwind.input.css`  
+- **Output:** `static/css/tailwind.css` (referenced by `templates/base.html`)  
+- **Build:** `npm run build:css`  
+- **Watch:** `npm run watch:css`  
+
+After CSS changes, rebuild before commit or add a CI step.
+
+---
+
+## Database
+
+- Configured in `radhe_cars/settings.py`: **`DATABASE_URL`** (via `dj-database-url`) **or** discrete `DB_*` variables.  
+- **No SQLite** — missing DB config raises `ImproperlyConfigured`.  
+- Optional **IPv4 preference** for some Supabase hostnames (`_prefer_ipv4_for_supabase`).
+
+---
+
+## Authentication
+
+- **django-allauth** with **email** login and **Google** provider.  
+- Redirect URIs must include your domain, e.g.  
+  `https://yourdomain.com/accounts/google/login/callback/`  
+- Custom behavior may live in `cars.account_adapter` (`ACCOUNT_ADAPTER`).
+
+---
+
+## URLs overview
+
+| Path | Notes |
+|------|--------|
+| `/` | Home |
+| `/cars/` | List + filters |
+| `/cars/<id>/` | Detail |
+| `/contact/` | Contact / inquiry |
+| `/sell/` | Sell flow |
+| `/accounts/` | allauth (login, signup, social, etc.) |
+| `/admin-panel/` | Staff panel (login under `/admin-panel/login/`) |
+| `/admin/` | Django admin |
+| `/health/` | Lightweight health check (root URLconf) |
+
+---
+
+## Deployment
+
+### Generic production checklist
+
+1. `DEBUG=False`, strong `SECRET_KEY`, correct `ALLOWED_HOSTS` and `CSRF_TRUSTED_ORIGINS`  
+2. PostgreSQL reachable; `DATABASE_URL` or `DB_*` set  
+3. `python manage.py migrate`  
+4. `python manage.py collectstatic --noinput`  
+5. **Media:** serve `MEDIA_ROOT` at `MEDIA_URL` (Nginx `alias` or object storage — not WhiteNoise)  
+6. **Gunicorn** (example): `gunicorn radhe_cars.wsgi:application --bind 127.0.0.1:8001`  
+7. **Nginx** reverse proxy + TLS (e.g. Let’s Encrypt)  
+8. Google OAuth **Authorized redirect URIs** for production domains  
+
+### AWS Lightsail / Ubuntu
+
+Example configs live under **`deploy/lightsail/`** (`nginx-site.conf.example`, `gunicorn.service.example`). After editing a **systemd** unit file:
+
+```bash
+sudo systemctl daemon-reload
+sudo systemctl restart radhe-cars.service   # or your unit name
+```
+
+---
+
+## Operations checklist
+
+| Task | Command / note |
+|------|----------------|
+| Migrations | `python manage.py migrate` |
+| Static files | `python manage.py collectstatic --noinput` |
+| Create staff user | `createsuperuser` then grant staff or use your onboarding process |
+| CSS rebuild | `npm run build:css` |
+
+---
+
+## Troubleshooting
+
+| Symptom | Suggestion |
+|---------|------------|
+| `ImproperlyConfigured` for DB | Set `DATABASE_URL` or full `DB_*` set in `.env` |
+| `ImproperlyConfigured` for Google | Set `GOOGLE_CLIENT_ID` and `GOOGLE_CLIENT_SECRET` |
+| CSRF errors on POST (HTTPS) | Add origin to `CSRF_TRUSTED_ORIGINS`; ensure proxy forwards `X-Forwarded-Proto` |
+| Stale CSS | Run `npm run build:css` and redeploy / `collectstatic` |
+| systemd “unit changed” warning | Run `sudo systemctl daemon-reload` after editing unit files |
 
 ---
 
 ## License
 
-© 2026 Radhe Cars. All rights reserved.
+© Radhe Cars. All rights reserved.
+
+---
+
+## Contributing (for new developers)
+
+1. Read **`.env.example`** end-to-end before first `runserver`.  
+2. Never commit **`.env`** or production secrets.  
+3. Match existing patterns in `cars/` for models/views/forms.  
+4. Run **migrations** when models change; document new env vars in **`.env.example`** and this README.
