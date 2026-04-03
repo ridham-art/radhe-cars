@@ -232,14 +232,26 @@
             moving = false,
             timer;
 
+        var slideMs = 700;
+
         function move(p, anim) {
-            track.style.transition = anim ? 'transform 700ms ease-in-out' : 'none';
+            track.style.transition = anim ? 'transform ' + slideMs + 'ms ease-in-out' : 'none';
             track.style.transform = 'translateX(-' + p * 100 + '%)';
         }
 
+        function clearMovingSoon() {
+            clearTimeout(clearMovingSoon._t);
+            clearMovingSoon._t = setTimeout(function () {
+                moving = false;
+            }, slideMs + 80);
+        }
+
         track.addEventListener('transitionend', function (e) {
-            if (e.target !== track || e.propertyName !== 'transform') return;
+            if (e.target !== track) return;
+            var prop = (e.propertyName || '').toLowerCase();
+            if (prop.indexOf('transform') === -1) return;
             moving = false;
+            clearTimeout(clearMovingSoon._t);
             if (pos === 0) {
                 pos = total;
                 move(pos, false);
@@ -254,9 +266,9 @@
         function updateDots() {
             for (var i = 0; i < dots.length; i++) {
                 var on = i === real;
-                dots[i].style.opacity = on ? '1' : '0.5';
-                dots[i].classList.toggle('bg-white', on);
-                dots[i].classList.toggle('bg-white/50', !on);
+                dots[i].style.opacity = on ? '1' : '0.45';
+                dots[i].style.backgroundColor = on ? 'rgb(255, 255, 255)' : 'rgba(255, 255, 255, 0.45)';
+                dots[i].style.boxShadow = on ? '0 0 0 1px rgba(255,255,255,0.9)' : 'none';
                 dots[i].setAttribute('aria-selected', on ? 'true' : 'false');
                 dots[i].setAttribute('tabindex', on ? '0' : '-1');
             }
@@ -270,6 +282,7 @@
             real = ((pos % total) + total) % total;
             updateDots();
             move(pos, true);
+            clearMovingSoon();
             resetTimer();
         };
 
@@ -280,6 +293,7 @@
             real = i;
             updateDots();
             move(pos, true);
+            clearMovingSoon();
             resetTimer();
         };
 
