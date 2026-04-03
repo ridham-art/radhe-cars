@@ -233,10 +233,17 @@
             timer;
 
         var slideMs = 700;
+        /* One slide width = section (viewport strip) width — NOT % of full track (that broke slide/dot sync). */
+        function heroSlideWidthPx() {
+            var sec = track.parentElement;
+            return sec && sec.offsetWidth ? sec.offsetWidth : 0;
+        }
 
         function move(p, anim) {
+            var w = heroSlideWidthPx();
+            if (!w) w = 1;
             track.style.transition = anim ? 'transform ' + slideMs + 'ms ease-in-out' : 'none';
-            track.style.transform = 'translateX(-' + p * 100 + '%)';
+            track.style.transform = 'translateX(-' + p * w + 'px)';
         }
 
         function clearMovingSoon() {
@@ -246,18 +253,25 @@
             }, slideMs + 80);
         }
 
+        var heroWrapReady = false;
+        setTimeout(function () {
+            heroWrapReady = true;
+        }, 600);
+
         track.addEventListener('transitionend', function (e) {
             if (e.target !== track) return;
             var prop = (e.propertyName || '').toLowerCase();
             if (prop.indexOf('transform') === -1) return;
             moving = false;
             clearTimeout(clearMovingSoon._t);
-            if (pos === 0) {
-                pos = total;
-                move(pos, false);
-            } else if (pos === total + 1) {
-                pos = 1;
-                move(pos, false);
+            if (heroWrapReady) {
+                if (pos === 0) {
+                    pos = total;
+                    move(pos, false);
+                } else if (pos === total + 1) {
+                    pos = 1;
+                    move(pos, false);
+                }
             }
             real = ((pos % total) + total) % total;
             updateDots();
@@ -305,6 +319,15 @@
         }
         resetTimer();
         updateDots();
+        move(pos, false);
+        requestAnimationFrame(function () {
+            move(pos, false);
+            updateDots();
+        });
+
+        window.addEventListener('resize', function heroResize() {
+            move(pos, false);
+        });
 
         var heroEl = track.parentElement;
         var hsx = 0,
