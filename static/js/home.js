@@ -64,13 +64,14 @@
             if (!card) return;
             var gap = 24;
             var cardW = card.offsetWidth + gap;
-            var visible = Math.round(track.parentElement.offsetWidth / cardW);
+            if (cardW <= 0) return;
+            var visible = Math.max(1, Math.round(track.parentElement.offsetWidth / cardW));
             var origCount = track.children.length;
 
             if (!track.dataset.cloned) {
                 var clones = [];
                 for (var i = 0; i < visible; i++) {
-                    clones.push(track.children[i].cloneNode(true));
+                    clones.push(track.children[i % origCount].cloneNode(true));
                 }
                 for (var j = 0; j < clones.length; j++) {
                     track.appendChild(clones[j]);
@@ -221,9 +222,9 @@
             init('recent');
         });
 
-        // Hero infinite carousel
+        // Hero infinite carousel (do not early-return whole init if #hero-track missing)
         var track = document.getElementById('hero-track');
-        if (!track) return;
+        if (track) {
         var dots = document.querySelectorAll('.hero-dot');
         var pos = 1,
             real = 0,
@@ -323,6 +324,7 @@
             },
             { passive: true }
         );
+        }
     }
     if (document.readyState === 'loading') {
         document.addEventListener('DOMContentLoaded', initHomePage);
