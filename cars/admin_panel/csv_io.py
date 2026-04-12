@@ -1,4 +1,5 @@
 """CSV import/export helpers for staff admin panel."""
+import calendar
 import csv
 import io
 from decimal import Decimal, InvalidOperation
@@ -6,7 +7,7 @@ from decimal import Decimal, InvalidOperation
 from django.db import transaction
 
 from cars.models import Brand, Car, CarModel
-from cars.admin_panel.forms import parse_bool, parse_decimal, parse_int
+from cars.admin_panel.forms import parse_bool, parse_decimal, parse_int, parse_model_month
 
 CSV_HEADERS = [
     'id',
@@ -86,12 +87,9 @@ def validate_and_preview_rows(rows_dicts):
                 errs.append(str(e))
         mm_s = row.get('model_month')
         if mm_s:
-            try:
-                mm = parse_int(mm_s)
-                if mm < 1 or mm > 12:
-                    errs.append('model_month must be between 1 and 12')
-            except ValueError as e:
-                errs.append(str(e))
+            mm = parse_model_month(mm_s)
+            if mm is None:
+                errs.append('model_month must be 1–12 or Jan–Dec')
         if row.get('original_price'):
             try:
                 parse_decimal(row.get('original_price'))
@@ -168,14 +166,7 @@ def apply_import(rows_dicts, replace_all=False):
                 orig = parse_decimal(row.get('original_price'))
             except ValueError:
                 orig = None
-        mm_val = None
-        if row.get('model_month'):
-            try:
-                mm_val = parse_int(row.get('model_month'))
-                if mm_val < 1 or mm_val > 12:
-                    mm_val = None
-            except ValueError:
-                mm_val = None
+        mm_val = parse_model_month(row.get('model_month')) if row.get('model_month') else None
         defaults = {
             'seller': None,
             'title': row['title'],
@@ -255,7 +246,7 @@ def _car_to_csv_row(car):
         'brand': car.brand.name,
         'model': car.model.name,
         'year': car.year,
-        'model_month': car.model_month if car.model_month is not None else '',
+        'model_month': calendar.month_abbr[car.model_month] if car.model_month else '',
         'variant': car.variant,
         'price': str(car.price),
         'mileage': car.mileage,

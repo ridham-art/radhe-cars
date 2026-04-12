@@ -1,8 +1,10 @@
+from calendar import month_abbr
 from decimal import Decimal, InvalidOperation
 
 from django import forms
 from django.contrib.auth.forms import AuthenticationForm
 from django.core.exceptions import ValidationError
+from django.utils.text import capfirst
 
 from cars.models import Brand, Car, CarModel
 
@@ -126,7 +128,6 @@ class CarStaffForm(forms.ModelForm):
             'title': forms.TextInput(attrs={'class': 'ap-input'}),
             'variant': forms.TextInput(attrs={'class': 'ap-input'}),
             'year': forms.NumberInput(attrs={'class': 'ap-input'}),
-            'model_month': forms.NumberInput(attrs={'class': 'ap-input', 'min': 1, 'max': 12, 'placeholder': '1–12 (optional)'}),
             'price': forms.NumberInput(attrs={'class': 'ap-input', 'step': '0.01'}),
             'original_price': forms.NumberInput(attrs={'class': 'ap-input', 'step': '0.01'}),
             'mileage': forms.NumberInput(attrs={'class': 'ap-input'}),
@@ -155,6 +156,17 @@ class CarStaffForm(forms.ModelForm):
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
+        mo_f = Car._meta.get_field('model_month')
+        _mlbl = mo_f.verbose_name and capfirst(mo_f.verbose_name) or 'Model month'
+        self.fields['model_month'] = forms.TypedChoiceField(
+            label=_mlbl,
+            required=False,
+            choices=[('', '— No month —')] + [(str(i), month_abbr[i]) for i in range(1, 13)],
+            coerce=lambda x: int(x) if x not in (None, '') else None,
+            empty_value=None,
+            widget=forms.Select(attrs={'class': 'ap-input'}),
+            help_text=mo_f.help_text,
+        )
         self.fields['seller'].required = False
         self.fields['seller'].queryset = self.fields['seller'].queryset.order_by('username')
         brand_id = None
@@ -206,3 +218,20 @@ def parse_int(val):
     if val is None or str(val).strip() == '':
         raise ValueError('Empty integer')
     return int(float(str(val).strip()))
+
+
+def parse_model_month(val):
+    """Return month 1–12 or None. Accepts digits or three-letter month (Jan, Feb, …)."""
+    if val is None or str(val).strip() == '':
+        return None
+    s = str(val).strip()
+    if s.isdigit():
+        m = int(s)
+        if 1 <= m <= 12:
+            return m
+        return None
+    pre = s[:3].lower()
+    for i in range(1, 13):
+        if month_abbr[i].lower() == pre:
+            return i
+    return None

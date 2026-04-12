@@ -163,7 +163,7 @@ class Car(models.Model):
         null=True,
         blank=True,
         validators=[MinValueValidator(1), MaxValueValidator(12)],
-        help_text='Manufacturing month (1–12); optional. Shown as “Month Year” on listing.',
+        help_text='Optional manufacturing month (stored as 1–12). Choose Jan–Dec in forms; customers see e.g. Jan 2021.',
     )
     variant = models.CharField(max_length=100, blank=True)
     price = models.DecimalField(max_digits=12, decimal_places=2)
@@ -283,7 +283,7 @@ class Car(models.Model):
     @property
     def make_year_display(self):
         if self.model_month is not None and 1 <= self.model_month <= 12:
-            return f"{calendar.month_name[self.model_month]} {self.year}"
+            return f"{calendar.month_abbr[self.model_month]} {self.year}"
         return str(self.year)
 
     @property

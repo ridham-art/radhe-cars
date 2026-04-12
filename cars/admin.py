@@ -1,7 +1,11 @@
+from calendar import month_abbr
+
+from django import forms
 from django.contrib import admin
 from django.contrib.admin import DateFieldListFilter
 from django.http import JsonResponse
 from django.urls import path, reverse
+
 from .models import Brand, CarModel, Car, CarImage, Inquiry, Testimonial, Wishlist
 
 
@@ -27,7 +31,7 @@ class CarImageInline(admin.TabularInline):
 
 @admin.register(Car)
 class CarAdmin(admin.ModelAdmin):
-    list_display = ['title', 'brand', 'model', 'year', 'model_month', 'price', 'fuel_type_label', 'transmission', 'status', 'is_featured', 'listed_at', 'created_at']
+    list_display = ['title', 'brand', 'model', 'year', 'model_month_abbr', 'price', 'fuel_type_label', 'transmission', 'status', 'is_featured', 'listed_at', 'created_at']
     list_filter = [
         'status',
         'is_featured',
@@ -48,6 +52,25 @@ class CarAdmin(admin.ModelAdmin):
     @admin.display(description='Fuel')
     def fuel_type_label(self, obj):
         return obj.get_fuel_type_display()
+
+    @admin.display(description='Month')
+    def model_month_abbr(self, obj):
+        if obj.model_month is None:
+            return '—'
+        return month_abbr[obj.model_month]
+
+    def formfield_for_dbfield(self, db_field, request, **kwargs):
+        if db_field.name == 'model_month':
+            return forms.TypedChoiceField(
+                required=False,
+                choices=[('', '— No month —')] + [(str(i), month_abbr[i]) for i in range(1, 13)],
+                coerce=lambda x: int(x) if x not in (None, '') else None,
+                empty_value=None,
+                label=db_field.verbose_name,
+                help_text=db_field.help_text,
+                widget=forms.Select(attrs={}),
+            )
+        return super().formfield_for_dbfield(db_field, request, **kwargs)
 
     def get_urls(self):
         info = self.model._meta.app_label, self.model._meta.model_name
