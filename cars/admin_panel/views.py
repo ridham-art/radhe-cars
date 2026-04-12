@@ -10,10 +10,10 @@ from django.contrib import messages
 from django.contrib.auth import get_user_model, login, logout
 from django.conf import settings
 from django.contrib.auth.views import LoginView, LogoutView
-from django.http import HttpResponseRedirect
+from django.http import Http404, HttpResponseRedirect
 from django.contrib.auth.mixins import LoginRequiredMixin, UserPassesTestMixin
 from django.core.paginator import EmptyPage
-from django.db.models import Q, Count
+from django.db.models import Q, Count, Prefetch
 from django.http import HttpResponse, JsonResponse
 from django.shortcuts import get_object_or_404, redirect, render
 from django.urls import reverse, reverse_lazy
@@ -29,7 +29,7 @@ from django.views.generic import (
     FormView,
 )
 
-from cars.models import Brand, Car, CarModel, CarImage, Inquiry, Wishlist
+from cars.models import Brand, Car, CarModel, CarImage, Inquiry, Wishlist, _safe_delete_stored_file
 from cars.admin_panel.forms import (
     BrandBulkForm,
     BrandForm,
@@ -387,6 +387,15 @@ class CarUpdateView(StaffRequiredMixin, AdminPanelContextMixin, UpdateView):
     form_class = CarStaffForm
     template_name = 'admin_panel/car_form.html'
 
+    def get_queryset(self):
+        qs = super().get_queryset()
+        return qs.prefetch_related(
+            Prefetch(
+                'images',
+                queryset=CarImage.objects.order_by('-is_primary', 'id'),
+            )
+        )
+
     def get_context_data(self, **kwargs):
         ctx = super().get_context_data(**kwargs)
         ctx['return_to_sell'] = self.request.GET.get('return') == 'sell'
@@ -423,6 +432,29 @@ class CarUpdateView(StaffRequiredMixin, AdminPanelContextMixin, UpdateView):
                 is_primary=not has_primary and first_new,
             )
             first_new = False
+
+
+class CarImageDeleteView(StaffRequiredMixin, View):
+    http_method_names = ['post']
+
+    def post(self, request, car_pk, image_pk):
+        car_image = get_object_or_404(CarImage, pk=image_pk)
+        if car_image.car_id != car_pk:
+            raise Http404()
+        was_primary = car_image.is_primary
+        if car_image.image and getattr(car_image.image, 'name', None):
+            _safe_delete_stored_file(car_image.image.name)
+        car_image.delete()
+        if was_primary:
+            CarImage.objects.filter(car_id=car_pk).update(is_primary=False)
+            first = CarImage.objects.filter(car_id=car_pk).order_by('id').first()
+            if first:
+                CarImage.objects.filter(pk=first.pk).update(is_primary=True)
+        messages.success(request, 'Image removed.')
+        url = reverse('admin_panel:car_edit', kwargs={'pk': car_pk})
+        if request.POST.get('return') == 'sell':
+            url = f'{url}?{urlencode({"return": "sell"})}'
+        return HttpResponseRedirect(url)
 
 
 class CarDeleteView(StaffRequiredMixin, AdminPanelContextMixin, DeleteView):

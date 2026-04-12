@@ -34,6 +34,11 @@ urlpatterns = [
     path('cars/export/csv/', views.CarListCSVExportView.as_view(), name='car_list_csv'),
     path('cars/add/', views.CarCreateView.as_view(), name='car_add'),
     path('cars/<int:pk>/edit/', views.CarUpdateView.as_view(), name='car_edit'),
+    path(
+        'cars/<int:car_pk>/images/<int:image_pk>/delete/',
+        views.CarImageDeleteView.as_view(),
+        name='car_image_delete',
+    ),
     path('cars/<int:pk>/delete/', views.CarDeleteView.as_view(), name='car_delete'),
     path('cars/bulk-delete/', views.CarBulkDeleteView.as_view(), name='car_bulk_delete'),
     path('api/brands/<int:pk>/models/', views.BrandModelsJsonView.as_view(), name='api_brand_models'),

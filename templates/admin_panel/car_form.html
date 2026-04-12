@@ -2,7 +2,33 @@
 {% block title %}{% if object %}Edit{% else %}Add{% endif %} car{% endblock %}
 {% block heading %}{% if object %}Edit car{% else %}Add car{% endif %}{% endblock %}
 {% block content %}
-<form method="post" enctype="multipart/form-data" class="max-w-4xl space-y-6">
+<div class="max-w-4xl space-y-6">
+    {% if object and object.images.all %}
+    <div class="bg-white rounded-xl border border-slate-200 p-6">
+        <h2 class="font-semibold text-slate-800 mb-2">Current images</h2>
+        <p class="text-xs text-slate-500 mb-3">Remove any you no longer need.</p>
+        <ul class="flex flex-wrap gap-4">
+            {% for img in object.images.all %}
+            <li class="relative w-36 shrink-0 rounded-lg border border-slate-200 overflow-hidden bg-slate-50">
+                {% if img.display_url %}
+                <img src="{{ img.display_url }}" alt="" class="w-full h-28 object-cover">
+                {% else %}
+                <div class="w-full h-28 flex items-center justify-center text-xs text-slate-400">No preview</div>
+                {% endif %}
+                <div class="p-2 space-y-1">
+                    {% if img.is_primary %}<span class="text-[10px] font-medium text-blue-700">Primary</span>{% endif %}
+                    <form method="post" action="{% url 'admin_panel:car_image_delete' car_pk=object.pk image_pk=img.pk %}" class="inline">
+                        {% csrf_token %}
+                        {% if return_to_sell %}<input type="hidden" name="return" value="sell">{% endif %}
+                        <button type="submit" class="text-xs text-red-600 hover:underline">Remove</button>
+                    </form>
+                </div>
+            </li>
+            {% endfor %}
+        </ul>
+    </div>
+    {% endif %}
+<form method="post" enctype="multipart/form-data" class="space-y-6">
     {% csrf_token %}
     {% if return_to_sell %}<input type="hidden" name="return" value="sell">{% endif %}
     {% if form.non_field_errors %}<div class="text-red-600 text-sm">{{ form.non_field_errors }}</div>{% endif %}
@@ -18,8 +44,8 @@
         </div>
     </div>
     <div class="bg-white rounded-xl border border-slate-200 p-6">
-        <h2 class="font-semibold text-slate-800 mb-2">Images</h2>
-        <p class="text-xs text-slate-500 mb-2">Upload additional images (optional).</p>
+        <h2 class="font-semibold text-slate-800 mb-2">{% if object %}Add images{% else %}Images{% endif %}</h2>
+        <p class="text-xs text-slate-500 mb-2">{% if object %}Upload additional images (optional).{% else %}Upload images (optional).{% endif %}</p>
         <input type="file" name="images" multiple accept="image/*" class="ap-input">
     </div>
     <div class="flex flex-wrap gap-2 items-center">
@@ -27,6 +53,7 @@
         <a href="{{ cancel_url }}" class="ap-btn ap-btn-neutral text-sm px-5 py-2.5">Cancel</a>
     </div>
 </form>
+</div>
 <script>
 (function(){
     var brandEl = document.getElementById('id_brand');
