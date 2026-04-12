@@ -42,6 +42,23 @@ def _row_dict(reader_row, fieldnames):
     return {k: _norm(reader_row.get(k, '')) for k in fieldnames}
 
 
+def normalize_fuel_type(raw):
+    """
+    Map CSV fuel strings to canonical Car.FUEL_CHOICES keys.
+    Accepts CNG, Petrol+CNG, Petrol + CNG (any spacing), Petrol, Diesel, Electric.
+    Returns None if empty or unrecognized.
+    """
+    if raw is None or str(raw).strip() == '':
+        return None
+    compact = ''.join(str(raw).strip().upper().split())
+    if compact == 'CNG' or compact == 'PETROL+CNG' or ('PETROL' in compact and 'CNG' in compact):
+        return 'Petrol + CNG'
+    mapping = {'PETROL': 'Petrol', 'DIESEL': 'Diesel', 'ELECTRIC': 'Electric'}
+    if compact in mapping:
+        return mapping[compact]
+    return None
+
+
 def validate_and_preview_rows(rows_dicts):
     """Return (ok_rows, errors) where errors is list of {row_num, message}."""
     errors = []
@@ -96,8 +113,10 @@ def validate_and_preview_rows(rows_dicts):
             except ValueError as e:
                 errs.append(str(e))
         fuel = row.get('fuel_type')
-        if fuel and fuel not in dict(Car.FUEL_CHOICES):
-            errs.append(f'Invalid fuel_type: {fuel}')
+        if fuel:
+            norm_f = normalize_fuel_type(fuel)
+            if not norm_f:
+                errs.append(f'Invalid fuel_type: {fuel}')
         trans = row.get('transmission')
         if trans and trans not in dict(Car.TRANSMISSION_CHOICES):
             errs.append(f'Invalid transmission: {trans}')
@@ -178,7 +197,7 @@ def apply_import(rows_dicts, replace_all=False):
             'price': price,
             'original_price': orig,
             'mileage': mileage,
-            'fuel_type': row.get('fuel_type') or 'Petrol',
+            'fuel_type': normalize_fuel_type(row.get('fuel_type')) or 'Petrol',
             'transmission': row.get('transmission') or 'MT',
             'body_type': row.get('body_type') or 'Hatchback',
             'ownership': row.get('ownership') or '1st Owner',

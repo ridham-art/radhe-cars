@@ -126,7 +126,7 @@ class Car(models.Model):
     FUEL_CHOICES = [
         ('Petrol', 'Petrol'),
         ('Diesel', 'Diesel'),
-        ('CNG', 'Petrol+CNG'),
+        ('Petrol + CNG', 'Petrol + CNG'),
         ('Electric', 'Electric'),
     ]
     TRANSMISSION_CHOICES = [

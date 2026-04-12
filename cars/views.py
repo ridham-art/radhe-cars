@@ -273,9 +273,14 @@ def _map_transmission(val):
 def _map_fuel(val):
     if not val:
         return 'Petrol'
-    v = str(val).upper()
-    mapping = {'PETROL': 'Petrol', 'DIESEL': 'Diesel', 'CNG': 'CNG', 'ELECTRIC': 'Electric'}
-    return mapping.get(v, 'Petrol')
+    s = str(val).strip()
+    if not s:
+        return 'Petrol'
+    compact = ''.join(s.upper().split())
+    if compact == 'CNG' or compact == 'PETROL+CNG' or ('PETROL' in compact and 'CNG' in compact):
+        return 'Petrol + CNG'
+    mapping = {'PETROL': 'Petrol', 'DIESEL': 'Diesel', 'ELECTRIC': 'Electric'}
+    return mapping.get(compact, 'Petrol')
 
 
 def sell_car(request):
