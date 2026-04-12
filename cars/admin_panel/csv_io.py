@@ -14,6 +14,7 @@ CSV_HEADERS = [
     'brand',
     'model',
     'year',
+    'model_month',
     'variant',
     'price',
     'mileage',
@@ -81,6 +82,14 @@ def validate_and_preview_rows(rows_dicts):
         if row.get('mileage'):
             try:
                 parse_int(row.get('mileage'))
+            except ValueError as e:
+                errs.append(str(e))
+        mm_s = row.get('model_month')
+        if mm_s:
+            try:
+                mm = parse_int(mm_s)
+                if mm < 1 or mm > 12:
+                    errs.append('model_month must be between 1 and 12')
             except ValueError as e:
                 errs.append(str(e))
         if row.get('original_price'):
@@ -159,12 +168,21 @@ def apply_import(rows_dicts, replace_all=False):
                 orig = parse_decimal(row.get('original_price'))
             except ValueError:
                 orig = None
+        mm_val = None
+        if row.get('model_month'):
+            try:
+                mm_val = parse_int(row.get('model_month'))
+                if mm_val < 1 or mm_val > 12:
+                    mm_val = None
+            except ValueError:
+                mm_val = None
         defaults = {
             'seller': None,
             'title': row['title'],
             'brand': brand,
             'model': car_model,
             'year': parse_int(row.get('year')),
+            'model_month': mm_val,
             'variant': row.get('variant') or '',
             'price': price,
             'original_price': orig,
@@ -196,11 +214,16 @@ def apply_import(rows_dicts, replace_all=False):
             except (TypeError, ValueError):
                 car = None
         if car is None:
-            car = Car.objects.filter(
+            q = Car.objects.filter(
                 title=defaults['title'],
                 model=car_model,
                 year=defaults['year'],
-            ).first()
+            )
+            if defaults['model_month'] is None:
+                q = q.filter(model_month__isnull=True)
+            else:
+                q = q.filter(model_month=defaults['model_month'])
+            car = q.first()
         try:
             if car:
                 for k, v in defaults.items():
@@ -232,6 +255,7 @@ def _car_to_csv_row(car):
         'brand': car.brand.name,
         'model': car.model.name,
         'year': car.year,
+        'model_month': car.model_month if car.model_month is not None else '',
         'variant': car.variant,
         'price': str(car.price),
         'mileage': car.mileage,

@@ -335,6 +335,16 @@ def sell_car(request):
                         title_parts.append(variant)
                     title = ' '.join(title_parts)
 
+                    model_month = None
+                    mm_raw = post.get('model_month', '').strip()
+                    if mm_raw:
+                        try:
+                            mi = int(mm_raw)
+                            if 1 <= mi <= 12:
+                                model_month = mi
+                        except (TypeError, ValueError):
+                            pass
+
                     if sell_timeline:
                         description = f"Sell timeline: {sell_timeline}. " + description if description else f"Sell timeline: {sell_timeline}"
 
@@ -343,6 +353,7 @@ def sell_car(request):
                         brand=brand,
                         model=car_model,
                         year=year,
+                        model_month=model_month,
                         variant=variant,
                         price=price,
                         mileage=mileage,

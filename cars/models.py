@@ -1,7 +1,9 @@
+import calendar
 import io
 import uuid
 
 from django.core.exceptions import ValidationError
+from django.core.validators import MaxValueValidator, MinValueValidator
 from django.core.files.base import ContentFile
 from django.core.files.storage import default_storage
 from django.db import models
@@ -124,7 +126,7 @@ class Car(models.Model):
     FUEL_CHOICES = [
         ('Petrol', 'Petrol'),
         ('Diesel', 'Diesel'),
-        ('CNG', 'CNG'),
+        ('CNG', 'Petrol+CNG'),
         ('Electric', 'Electric'),
     ]
     TRANSMISSION_CHOICES = [
@@ -157,6 +159,12 @@ class Car(models.Model):
     brand = models.ForeignKey(Brand, on_delete=models.PROTECT)
     model = models.ForeignKey(CarModel, on_delete=models.PROTECT)
     year = models.IntegerField()
+    model_month = models.PositiveSmallIntegerField(
+        null=True,
+        blank=True,
+        validators=[MinValueValidator(1), MaxValueValidator(12)],
+        help_text='Manufacturing month (1–12); optional. Shown as “Month Year” on listing.',
+    )
     variant = models.CharField(max_length=100, blank=True)
     price = models.DecimalField(max_digits=12, decimal_places=2)
     original_price = models.DecimalField(max_digits=12, decimal_places=2, null=True, blank=True, help_text="Strikethrough price for discount display")
@@ -217,8 +225,12 @@ class Car(models.Model):
             dup = Car.objects.filter(title=self.title, model_id=self.model_id, year=self.year)
             if self.pk:
                 dup = dup.exclude(pk=self.pk)
+            if self.model_month is None:
+                dup = dup.filter(model_month__isnull=True)
+            else:
+                dup = dup.filter(model_month=self.model_month)
             if dup.exists():
-                raise ValidationError('A car with this title, model, and year already exists.')
+                raise ValidationError('A car with this title, model, year, and month already exists.')
 
     @property
     def primary_image(self):
@@ -269,8 +281,14 @@ class Car(models.Model):
         return f"{self.mileage} km"
 
     @property
+    def make_year_display(self):
+        if self.model_month is not None and 1 <= self.model_month <= 12:
+            return f"{calendar.month_name[self.model_month]} {self.year}"
+        return str(self.year)
+
+    @property
     def specs_short(self):
-        parts = [self.mileage_display, self.fuel_type, self.get_transmission_display()]
+        parts = [self.mileage_display, self.get_fuel_type_display(), self.get_transmission_display()]
         return " • ".join(parts)
 
     class Meta:

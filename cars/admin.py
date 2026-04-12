@@ -27,7 +27,7 @@ class CarImageInline(admin.TabularInline):
 
 @admin.register(Car)
 class CarAdmin(admin.ModelAdmin):
-    list_display = ['title', 'brand', 'model', 'year', 'price', 'fuel_type', 'transmission', 'status', 'is_featured', 'listed_at', 'created_at']
+    list_display = ['title', 'brand', 'model', 'year', 'model_month', 'price', 'fuel_type_label', 'transmission', 'status', 'is_featured', 'listed_at', 'created_at']
     list_filter = [
         'status',
         'is_featured',
@@ -44,6 +44,10 @@ class CarAdmin(admin.ModelAdmin):
     readonly_fields = ['created_at', 'updated_at', 'listed_at']
     inlines = [CarImageInline]
     change_form_template = 'admin/cars/car/change_form.html'
+
+    @admin.display(description='Fuel')
+    def fuel_type_label(self, obj):
+        return obj.get_fuel_type_display()
 
     def get_urls(self):
         info = self.model._meta.app_label, self.model._meta.model_name
@@ -88,7 +92,7 @@ class CarAdmin(admin.ModelAdmin):
 
     fieldsets = (
         ('Basic Info', {
-            'fields': ('title', 'brand', 'model', 'year', 'variant', 'color', 'description')
+            'fields': ('title', 'brand', 'model', 'year', 'model_month', 'variant', 'color', 'description')
         }),
         ('Pricing', {
             'fields': ('price', 'original_price')

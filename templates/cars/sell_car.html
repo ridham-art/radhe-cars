@@ -129,14 +129,15 @@
       <div class="sell-progress" id="prog">
         <span class="sell-pill active" id="sp1">Brand</span>
         <span class="sell-pill wait" id="sp2">Year</span>
-        <span class="sell-pill wait" id="sp3">Model</span>
-        <span class="sell-pill wait" id="sp4">Variant</span>
-        <span class="sell-pill wait" id="sp5">Reg. State</span>
-        <span class="sell-pill wait" id="sp6">KMs</span>
-        <span class="sell-pill wait" id="sp7">Location</span>
-        <span class="sell-pill wait" id="sp8">Timeline</span>
-        <span class="sell-pill wait" id="sp9">Phone</span>
-        <span class="sell-pill wait" id="sp10">Photos</span>
+        <span class="sell-pill wait" id="sp3">Month</span>
+        <span class="sell-pill wait" id="sp4">Model</span>
+        <span class="sell-pill wait" id="sp5">Variant</span>
+        <span class="sell-pill wait" id="sp6">Reg. State</span>
+        <span class="sell-pill wait" id="sp7">KMs</span>
+        <span class="sell-pill wait" id="sp8">Location</span>
+        <span class="sell-pill wait" id="sp9">Timeline</span>
+        <span class="sell-pill wait" id="sp10">Phone</span>
+        <span class="sell-pill wait" id="sp11">Photos</span>
       </div>
 
       <div id="sell-success" class="hidden mx-5 mt-4 p-4 bg-green-50 border border-green-200 rounded-lg">
@@ -151,6 +152,7 @@
         <input type="hidden" name="brand" id="h-brand">
         <input type="hidden" name="model" id="h-model">
         <input type="hidden" name="year" id="h-year">
+        <input type="hidden" name="model_month" id="h-month" value="">
         <input type="hidden" name="fuel_type" id="h-fuel">
         <input type="hidden" name="transmission" id="h-trans">
         <input type="hidden" name="variant" id="h-variant">
@@ -197,8 +199,21 @@
           </div>
         </div>
 
-        <!-- STEP 3: MODEL -->
+        <!-- STEP 3: MANUFACTURING MONTH -->
         <div class="step" id="s3">
+          <div class="sell-step-body">
+            <h2 class="sell-step-title">Select manufacturing month</h2>
+            <p class="sell-step-sub">Which month was the car made? (shown on your listing as e.g. July 2019)</p>
+            <div class="sell-search">
+              <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg>
+              <input type="text" placeholder="Search month" id="month-search" oninput="filterEl('#month-g .opt-card',this.value,'nm')">
+            </div>
+            <div class="grid grid-cols-3 sm:grid-cols-4 gap-2 max-h-[220px] overflow-y-auto sell-scroll" id="month-g"></div>
+          </div>
+        </div>
+
+        <!-- STEP 4: MODEL -->
+        <div class="step" id="s4">
           <div class="sell-step-body">
             <h2 class="sell-step-title">Select car model</h2>
             <p class="sell-step-sub">Showing models for <span id="lbl-brand" class="font-semibold text-slate-700"></span></p>
@@ -212,16 +227,16 @@
           </div>
         </div>
 
-        <!-- STEP 4: VARIANT (Fuel → Transmission → Variant) -->
-        <div class="step" id="s4">
+        <!-- STEP 5: VARIANT (Fuel → Transmission → Variant) -->
+        <div class="step" id="s5">
           <div class="sell-step-body">
             <h2 class="sell-step-title">Select variant</h2>
-            <p class="sell-step-sub" id="s4-sub">Choose fuel type, transmission, then variant. For electric cars, transmission is skipped.</p>
+            <p class="sell-step-sub" id="s5-sub">Choose fuel type, transmission, then variant. For electric cars, transmission is skipped.</p>
             <div id="fuel-section">
               <div class="sell-label">Select fuel type</div>
               <div class="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-6" id="fuel-g">
                 <div class="fuel-box" data-nm="Petrol" data-v="PETROL" onclick="pickFuel(this)"><div class="icon">⛽</div><span>Petrol</span></div>
-                <div class="fuel-box" data-nm="CNG" data-v="CNG" onclick="pickFuel(this)"><div class="icon">💨</div><span>CNG</span></div>
+                <div class="fuel-box" data-nm="Petrol+CNG" data-v="CNG" onclick="pickFuel(this)"><div class="icon">💨</div><span>Petrol+CNG</span></div>
                 <div class="fuel-box" data-nm="Diesel" data-v="DIESEL" onclick="pickFuel(this)"><div class="icon">🛢️</div><span>Diesel</span></div>
                 <div class="fuel-box" data-nm="Electric" data-v="ELECTRIC" onclick="pickFuel(this)"><div class="icon">🔋</div><span>Electric</span></div>
               </div>
@@ -260,8 +275,8 @@
           </div>
         </div>
 
-        <!-- STEP 5: REG. STATE + DISTRICT (combined) -->
-        <div class="step" id="s5">
+        <!-- STEP 6: REG. STATE + DISTRICT (combined) -->
+        <div class="step" id="s6">
           <div class="sell-step-body">
             <h2 class="sell-step-title">Select registration state & district</h2>
             <p class="sell-step-sub">Choose your car's registration details</p>
@@ -284,8 +299,8 @@
           </div>
         </div>
 
-        <!-- STEP 6: KMs DRIVEN -->
-        <div class="step" id="s6">
+        <!-- STEP 7: KMs DRIVEN -->
+        <div class="step" id="s7">
           <div class="sell-step-body">
             <h2 class="sell-step-title">Kilometres driven</h2>
             <p class="sell-step-sub">How much has your car been driven?</p>
@@ -297,8 +312,8 @@
           </div>
         </div>
 
-        <!-- STEP 7: CAR LOCATION -->
-        <div class="step" id="s7">
+        <!-- STEP 8: CAR LOCATION -->
+        <div class="step" id="s8">
           <div class="sell-step-body">
             <h2 class="sell-step-title">Select car location</h2>
             <p class="sell-step-sub">Which city in Gujarat is your car in?</p>
@@ -313,8 +328,8 @@
           </div>
         </div>
 
-        <!-- STEP 8: TIMELINE -->
-        <div class="step" id="s8">
+        <!-- STEP 9: TIMELINE -->
+        <div class="step" id="s9">
           <div class="sell-step-body">
             <div id="summary-top" class="text-center mb-6 py-4 border-b border-slate-100">
               <div class="font-bold text-slate-800" id="car-full-name"></div>
@@ -331,8 +346,8 @@
           </div>
         </div>
 
-        <!-- STEP 9: PHONE -->
-        <div class="step" id="s9">
+        <!-- STEP 10: PHONE -->
+        <div class="step" id="s10">
           <div class="sell-step-body">
             <div class="flex items-center gap-3 pb-4 mb-4 border-b border-slate-100">
               <div class="w-12 h-12 rounded-full bg-blue-100 flex items-center justify-center text-blue-600 font-bold" id="phone-brand-icon"></div>
@@ -351,8 +366,8 @@
           </div>
         </div>
 
-        <!-- STEP 10: PHOTOS -->
-        <div class="step" id="s10">
+        <!-- STEP 11: PHOTOS -->
+        <div class="step" id="s11">
           <div class="sell-step-body space-y-6">
             <h2 class="sell-step-title">Almost done!</h2>
             <p class="sell-step-sub">Add photos and price to complete your listing</p>
@@ -384,8 +399,8 @@
           </div>
         </div>
 
-        <!-- STEP 11: THANK YOU (only shown after successful submit) -->
-        <div class="step" id="s11">
+        <!-- STEP 12: THANK YOU (only shown after successful submit) -->
+        <div class="step" id="s12">
           <div class="sell-step-body" id="sell-thankyou">
             <div class="w-16 h-16 rounded-full bg-green-100 flex items-center justify-center mb-6 mx-auto">
               <svg class="w-10 h-10 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>
@@ -411,8 +426,8 @@
 
 {% block extra_js %}
 <script>
-const T=10;let cur=1;
-const D={brand:'',brandName:'',year:'',model:'',modelName:'',fuel:'',fuelName:'',trans:'',transName:'',variant:'',rto:'',km:'',city:'',timeline:'',phone:'',stateSelected:false};
+const T=11;let cur=1;
+const D={brand:'',brandName:'',year:'',monthNum:'',monthName:'',model:'',modelName:'',fuel:'',fuelName:'',trans:'',transName:'',variant:'',rto:'',km:'',city:'',timeline:'',phone:'',stateSelected:false};
 
 const GJ_RTOS=['GJ-01 Ahmedabad','GJ-02 Mehsana','GJ-03 Rajkot','GJ-04 Bhavnagar','GJ-05 Surat','GJ-06 Vadodara','GJ-07 Nadiad (Kheda)','GJ-08 Palanpur (Banaskantha)','GJ-09 Himatnagar (Sabarkantha)','GJ-10 Jamnagar','GJ-11 Junagadh','GJ-12 Bhuj (Kutch)','GJ-13 Surendranagar','GJ-14 Amreli','GJ-15 Valsad','GJ-16 Bharuch','GJ-17 Godhra (Panchmahal)','GJ-18 Gandhinagar','GJ-19 Bardoli (Surat Rural)','GJ-20 Dahod','GJ-21 Navsari','GJ-22 Rajpipla (Narmada)','GJ-23 Anand','GJ-24 Patan','GJ-25 Porbandar','GJ-26 Vyara (Tapi)','GJ-27 Ahmedabad (East / Sub RTO)','GJ-28 Surat (Sub RTO)','GJ-29 Vadodara (Sub RTO)','GJ-30 Gandhinagar (Sub RTO)','GJ-31 Dahod (Sub RTO)','GJ-32 Botad','GJ-33 Aravalli (Modasa)','GJ-34 Mahisagar (Lunawada)','GJ-35 Morbi','GJ-36 Devbhoomi Dwarka','GJ-37 Gir Somnath','GJ-38 Chhota Udepur'];
 
@@ -423,7 +438,8 @@ const MAJOR_CITIES=['Ahmedabad','Surat','Vadodara','Rajkot','Gandhinagar','Bhavn
 const ALL_CITIES=['Amreli','Anand','Ankleshwar','Bardoli','Bharuch','Bhuj','Botad','Chhota Udaipur','Dahod','Daman','Deesa','Dholka','Diu','Dwarka','Gandhidham','Godhra','Halvad','Himatnagar','Jetpur','Kadi','Kalol','Kapadvanj','Keshod','Khambhat','Kutch','Mahuva','Mandvi','Mehsana','Modasa','Morbi','Nadiad','Navsari','Okha','Palanpur','Patan','Petlad','Porbandar','Sanand','Sidhpur','Somnath','Surendranagar','Tapi','Una','Unjha','Upleta','Valsad','Vapi','Veraval','Viramgam','Visnagar','Vyara','Wadhwan','Wankaner'];
 
 function updateBreadcrumb(){
-  const parts=[D.brandName,D.year,D.modelName,D.variant].filter(Boolean);
+  const ym=D.year&&(D.monthName||D.monthNum)?(D.monthName?D.monthName+' '+D.year:D.year):D.year;
+  const parts=[D.brandName,ym,D.modelName,D.variant].filter(Boolean);
   const el=document.getElementById('breadcrumb');
   el.textContent=parts.length?parts.join(' '):'Select your car details';
   el.classList.toggle('empty',!parts.length);
@@ -441,7 +457,7 @@ function go(n){
   document.getElementById('s'+n).classList.add('active');
   cur=n;prog();updateBreadcrumb();
   const footer=document.getElementById('sell-footer');
-  if(footer)footer.classList.toggle('hidden',cur<=1||cur===11);
+  if(footer)footer.classList.toggle('hidden',cur<=1||cur===12);
   document.getElementById('sell-steps').scrollTop=0;
   window.scrollTo({top:0,behavior:'smooth'});
 }
@@ -483,6 +499,9 @@ function pickBrand(el){
         this.classList.remove('selected');
         D.year='';
         document.getElementById('h-year').value='';
+        D.monthNum='';D.monthName='';
+        document.getElementById('h-month').value='';
+        document.querySelectorAll('#month-g .opt-card').forEach(c=>c.classList.remove('selected'));
         updateBreadcrumb();
         return;
       }
@@ -495,6 +514,35 @@ function pickBrand(el){
     };
     g.appendChild(d);
   }
+})();
+
+(function(){
+  const months=['January','February','March','April','May','June','July','August','September','October','November','December'];
+  const g=document.getElementById('month-g');
+  if(!g)return;
+  months.forEach((nm,i)=>{
+    const mo=i+1;
+    const d=document.createElement('div');
+    d.className='opt-card';
+    d.dataset.nm=nm;d.dataset.v=String(mo);
+    d.innerHTML='<span>'+nm+'</span>';
+    d.onclick=function(){
+      if(this.classList.contains('selected')){
+        this.classList.remove('selected');
+        D.monthNum='';D.monthName='';
+        document.getElementById('h-month').value='';
+        updateBreadcrumb();
+        return;
+      }
+      document.querySelectorAll('#month-g .opt-card').forEach(c=>c.classList.remove('selected'));
+      this.classList.add('selected');
+      D.monthNum=String(mo);D.monthName=nm;
+      document.getElementById('h-month').value=D.monthNum;
+      updateBreadcrumb();
+      setTimeout(()=>go(4),200);
+    };
+    g.appendChild(d);
+  });
 })();
 
 function loadModels(){
@@ -522,7 +570,7 @@ function loadModels(){
         D.model=String(m.id);D.modelName=m.name;
         document.getElementById('h-model').value=D.model;
         resetVariantStep();
-        setTimeout(()=>go(4),200);
+        setTimeout(()=>go(5),200);
       };
       g.appendChild(d);
     });
@@ -541,7 +589,7 @@ function resetVariantStep(){
   D.fuel='';D.fuelName='';D.trans='';D.transName='';
   document.getElementById('h-fuel').value='';
   document.getElementById('h-trans').value='';
-  var sub=document.getElementById('s4-sub');
+  var sub=document.getElementById('s5-sub');
   if(sub)sub.textContent='Choose fuel type, transmission, then variant. For electric cars, transmission is skipped.';
 }
 function showVariantAfterFuel(){
@@ -562,7 +610,7 @@ function pickFuel(el){
     document.getElementById('h-trans').value='';
     document.getElementById('trans-section').classList.add('hidden');
     document.getElementById('variant-section').classList.add('hidden');
-    var sub=document.getElementById('s4-sub');
+    var sub=document.getElementById('s5-sub');
     if(sub)sub.textContent='Choose fuel type, transmission, then variant. For electric cars, transmission is skipped.';
     return;
   }
@@ -578,14 +626,14 @@ function pickFuel(el){
     D.trans='AUTOMATIC';
     D.transName='Auto';
     document.getElementById('h-trans').value=D.trans;
-    var sub=document.getElementById('s4-sub');
+    var sub=document.getElementById('s5-sub');
     if(sub)sub.textContent='Electric — choose your variant below.';
     showVariantAfterFuel();
   }else{
     document.getElementById('trans-section').classList.remove('hidden');
     D.trans='';D.transName='';
     document.getElementById('h-trans').value='';
-    var sub2=document.getElementById('s4-sub');
+    var sub2=document.getElementById('s5-sub');
     if(sub2)sub2.textContent='Choose fuel type, transmission, then variant. For electric cars, transmission is skipped.';
   }
 }
@@ -645,7 +693,7 @@ function pickVariantFromList(v){
   document.getElementById('variant-panel').classList.add('hidden');
   document.getElementById('variant-btn').classList.remove('open');
   document.getElementById('variant-search').value='';
-  go(5);
+  go(6);
 }
 function pickVariantManual(){
   const v=document.getElementById('variant-input').value.trim();
@@ -653,7 +701,7 @@ function pickVariantManual(){
   D.variant=v;
   document.getElementById('h-variant').value=v;
   document.getElementById('variant-btn-text').textContent=v;
-  go(5);
+  go(6);
 }
 
 function pickState(el){
@@ -693,7 +741,7 @@ function buildDistricts(){
       D.rto=r;
       document.getElementById('h-rto').value=r;
       buildKms();
-      setTimeout(()=>go(6),200);
+      setTimeout(()=>go(7),200);
     };
     g.appendChild(d);
   });
@@ -720,7 +768,7 @@ function buildKms(){
       D.km=r;
       document.getElementById('h-km').value=r;
       buildCities();
-      setTimeout(()=>go(7),200);
+      setTimeout(()=>go(8),200);
     };
     g.appendChild(d);
   });
@@ -759,9 +807,10 @@ function pickCity(c,el){
   el.classList.add('selected');
   D.city=c;document.getElementById('h-city').value=c;
   updateBreadcrumb();
-  document.getElementById('car-full-name').textContent=[D.brandName,D.year,D.modelName,D.variant].filter(Boolean).join(' ');
+  const ym=D.year&&(D.monthName||D.monthNum)?(D.monthName?D.monthName+' '+D.year:D.year):D.year;
+  document.getElementById('car-full-name').textContent=[D.brandName,ym,D.modelName,D.variant].filter(Boolean).join(' ');
   document.getElementById('car-sub-info').textContent=['GJ - Gujarat',D.rto,D.km,D.city].filter(Boolean).join(' | ');
-  setTimeout(()=>go(8),200);
+  setTimeout(()=>go(9),200);
 }
 function filterCities(q){
   q=q.toLowerCase();
@@ -782,9 +831,10 @@ function pickTimeline(el){
   D.timeline=el.dataset.v;
   document.getElementById('h-timeline').value=D.timeline;
   document.getElementById('phone-brand-icon').textContent=D.brandName?D.brandName[0]:'';
-  document.getElementById('phone-car-name').textContent=[D.brandName,D.year,D.modelName,D.variant].filter(Boolean).join(' ');
-  document.getElementById('phone-car-sub').textContent=[D.year,D.fuelName,D.rto].filter(Boolean).join(' | ');
-  setTimeout(()=>go(9),200);
+  const ym=D.year&&(D.monthName||D.monthNum)?(D.monthName?D.monthName+' '+D.year:D.year):D.year;
+  document.getElementById('phone-car-name').textContent=[D.brandName,ym,D.modelName,D.variant].filter(Boolean).join(' ');
+  document.getElementById('phone-car-sub').textContent=[ym,D.fuelName,D.rto].filter(Boolean).join(' | ');
+  setTimeout(()=>go(10),200);
 }
 
 function pickPhone(){
@@ -792,7 +842,7 @@ function pickPhone(){
   if(v.length!==10){alert('Please enter a valid 10-digit phone number');return;}
   D.phone=v;
   document.getElementById('h-phone').value='+91'+v;
-  go(10);
+  go(11);
 }
 
 document.addEventListener('click', function(e){
@@ -853,8 +903,8 @@ document.getElementById('sell-form').addEventListener('submit', function(e) {
     btn.disabled=false;
     btn.textContent=origText;
     if(res.ok){
-      if(cur===10){
-        go(11);
+      if(cur===11){
+        go(12);
         document.getElementById('prog').classList.add('hidden');
         document.getElementById('breadcrumb').classList.add('hidden');
         document.getElementById('sell-footer').classList.add('hidden');
