@@ -26,19 +26,15 @@
     </button>
 
     <div class="hidden lg:flex items-center gap-6 shrink-0">
-        <a href="{% url 'sell_car' %}" class="no-underline" aria-label="Sell your car">
-            <span class="group transition-all duration-300 hover:shadow-[0_0_40px_-5px_rgba(139,92,246,0.6)] text-lg font-medium text-white bg-black rounded-full pt-3 pr-8 pb-3 pl-8 relative inline-block cursor-pointer">
-                <div class="mask-linear bg-blue-700 opacity-100 rounded-full pt-[1px] pr-[1px] pb-[1px] pl-[1px] absolute top-0 right-0 bottom-0 left-0"></div>
-                <div class="bg-gradient-to-r from-transparent via-white/40 to-transparent h-[1px] absolute top-0 right-4 left-4"></div>
-                <span class="flex items-center gap-2 z-10 relative drop-shadow-md">Sell Car</span>
-            </span>
+        <a href="{% url 'sell_car' %}" class="no-underline inline-flex items-center justify-center shrink-0 rounded-full bg-blue-600 hover:bg-blue-700 text-white text-sm font-semibold px-5 py-2.5 shadow-sm transition-colors border border-blue-700/20" aria-label="Sell your car">
+            Sell Car
         </a>
         <a href="{% url 'car_list' %}" class="no-underline hover:text-gray-600 transition-colors text-sm font-medium text-slate-950">Buy Car</a>
         {% if user.is_authenticated %}
         <a href="{% url 'wishlist' %}" id="nav-wishlist-link" class="flex flex-col gap-0.5 cursor-pointer group text-slate-950 items-center no-underline relative" aria-label="Wishlist">
-            <span class="relative inline-flex">
-                <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" class="group-hover:text-rose-400 transition-colors text-rose-400"><path d="M19 14c1.49-1.46 3-3.21 3-5.5A5.5 5.5 0 0 0 16.5 3c-1.76 0-3 .5-4.5 2-1.5-1.5-2.74-2-4.5-2A5.5 5.5 0 0 0 2 8.5c0 2.3 1.5 4.05 3 5.5l7 7Z"></path></svg>
-                <span id="nav-wishlist-count" class="absolute -top-1.5 -right-2 min-w-[1.125rem] h-[1.125rem] px-0.5 flex items-center justify-center rounded-full bg-rose-500 text-[10px] font-bold text-white leading-none" aria-live="polite">{{ nav_wishlist_count }}</span>
+            <span class="relative inline-flex h-[22px] w-[22px] items-center justify-center">
+                <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" class="group-hover:text-rose-400 transition-colors text-rose-400" aria-hidden="true"><path d="M19 14c1.49-1.46 3-3.21 3-5.5A5.5 5.5 0 0 0 16.5 3c-1.76 0-3 .5-4.5 2-1.5-1.5-2.74-2-4.5-2A5.5 5.5 0 0 0 2 8.5c0 2.3 1.5 4.05 3 5.5l7 7Z"></path></svg>
+                <span id="nav-wishlist-count" class="pointer-events-none absolute right-0 top-0 z-10 flex h-[1.125rem] min-w-[1.125rem] translate-x-1/2 -translate-y-1/2 items-center justify-center rounded-full bg-rose-500 px-0.5 text-[10px] font-bold leading-none text-white ring-2 ring-slate-50" aria-live="polite">{{ nav_wishlist_count }}</span>
             </span>
             <span class="text-xs text-gray-600">Wishlist</span>
         </a>
@@ -101,9 +97,9 @@
             </a>
             {% if user.is_authenticated %}
             <a href="{% url 'wishlist' %}" id="nav-wishlist-link-mobile" class="flex items-center gap-3 py-3 px-4 rounded-xl hover:bg-gray-50 text-gray-700 font-medium no-underline">
-                <span class="relative inline-flex shrink-0">
-                    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 14c1.49-1.46 3-3.21 3-5.5A5.5 5.5 0 0 0 16.5 3c-1.76 0-3 .5-4.5 2-1.5-1.5-2.74-2-4.5-2A5.5 5.5 0 0 0 2 8.5c0 2.3 1.5 4.05 3 5.5l7 7Z"/></svg>
-                    <span id="nav-wishlist-count-mobile" class="absolute -top-1 -right-1.5 min-w-[1.125rem] h-[1.125rem] px-0.5 flex items-center justify-center rounded-full bg-rose-500 text-[10px] font-bold text-white leading-none">{{ nav_wishlist_count }}</span>
+                <span class="relative inline-flex h-5 w-5 shrink-0 items-center justify-center">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M19 14c1.49-1.46 3-3.21 3-5.5A5.5 5.5 0 0 0 16.5 3c-1.76 0-3 .5-4.5 2-1.5-1.5-2.74-2-4.5-2A5.5 5.5 0 0 0 2 8.5c0 2.3 1.5 4.05 3 5.5l7 7Z"/></svg>
+                    <span id="nav-wishlist-count-mobile" class="pointer-events-none absolute right-0 top-0 z-10 flex h-[1.125rem] min-w-[1.125rem] translate-x-1/2 -translate-y-1/2 items-center justify-center rounded-full bg-rose-500 px-0.5 text-[10px] font-bold leading-none text-white ring-2 ring-white">{{ nav_wishlist_count }}</span>
                 </span>
                 Wishlist
             </a>
