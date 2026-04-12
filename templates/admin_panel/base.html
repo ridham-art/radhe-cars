@@ -66,7 +66,7 @@
                 <a href="{% url 'admin_panel:carmodel_list' %}" class="block px-3 py-2.5 md:py-2 rounded-lg hover:bg-slate-800 text-sm {% if 'carmodel' in request.resolver_match.url_name %}bg-slate-800{% endif %}">Models</a>
                 <a href="{% url 'admin_panel:customer_list' %}" class="block px-3 py-2.5 md:py-2 rounded-lg hover:bg-slate-800 text-sm {% if request.resolver_match.url_name == 'customer_list' %}bg-slate-800{% endif %}">Customers</a>
                 <a href="{% url 'admin_panel:wishlist_list' %}" class="block px-3 py-2.5 md:py-2 rounded-lg hover:bg-slate-800 text-sm {% if request.resolver_match.url_name == 'wishlist_list' %}bg-slate-800{% endif %}">Wishlist</a>
-                <a href="{% url 'admin_panel:inquiry_list' %}" class="block px-3 py-2.5 md:py-2 rounded-lg hover:bg-slate-800 text-sm flex items-center justify-between {% if 'inquiry' in request.resolver_match.url_name %}bg-slate-800{% endif %}">
+                <a href="{% url 'admin_panel:inquiry_list' %}" class="block px-3 py-2.5 md:py-2 rounded-lg hover:bg-slate-800 text-sm flex items-center justify-between {% if request.resolver_match.url_name|slice:':8' == 'inquiry_' %}bg-slate-800{% endif %}">
                     <span>Buy car inquiries</span>
                     {% if unread_inquiry_count %}
                     <span id="nav-inquiry-badge" class="bg-red-500 text-white text-xs font-bold px-2 py-0.5 rounded-full">{{ unread_inquiry_count }}</span>
