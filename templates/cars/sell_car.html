@@ -110,35 +110,112 @@
 .sell-scroll::-webkit-scrollbar{width:5px}
 .sell-scroll::-webkit-scrollbar-track{background:#f1f5f9;border-radius:3px}
 .sell-scroll::-webkit-scrollbar-thumb{background:#cbd5e1;border-radius:3px}
+
+/* --- Mobile-only Cars24-style shell (desktop: md+ unchanged) --- */
+.sell-mv-accent{color:#6d28d9}
+.sell-mobile-header{display:none;align-items:center;gap:10px;padding:12px 16px;padding-top:max(12px,env(safe-area-inset-top));border-bottom:1px solid #f1f5f9;min-height:52px}
+.sell-mobile-back{background:none;border:0;padding:8px;margin-left:-4px;color:#0f172a;cursor:pointer;border-radius:10px;line-height:1;touch-manipulation;-webkit-tap-highlight-color:transparent}
+.sell-mobile-back:active{background:#f1f5f9}
+.sell-mobile-title{font-size:17px;font-weight:700;color:#0f172a;flex:1;min-width:0}
+.sell-chips{flex-wrap:nowrap;gap:8px;overflow-x:auto;padding:10px 16px;border-bottom:1px solid #f1f5f9;scrollbar-width:none;-webkit-overflow-scrolling:touch}
+.sell-chips::-webkit-scrollbar{display:none}
+.sell-chips.sell-chips--empty{display:none!important}
+@media (min-width:768px){.sell-chips{display:none!important}}
+.sell-chip{flex-shrink:0;padding:6px 12px;border-radius:9999px;font-size:12px;font-weight:600;background:#f5f3ff;color:#5b21b6;border:1px solid #ddd6fe;max-width:200px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.sell-pill-mark{display:none;font-size:12px;font-weight:700;width:26px;height:26px;border-radius:50%;align-items:center;justify-content:center;line-height:1}
+.sell-pill-text{font-size:11px;font-weight:600;white-space:nowrap}
+
+@media (max-width:767px){
+.sell-hero-md{display:none!important}
+.sell-flow-outer{max-width:none!important;padding-left:0!important;padding-right:0!important}
+.sell-card{max-width:none!important;border-radius:0!important;margin:0!important;box-shadow:none!important;max-height:none!important;border-left:0!important;border-right:0!important}
+.sell-breadcrumb{display:none!important}
+.sell-mobile-header{display:flex!important}
+.sell-chips{display:flex!important}
+.sell-progress{padding:10px 12px 0!important;gap:0!important;border-bottom:none!important;align-items:flex-start}
+.sell-pill{display:inline-flex!important;flex-direction:column;align-items:center;gap:4px;padding:6px 10px 10px!important;min-width:64px;background:transparent!important;border-radius:0!important;border-bottom:3px solid transparent!important;color:#94a3b8!important}
+.sell-pill.active{border-bottom-color:#6d28d9!important;color:#6d28d9!important}
+.sell-pill.done{color:#6d28d9!important;border-bottom-color:transparent!important}
+.sell-pill.wait{opacity:.85}
+.sell-pill-mark{display:inline-flex!important;background:#e7e5e4;color:#57534e}
+.sell-pill.active .sell-pill-mark{background:#6d28d9;color:#fff}
+.sell-pill.done .sell-pill-mark{background:#7c3aed;color:#fff;font-size:14px}
+.sell-pill-text{font-size:10px;font-weight:700;text-align:center;max-width:72px;line-height:1.2}
+.sell-step-body{padding:16px!important}
+.sell-search input:focus{border-color:#7c3aed!important;box-shadow:0 0 0 3px rgba(124,58,237,.12)!important}
+.sell-input:focus{border-color:#7c3aed!important;box-shadow:0 0 0 3px rgba(124,58,237,.12)!important}
+.btn-primary{background:#6d28d9!important}
+.btn-primary:hover{background:#5b21b6!important}
+.btn-back{border-color:#6d28d9!important;color:#6d28d9!important}
+.opt-card.selected,.fuel-box.selected,.list-card.selected,.city-box.selected,.state-box.selected,.district-box.selected,.tl-box.selected{border-color:#7c3aed!important;background:#f5f3ff!important}
+
+/* Full-width list rows + chevron */
+#brand-g,#year-g,#month-g,#model-g{display:flex!important;flex-direction:column!important;gap:0!important;max-height:none!important}
+#brand-g .opt-card,#year-g .opt-card,#month-g .opt-card,#model-g .opt-card{border-radius:0!important;border-left:0!important;border-right:0!important;margin:0!important;display:flex!important;align-items:center!important;justify-content:space-between!important;min-height:52px!important;padding:14px 16px!important;border-top:0!important;border-bottom:1px solid #e2e8f0!important}
+#brand-g .opt-card:last-child,#year-g .opt-card:last-child,#month-g .opt-card:last-child,#model-g .opt-card:last-child{border-bottom:1px solid #e2e8f0!important}
+#brand-g .opt-card::after,#year-g .opt-card::after,#month-g .opt-card::after,#model-g .opt-card::after{content:'›';font-size:20px;color:#94a3b8;font-weight:300;margin-left:8px}
+#km-g{display:flex!important;flex-direction:column!important;gap:0!important}
+#km-g > * + *{margin-top:0!important}
+#km-g .list-card{border-radius:0!important;border-left:0!important;border-right:0!important;display:flex!important;align-items:center!important;justify-content:space-between!important;min-height:52px!important;padding:14px 16px!important;border-bottom:1px solid #e2e8f0!important;margin:0!important}
+#km-g .list-card::after{content:'›';font-size:20px;color:#94a3b8}
+.district-grid{display:block!important;max-height:none!important}
+.district-grid .district-box{border-radius:0!important;border-left:0!important;border-right:0!important;display:flex!important;align-items:center!important;justify-content:space-between!important;min-height:52px!important;padding:14px 16px!important;border-bottom:1px solid #e2e8f0!important;margin:0!important;text-align:left!important}
+.district-grid .district-box::after{content:'›';font-size:20px;color:#94a3b8}
+#metro-g,#city-g{display:flex!important;flex-direction:column!important;gap:0!important}
+#metro-g .city-box,#city-g .city-box{border-radius:0!important;border-left:0!important;border-right:0!important;display:flex!important;align-items:center!important;justify-content:space-between!important;min-height:48px!important;padding:12px 16px!important;border-bottom:1px solid #e2e8f0!important;margin:0!important;text-align:left!important}
+#metro-g .city-box::after,#city-g .city-box::after{content:'›';font-size:20px;color:#94a3b8}
+#timeline-g .tl-box{border-radius:0!important;border-left:0!important;border-right:0!important;border-bottom:1px solid #e2e8f0!important;margin:0!important}
+#state-section .state-box{border-radius:0!important;display:flex!important;align-items:center!important;justify-content:space-between!important;min-height:52px!important;padding:14px 16px!important;border-left:0!important;border-right:0!important;border-bottom:1px solid #e2e8f0!important}
+#state-section .state-box::after{content:'›';font-size:20px;color:#94a3b8}
+.sell-footer{display:none!important}
+}
+
+@media (min-width:768px){
+.sell-pill-mark{display:none!important}
+.sell-pill{padding:8px 14px!important;border-radius:9999px!important;border-bottom:none!important;flex-direction:row!important;min-width:0!important;align-items:center!important}
+.sell-pill-text{font-size:12px!important;font-weight:600!important;max-width:none!important;white-space:nowrap!important}
+.sell-pill.active{background:#1e40af!important;color:#fff!important}
+.sell-pill.done{background:#dcfce7!important;color:#166534!important}
+.sell-pill.wait{background:#f1f5f9!important;color:#94a3b8!important}
+}
 </style>
 {% endblock %}
 
 {% block content %}
 <div class="min-h-screen bg-gray-50 pb-16">
-  <div class="bg-gradient-to-br from-slate-800 via-slate-900 to-slate-800 text-white py-6 px-4">
+  <div class="sell-hero-md bg-gradient-to-br from-slate-800 via-slate-900 to-slate-800 text-white py-6 px-4">
     <div class="max-w-xl mx-auto text-center">
       <h1 class="text-2xl sm:text-3xl font-bold tracking-tight">Sell Your Car at Best Price</h1>
       <p class="mt-2 text-slate-300 text-sm">Get instant valuation in a few simple steps</p>
     </div>
   </div>
 
-  <div class="max-w-xl mx-auto px-4 -mt-6 relative z-10">
+  <div class="sell-flow-outer max-w-xl mx-auto px-4 mt-0 md:-mt-6 relative z-10">
     <div class="sell-card">
-      <div class="sell-breadcrumb empty" id="breadcrumb">Select your car details</div>
+      <div class="sell-mobile-header" id="sell-mobile-header">
+        <button type="button" class="sell-mobile-back" id="sell-mobile-back" onclick="if(typeof cur!=='undefined'&&cur>1){go(cur-1);}" aria-label="Back" hidden>
+          <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="m15 18-6-6 6-6"/></svg>
+        </button>
+        <span class="sell-mobile-title">Your car details</span>
+      </div>
+
+      <div class="sell-breadcrumb empty hidden md:block" id="breadcrumb">Select your car details</div>
 
       <div class="sell-progress" id="prog">
-        <span class="sell-pill active" id="sp1">Brand</span>
-        <span class="sell-pill wait" id="sp2">Year</span>
-        <span class="sell-pill wait" id="sp3">Month</span>
-        <span class="sell-pill wait" id="sp4">Model</span>
-        <span class="sell-pill wait" id="sp5">Variant</span>
-        <span class="sell-pill wait" id="sp6">Reg. State</span>
-        <span class="sell-pill wait" id="sp7">KMs</span>
-        <span class="sell-pill wait" id="sp8">Location</span>
-        <span class="sell-pill wait" id="sp9">Timeline</span>
-        <span class="sell-pill wait" id="sp10">Phone</span>
-        <span class="sell-pill wait" id="sp11">Photos</span>
+        <span class="sell-pill active" id="sp1"><span class="sell-pill-mark">1</span><span class="sell-pill-text">Brand</span></span>
+        <span class="sell-pill wait" id="sp2"><span class="sell-pill-mark">2</span><span class="sell-pill-text">Year</span></span>
+        <span class="sell-pill wait" id="sp3"><span class="sell-pill-mark">3</span><span class="sell-pill-text">Month</span></span>
+        <span class="sell-pill wait" id="sp4"><span class="sell-pill-mark">4</span><span class="sell-pill-text">Model</span></span>
+        <span class="sell-pill wait" id="sp5"><span class="sell-pill-mark">5</span><span class="sell-pill-text">Variant</span></span>
+        <span class="sell-pill wait" id="sp6"><span class="sell-pill-mark">6</span><span class="sell-pill-text">Reg. State</span></span>
+        <span class="sell-pill wait" id="sp7"><span class="sell-pill-mark">7</span><span class="sell-pill-text">KMs</span></span>
+        <span class="sell-pill wait" id="sp8"><span class="sell-pill-mark">8</span><span class="sell-pill-text">Location</span></span>
+        <span class="sell-pill wait" id="sp9"><span class="sell-pill-mark">9</span><span class="sell-pill-text">Timeline</span></span>
+        <span class="sell-pill wait" id="sp10"><span class="sell-pill-mark">10</span><span class="sell-pill-text">Phone</span></span>
+        <span class="sell-pill wait" id="sp11"><span class="sell-pill-mark">11</span><span class="sell-pill-text">Photos</span></span>
       </div>
+
+      <div class="sell-chips sell-chips--empty" id="sell-chips" aria-label="Selected so far"></div>
 
       <div id="sell-success" class="hidden mx-5 mt-4 p-4 bg-green-50 border border-green-200 rounded-lg">
         <p class="text-green-700 text-sm font-medium" id="sell-success-msg"></p>
@@ -443,12 +520,27 @@ function updateBreadcrumb(){
   const el=document.getElementById('breadcrumb');
   el.textContent=parts.length?parts.join(' '):'Select your car details';
   el.classList.toggle('empty',!parts.length);
+  const chips=document.getElementById('sell-chips');
+  if(chips){
+    chips.innerHTML=parts.map(function(p){
+      var t=document.createElement('span');
+      t.className='sell-chip';
+      t.textContent=p;
+      return t.outerHTML;
+    }).join('');
+    chips.classList.toggle('sell-chips--empty',!parts.length);
+  }
 }
 
 function prog(){
   for(let i=1;i<=T;i++){
     const el=document.getElementById('sp'+i);
-    if(el)el.className='sell-pill '+(i<cur?'done':i===cur?'active':'wait');
+    if(!el) continue;
+    el.className='sell-pill '+(i<cur?'done':i===cur?'active':'wait');
+    const mark=el.querySelector('.sell-pill-mark');
+    if(mark){
+      mark.textContent=i<cur?'✓':String(i);
+    }
   }
 }
 
@@ -458,6 +550,8 @@ function go(n){
   cur=n;prog();updateBreadcrumb();
   const footer=document.getElementById('sell-footer');
   if(footer)footer.classList.toggle('hidden',cur<=1||cur===12);
+  const mb=document.getElementById('sell-mobile-back');
+  if(mb)mb.hidden=(cur<=1||cur===12);
   document.getElementById('sell-steps').scrollTop=0;
   window.scrollTo({top:0,behavior:'smooth'});
 }
@@ -908,6 +1002,8 @@ document.getElementById('sell-form').addEventListener('submit', function(e) {
         document.getElementById('prog').classList.add('hidden');
         document.getElementById('breadcrumb').classList.add('hidden');
         document.getElementById('sell-footer').classList.add('hidden');
+        var sc=document.getElementById('sell-chips'); if(sc){ sc.classList.add('hidden'); sc.classList.add('sell-chips--empty'); }
+        var mh=document.getElementById('sell-mobile-header'); if(mh) mh.classList.add('hidden');
       }
     }else{
       document.getElementById('sell-error-msg').textContent=res.data.message||'Something went wrong.';
