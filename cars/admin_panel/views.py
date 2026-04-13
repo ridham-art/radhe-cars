@@ -40,6 +40,7 @@ from cars.admin_panel.forms import (
     StaffAuthenticationForm,
 )
 from cars.admin_panel import csv_io
+from cars.admin_panel.cache_utils import get_cached_nav_counts, invalidate_admin_nav_counts_cache
 
 logger = logging.getLogger('cars.admin_panel.auth')
 
@@ -127,10 +128,7 @@ class StaffRequiredMixin(LoginRequiredMixin, UserPassesTestMixin):
 class AdminPanelContextMixin:
     def get_context_data(self, **kwargs):
         ctx = super().get_context_data(**kwargs)
-        ctx['unread_inquiry_count'] = Inquiry.objects.filter(is_read=False).count()
-        ctx['sell_inquiry_unread_count'] = Car.objects.filter(
-            submit_via_sell_form=True, sell_inquiry_seen=False
-        ).count()
+        ctx.update(get_cached_nav_counts())
         return ctx
 
 
@@ -231,18 +229,25 @@ class DashboardView(StaffRequiredMixin, AdminPanelContextMixin, TemplateView):
     def get_context_data(self, **kwargs):
         ctx = super().get_context_data(**kwargs)
         User = get_user_model()
-        customers = User.objects.filter(is_staff=False)
-        wish_qs = Wishlist.objects.filter(user__isnull=False)
+        car_stats = Car.objects.aggregate(
+            total_cars=Count('pk'),
+            active_cars=Count('pk', filter=~Q(status='SOLD')),
+            sold_cars=Count('pk', filter=Q(status='SOLD')),
+        )
+        inq_stats = Inquiry.objects.aggregate(
+            total_inquiries=Count('pk'),
+            unread_inquiries=Count('pk', filter=Q(is_read=False)),
+        )
+        wish_stats = Wishlist.objects.filter(user__isnull=False).aggregate(
+            total_wishlist_saves=Count('pk'),
+            customers_with_wishlist=Count('user_id', distinct=True),
+        )
         ctx.update(
             {
-                'total_cars': Car.objects.count(),
-                'active_cars': Car.objects.exclude(status='SOLD').count(),
-                'sold_cars': Car.objects.filter(status='SOLD').count(),
-                'total_inquiries': Inquiry.objects.count(),
-                'unread_inquiries': Inquiry.objects.filter(is_read=False).count(),
-                'total_customers': customers.count(),
-                'total_wishlist_saves': wish_qs.count(),
-                'customers_with_wishlist': wish_qs.values('user_id').distinct().count(),
+                **car_stats,
+                **inq_stats,
+                'total_customers': User.objects.filter(is_staff=False).count(),
+                **wish_stats,
             }
         )
         return ctx
@@ -508,9 +513,11 @@ class SellCarInquiryListView(
 
     def dispatch(self, request, *args, **kwargs):
         if request.method == 'GET':
-            Car.objects.filter(submit_via_sell_form=True, sell_inquiry_seen=False).update(
+            n = Car.objects.filter(submit_via_sell_form=True, sell_inquiry_seen=False).update(
                 sell_inquiry_seen=True
             )
+            if n:
+                invalidate_admin_nav_counts_cache()
         return super().dispatch(request, *args, **kwargs)
 
     def get_queryset(self):
@@ -540,6 +547,8 @@ class SellCarInquiryBulkDeleteView(StaffRequiredMixin, View):
             messages.warning(request, 'No listings selected.')
             return redirect('admin_panel:sell_car_inquiry_list')
         n, _ = Car.objects.filter(pk__in=ids, submit_via_sell_form=True).delete()
+        if n:
+            invalidate_admin_nav_counts_cache()
         messages.success(request, f'Deleted {n} listing(s).')
         return redirect('admin_panel:sell_car_inquiry_list')
 
@@ -682,7 +691,7 @@ class BrandDeleteAllModelsView(StaffRequiredMixin, View):
             else:
                 deletable.append(m)
         ctx = {
-            'unread_inquiry_count': Inquiry.objects.filter(is_read=False).count(),
+            **get_cached_nav_counts(),
             'brand': brand,
             'deletable': deletable,
             'blocked': blocked,
@@ -799,12 +808,15 @@ class InquiryDetailView(StaffRequiredMixin, AdminPanelContextMixin, DetailView):
         if not obj.is_read:
             obj.is_read = True
             obj.save(update_fields=['is_read'])
+            invalidate_admin_nav_counts_cache()
         return response
 
 
 class InquiryMarkReadView(StaffRequiredMixin, View):
     def post(self, request, pk):
-        Inquiry.objects.filter(pk=pk).update(is_read=True)
+        n = Inquiry.objects.filter(pk=pk).update(is_read=True)
+        if n:
+            invalidate_admin_nav_counts_cache()
         messages.success(request, 'Marked as read.')
         return redirect('admin_panel:inquiry_list')
 
@@ -812,6 +824,8 @@ class InquiryMarkReadView(StaffRequiredMixin, View):
 class InquiryMarkAllReadView(StaffRequiredMixin, View):
     def post(self, request):
         n = Inquiry.objects.filter(is_read=False).update(is_read=True)
+        if n:
+            invalidate_admin_nav_counts_cache()
         messages.success(request, f'Marked {n} inquiry(ies) as read.')
         return redirect('admin_panel:inquiry_list')
 
@@ -819,14 +833,16 @@ class InquiryMarkAllReadView(StaffRequiredMixin, View):
 class InquiryDeleteView(StaffRequiredMixin, View):
     def post(self, request, pk):
         Inquiry.objects.filter(pk=pk).delete()
+        invalidate_admin_nav_counts_cache()
         messages.success(request, 'Inquiry deleted.')
         return redirect('admin_panel:inquiry_list')
 
 
 class UnreadInquiryCountJsonView(StaffRequiredMixin, View):
     def get(self, request):
-        inquiries = Inquiry.objects.filter(is_read=False).count()
-        sell = Car.objects.filter(submit_via_sell_form=True, sell_inquiry_seen=False).count()
+        counts = get_cached_nav_counts()
+        inquiries = counts['unread_inquiry_count']
+        sell = counts['sell_inquiry_unread_count']
         return JsonResponse(
             {
                 'count': inquiries,

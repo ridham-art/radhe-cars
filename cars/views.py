@@ -9,6 +9,7 @@ from django.core.paginator import Paginator
 from django.db.models import Q, F, Prefetch, Count
 from django.db.models.functions import Coalesce
 from django.http import HttpResponse, JsonResponse
+from cars.admin_panel.cache_utils import invalidate_admin_nav_counts_cache
 from .models import Car, Brand, CarModel, CarImage, Testimonial, Wishlist
 
 # One query batch for car images (primary first) — avoids dozens of round-trips to the DB per page.
@@ -221,6 +222,7 @@ def contact(request):
         form = ContactForm(request.POST)
         if form.is_valid():
             inquiry = form.save()
+            invalidate_admin_nav_counts_cache()
             if is_ajax:
                 return JsonResponse({'success': True, 'message': 'Your message has been sent successfully! We will get back to you soon.'})
             messages.success(request, 'Your message has been sent successfully! We will get back to you soon.')
@@ -376,6 +378,7 @@ def sell_car(request):
                     if request.user.is_authenticated:
                         car.seller = request.user
                     car.save()
+                    invalidate_admin_nav_counts_cache()
 
                     for i, img in enumerate(images):
                         CarImage.objects.create(car=car, image=img, is_primary=(i == 0))
