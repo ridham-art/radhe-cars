@@ -49,9 +49,9 @@
         </div>
     </div>
     <div class="overflow-x-auto overflow-y-hidden -mx-4 px-4 md:mx-0 md:px-0 md:overflow-hidden scrollbar-hide snap-x snap-mandatory pb-2" style="-webkit-overflow-scrolling:touch">
-        <div id="featured-track" class="flex gap-4 md:gap-6">
+        <div id="featured-track" class="flex gap-4 md:gap-6 w-full min-w-0">
             {% for car in featured_cars %}
-            <div class="w-[280px] min-w-[280px] sm:w-[calc(50%-12px)] lg:w-[calc(25%-18px)] shrink-0 snap-start">
+            <div class="w-[280px] min-w-[280px] sm:w-[calc(50%-12px)] sm:min-w-0 lg:w-[calc((100%-3rem)/3)] lg:min-w-0 lg:max-w-[calc((100%-3rem)/3)] shrink-0 snap-start">
                 {% include 'partials/car_card.html' with car=car wishlisted_ids=wishlisted_ids %}
             </div>
             {% empty %}
@@ -102,9 +102,9 @@
         <div id="recent-cars-loading" class="hidden absolute inset-0 flex items-center justify-center bg-gray-50/80 z-10 rounded-xl">
             <div class="w-10 h-10 border-4 border-blue-600 border-t-transparent rounded-full animate-spin"></div>
         </div>
-        <div id="recent-track" class="flex gap-4 md:gap-6 carousel-row-stable items-stretch">
+        <div id="recent-track" class="flex gap-4 md:gap-6 carousel-row-stable items-stretch w-full min-w-0">
             {% for car in recent_cars %}
-            <div class="w-[280px] min-w-[280px] sm:w-[calc(50%-12px)] lg:w-[calc(25%-18px)] shrink-0 snap-start">
+            <div class="w-[280px] min-w-[280px] sm:w-[calc(50%-12px)] sm:min-w-0 lg:w-[calc((100%-3rem)/3)] lg:min-w-0 lg:max-w-[calc((100%-3rem)/3)] shrink-0 snap-start">
                 {% include 'partials/car_card.html' with car=car wishlisted_ids=wishlisted_ids %}
             </div>
             {% endfor %}

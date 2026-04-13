@@ -1,5 +1,5 @@
 {% for car in cars %}
-<div class="w-[280px] min-w-[280px] sm:w-[calc(50%-12px)] lg:w-[calc(25%-18px)] shrink-0 snap-start">
+<div class="w-[280px] min-w-[280px] sm:w-[calc(50%-12px)] sm:min-w-0 lg:w-[calc((100%-3rem)/3)] lg:min-w-0 lg:max-w-[calc((100%-3rem)/3)] shrink-0 snap-start">
     {% include 'partials/car_card.html' with car=car wishlisted_ids=wishlisted_ids %}
 </div>
 {% empty %}
