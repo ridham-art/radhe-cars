@@ -4,14 +4,13 @@
 {% block title %}{{ car.title }} - Radhe Cars{% endblock %}
 
 {% block content %}
-<main class="max-w-[1440px] mx-auto px-4 sm:px-6 lg:px-8 py-8 lg:py-12 flex flex-col lg:flex-row gap-10 lg:gap-16 items-start relative">
+<main class="max-w-[1440px] mx-auto px-4 sm:px-6 lg:px-8 py-8 lg:py-12 flex flex-col gap-10 lg:gap-12 relative">
 
-    <!-- Left Column: Gallery & Details (flow-root contains float; xl+ text wraps beside gallery) -->
-    <div class="w-full lg:flex-1 flex flex-col gap-10 lg:gap-12 min-w-0 order-1 xl:flow-root">
+    <!-- Hero: gallery + desktop booking side-by-side (Spinny-style split) -->
+    <div class="w-full flex flex-col lg:flex-row lg:items-start lg:gap-8 xl:gap-10 min-w-0">
 
-        <!-- Gallery: fixed narrow width; xl+ float so overview fills space beside it (avoids a wide empty strip on large screens) -->
-        <section class="flex flex-col gap-2 w-[min(200px,88vw)] sm:w-[220px] shrink-0 mx-auto lg:mx-0 xl:float-left xl:mr-8 xl:mb-2 min-w-0">
-            <div class="relative w-full h-36 sm:h-40 bg-gray-100 rounded-lg overflow-hidden group flex items-center justify-center">
+        <section class="flex flex-col gap-2 w-full max-w-[min(100%,380px)] mx-auto lg:mx-0 lg:flex-1 lg:min-w-0 lg:max-w-[min(100%,460px)] min-w-0">
+            <div class="relative w-full aspect-[4/3] max-h-[220px] sm:max-h-[260px] bg-gray-100 rounded-xl overflow-hidden group flex items-center justify-center">
                 {% if car.images.all %}
                 <div id="gallery-track" class="flex w-full h-full" style="transform: translateX(-100%); transition: transform 700ms cubic-bezier(0.25, 0.46, 0.45, 0.94); will-change: transform">
                     {% for img in car.images.all %}
@@ -49,185 +48,8 @@
             {% endif %}
         </section>
 
-        <!-- Mobile-only: Booking panel (title, price, buttons, seller) - shown after gallery, before overview -->
-        <div class="lg:hidden flex flex-col gap-6 clear-both">
-            <div class="flex flex-col gap-4">
-                <div class="flex items-start justify-between gap-4">
-                    <h1 class="text-2xl font-semibold text-gray-900 tracking-tight leading-[1.2] flex-1 min-w-0">{{ car.title }}</h1>
-                    {% if user.is_authenticated %}
-                    <button type="button" class="wishlist-toggle flex flex-col items-center gap-0.5 shrink-0 p-2 text-gray-500 hover:text-rose-500 transition-colors duration-150 ease-out group bg-transparent border-0 cursor-pointer touch-manipulation select-none" data-car-pk="{{ car.pk }}" data-in-wishlist="{{ in_wishlist|yesno:'1,0' }}" data-wishlist-count="{{ wishlist_count }}" data-url="{% url 'toggle_wishlist' car.pk %}">
-                        <span class="wishlist-icon-filled {% if not in_wishlist %}hidden{% endif %}"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="currentColor" stroke="currentColor" stroke-width="1.5" class="w-8 h-8 text-rose-500"><path d="M19 14c1.49-1.46 3-3.21 3-5.5A5.5 5.5 0 0 0 16.5 3c-1.76 0-3 .5-4.5 2-1.5-1.5-2.74-2-4.5-2A5.5 5.5 0 0 0 2 8.5c0 2.3 1.5 4.05 3 5.5l7 7Z"></path></svg></span>
-                        <span class="wishlist-icon-outline {% if in_wishlist %}hidden{% endif %}"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" class="w-8 h-8 group-hover:text-rose-500"><path d="M19 14c1.49-1.46 3-3.21 3-5.5A5.5 5.5 0 0 0 16.5 3c-1.76 0-3 .5-4.5 2-1.5-1.5-2.74-2-4.5-2A5.5 5.5 0 0 0 2 8.5c0 2.3 1.5 4.05 3 5.5l7 7Z"></path></svg></span>
-                        <span class="wishlist-count text-xs text-gray-400 group-hover:text-gray-600">{{ wishlist_count }} {% if wishlist_count == 1 %}person{% else %}people{% endif %} shortlisted</span>
-                    </button>
-                    {% else %}
-                    <a href="{% url 'login' %}?next={{ request.get_full_path|urlencode }}" class="flex flex-col items-center gap-0.5 shrink-0 p-2 text-gray-500 hover:text-rose-500 transition-colors group no-underline">
-                        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" class="w-8 h-8 group-hover:text-rose-500"><path d="M19 14c1.49-1.46 3-3.21 3-5.5A5.5 5.5 0 0 0 16.5 3c-1.76 0-3 .5-4.5 2-1.5-1.5-2.74-2-4.5-2A5.5 5.5 0 0 0 2 8.5c0 2.3 1.5 4.05 3 5.5l7 7Z"></path></svg>
-                        <span class="text-xs text-gray-400 group-hover:text-gray-600">{{ wishlist_count }} {% if wishlist_count == 1 %}person{% else %}people{% endif %} shortlisted</span>
-                    </a>
-                    {% endif %}
-                </div>
-                <div class="flex flex-wrap gap-2">
-                    <span class="px-3 py-1.5 bg-gray-50 border border-gray-200 text-gray-700 rounded-lg text-sm font-medium">{{ car.mileage|floatformat:0 }} km</span>
-                    <span class="px-3 py-1.5 bg-gray-50 border border-gray-200 text-gray-700 rounded-lg text-sm font-medium">{{ car.ownership }}</span>
-                    <span class="px-3 py-1.5 bg-gray-50 border border-gray-200 text-gray-700 rounded-lg text-sm font-medium">{{ car.get_transmission_display }}</span>
-                    <span class="px-3 py-1.5 bg-gray-50 border border-gray-200 text-gray-700 rounded-lg text-sm font-medium">{{ car.get_fuel_type_display }}</span>
-                    {% if car.rto %}
-                    <span class="px-3 py-1.5 bg-gray-50 border border-gray-200 text-gray-700 rounded-lg text-sm font-medium">{{ car.rto }}</span>
-                    {% endif %}
-                </div>
-            </div>
-            <div class="flex flex-col gap-4 overflow-hidden bg-gray-50 border border-gray-200 rounded-2xl pt-6 pr-6 pb-6 pl-6 relative">
-                <div class="absolute top-0 right-0 w-32 h-32 bg-gradient-to-br from-blue-100/50 to-transparent rounded-bl-full pointer-events-none"></div>
-                <div class="flex flex-col gap-1 relative z-10">
-                    <span class="text-xs text-gray-500 uppercase tracking-wide">Car price</span>
-                    <span class="text-4xl font-semibold text-gray-900 tracking-tight">{{ car.price_display }}</span>
-                    <p class="text-sm text-gray-500 mt-1">+ Price will be negotiable. Contact us now.</p>
-                </div>
-                {% if car.original_price %}
-                <div class="flex items-center gap-2 text-base relative z-10">
-                    <span class="text-gray-500 line-through">{{ car.original_price_display }}</span>
-                    {% if car.savings_display %}
-                    <span class="text-emerald-600 font-medium bg-emerald-50 px-2 py-0.5 rounded text-sm">(Save {{ car.savings_display }})</span>
-                    {% endif %}
-                </div>
-                {% endif %}
-            </div>
-            <div class="flex flex-col gap-3">
-                <a href="{% url 'contact' %}?car={{ car.pk }}" class="w-full bg-[#ea580c] hover:bg-[#c2410c] text-white py-4 rounded-xl text-lg font-semibold transition-all shadow-sm hover:shadow-md hover:-translate-y-0.5 text-center no-underline flex items-center justify-center">
-                    Contact Us
-                </a>
-                <button type="button" class="share-btn w-full bg-white border border-gray-200 hover:bg-gray-50 text-gray-700 py-4 rounded-xl text-lg font-semibold transition-all flex items-center justify-center gap-2" data-share-url="{{ request.build_absolute_uri }}" data-share-title="{{ car.title }} - {{ car.price_display }}" onclick="event.stopPropagation(); event.preventDefault(); if(window.doShare) window.doShare(this); return false;">
-                    <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/></svg>
-                    Share
-                </button>
-            </div>
-            {% if car.contact_number %}
-            <div class="bg-white border border-gray-200 rounded-2xl p-6">
-                <h3 class="font-semibold text-gray-900 mb-3">Seller Contact</h3>
-                {% if car.contact_name %}
-                <p class="text-sm text-gray-600 mb-1">{{ car.contact_name }}</p>
-                {% endif %}
-                <a href="tel:{{ car.contact_number }}" class="text-blue-600 font-medium">{{ car.contact_number }}</a>
-            </div>
-            {% endif %}
-        </div>
-
-        <!-- Car Overview (beside floated gallery from xl upward when viewport is wide enough) -->
-        <section class="clear-none xl:mt-0">
-            <h2 class="text-2xl font-semibold text-gray-900 tracking-tight mb-8">Car Overview</h2>
-            <div class="grid grid-cols-2 md:grid-cols-3 gap-y-10 gap-x-6 border-t border-gray-100 pt-8">
-                <div class="flex flex-col gap-1.5">
-                    <span class="text-sm text-gray-500">Make Year</span>
-                    <span class="text-base font-medium text-gray-900">{{ car.make_year_display }}</span>
-                </div>
-                {% if car.registration_year %}
-                <div class="flex flex-col gap-1.5">
-                    <span class="text-sm text-gray-500">Registration Year</span>
-                    <span class="text-base font-medium text-gray-900">{{ car.registration_year }}</span>
-                </div>
-                {% endif %}
-                <div class="flex flex-col gap-1.5">
-                    <span class="text-sm text-gray-500">Fuel Type</span>
-                    <span class="text-base font-medium text-gray-900">{{ car.get_fuel_type_display }}</span>
-                </div>
-                <div class="flex flex-col gap-1.5">
-                    <span class="text-sm text-gray-500">Km Driven</span>
-                    <span class="text-base font-medium text-gray-900">{{ car.mileage_display }}</span>
-                </div>
-                <div class="flex flex-col gap-1.5">
-                    <span class="text-sm text-gray-500">Transmission</span>
-                    <span class="text-base font-medium text-gray-900">{{ car.get_transmission_display }}</span>
-                </div>
-                <div class="flex flex-col gap-1.5">
-                    <span class="text-sm text-gray-500">No. of Owner</span>
-                    <span class="text-base font-medium text-gray-900">{{ car.ownership }}</span>
-                </div>
-                {% if car.insurance_validity %}
-                <div class="flex flex-col gap-1.5">
-                    <span class="text-sm text-gray-500">Insurance Validity</span>
-                    <span class="text-base font-medium text-gray-900">{{ car.insurance_validity }}</span>
-                </div>
-                {% endif %}
-                {% if car.insurance_type %}
-                <div class="flex flex-col gap-1.5">
-                    <span class="text-sm text-gray-500">Insurance Type</span>
-                    <span class="text-base font-medium text-gray-900">{{ car.insurance_type }}</span>
-                </div>
-                {% endif %}
-                {% if car.rto %}
-                <div class="flex flex-col gap-1.5">
-                    <span class="text-sm text-gray-500">RTO</span>
-                    <span class="text-base font-medium text-gray-900">{{ car.rto }}</span>
-                </div>
-                {% endif %}
-                {% if car.color %}
-                <div class="flex flex-col gap-1.5">
-                    <span class="text-sm text-gray-500">Color</span>
-                    <span class="text-base font-medium text-gray-900">{{ car.color }}</span>
-                </div>
-                {% endif %}
-            </div>
-        </section>
-
-        {% if car.description %}
-        <section class="clear-both">
-            <h2 class="text-2xl font-semibold text-gray-900 tracking-tight mb-4">Description</h2>
-            <p class="text-gray-600 leading-relaxed">{{ car.description }}</p>
-        </section>
-        {% endif %}
-
-        <!-- Similar Cars - last section above footer on mobile -->
-        {% if similar_cars %}
-        <section class="clear-both bg-[#f8fafc] -mx-4 sm:-mx-6 lg:mx-0 px-4 sm:px-6 lg:px-10 py-12 rounded-none lg:rounded-3xl border border-transparent lg:border-gray-100">
-            <h2 class="text-2xl font-semibold text-gray-900 tracking-tight mb-6 lg:mb-8">Similar Cars</h2>
-            <div class="flex gap-4 overflow-x-auto scrollbar-hide snap-x snap-mandatory pb-2 lg:grid lg:grid-cols-2 xl:grid-cols-3 lg:overflow-visible lg:gap-6" style="-webkit-overflow-scrolling: touch;">
-                {% for scar in similar_cars %}
-                <article class="w-[280px] min-w-[280px] shrink-0 snap-start bg-white rounded-2xl border border-gray-100 overflow-hidden flex flex-col shadow-sm hover:shadow-lg transition-all duration-300 hover:-translate-y-0 lg:hover:-translate-y-1 group lg:w-auto lg:min-w-0 lg:shrink cursor-pointer" data-car-url="{% url 'car_detail' scar.pk %}" onclick="var u=this.getAttribute('data-car-url');if(u)location.href=u;">
-                    <div class="relative aspect-[4/3] bg-slate-100 overflow-hidden flex items-center justify-center">
-                        {% if scar.primary_image %}
-                        <img src="{{ scar.primary_image.display_url }}" alt="{{ scar.title }}" width="800" height="600" loading="lazy" decoding="async" class="w-full h-full max-h-full object-contain group-hover:scale-[1.02] transition-transform duration-500">
-                        {% else %}
-                        <div class="w-full h-full bg-gray-200"></div>
-                        {% endif %}
-                    </div>
-                    <div class="p-5 flex flex-col flex-1">
-                        <h3 class="text-lg font-semibold text-gray-900 mb-1 tracking-tight">{{ scar.title }}</h3>
-                        <p class="text-sm text-gray-500 mb-4">{{ scar.specs_short }}</p>
-                        <p class="text-xl font-semibold text-gray-900 tracking-tight mb-6">{{ scar.price_display }}</p>
-                        <div class="mt-auto flex gap-3" onclick="event.stopPropagation()">
-                            <a href="{% url 'car_detail' scar.pk %}" class="flex-1 bg-blue-600 hover:bg-blue-700 text-white py-2.5 rounded-xl text-sm font-medium transition-colors shadow-sm text-center no-underline">Book Now</a>
-                            <button type="button" class="share-btn px-5 bg-white border border-gray-200 hover:bg-gray-50 text-gray-700 py-2.5 rounded-xl text-sm font-medium transition-colors" data-share-url="{% url 'car_detail' scar.pk %}" data-share-title="{{ scar.title }} - {{ scar.price_display }}" onclick="event.stopPropagation(); event.preventDefault(); if(window.doShare) window.doShare(this); return false;">Share</button>
-                        </div>
-                    </div>
-                </article>
-                {% endfor %}
-            </div>
-        </section>
-        {% endif %}
-
-        <!-- Testimonials -->
-        {% if testimonials %}
-        <section class="clear-both bg-[#0f172a] -mx-4 sm:-mx-6 lg:mx-0 px-4 sm:px-6 lg:px-10 py-16 rounded-none lg:rounded-[2rem] text-white">
-            <h2 class="text-3xl font-semibold text-center tracking-tight mb-12">Stories from Happy Customers</h2>
-            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-                {% for t in testimonials %}
-                <div class="relative rounded-2xl overflow-hidden aspect-[3/4] group cursor-pointer">
-                    <img src="{{ t.image.url }}" alt="{{ t.name }}" width="600" height="800" loading="lazy" decoding="async" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700">
-                    <div class="absolute inset-0 bg-gradient-to-t from-black/90 via-black/20 to-transparent"></div>
-                    <div class="absolute bottom-6 left-6 right-6">
-                        <h4 class="text-lg font-semibold mb-1">{{ t.name }}</h4>
-                        <p class="text-sm text-gray-300 leading-snug">{{ t.designation }}</p>
-                    </div>
-                </div>
-                {% endfor %}
-            </div>
-        </section>
-        {% endif %}
-    </div>
-
-    <!-- Right Column: Sticky Booking Panel (desktop only - mobile uses inline panel above) -->
-    <aside class="hidden lg:flex w-full lg:w-[380px] xl:w-[420px] shrink-0 lg:sticky lg:top-[120px] h-fit flex-col gap-6 lg:pb-12 order-2">
+    <!-- Desktop: sticky booking beside gallery -->
+    <aside class="hidden lg:flex w-full lg:w-[380px] xl:w-[420px] shrink-0 lg:sticky lg:top-[120px] h-fit flex-col gap-6 lg:pb-12">
 
         <div class="flex flex-col gap-4">
             <div class="flex items-start justify-between gap-4">
@@ -297,6 +119,188 @@
         </div>
         {% endif %}
     </aside>
+
+    </div>
+
+    <!-- Below hero: mobile booking + specs + rest (full width) -->
+    <div class="w-full flex flex-col gap-10 lg:gap-12 min-w-0">
+
+        <!-- Mobile-only: Booking panel (title, price, buttons, seller) - shown after gallery, before overview -->
+        <div class="lg:hidden flex flex-col gap-6">
+            <div class="flex flex-col gap-4">
+                <div class="flex items-start justify-between gap-4">
+                    <h1 class="text-2xl font-semibold text-gray-900 tracking-tight leading-[1.2] flex-1 min-w-0">{{ car.title }}</h1>
+                    {% if user.is_authenticated %}
+                    <button type="button" class="wishlist-toggle flex flex-col items-center gap-0.5 shrink-0 p-2 text-gray-500 hover:text-rose-500 transition-colors duration-150 ease-out group bg-transparent border-0 cursor-pointer touch-manipulation select-none" data-car-pk="{{ car.pk }}" data-in-wishlist="{{ in_wishlist|yesno:'1,0' }}" data-wishlist-count="{{ wishlist_count }}" data-url="{% url 'toggle_wishlist' car.pk %}">
+                        <span class="wishlist-icon-filled {% if not in_wishlist %}hidden{% endif %}"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="currentColor" stroke="currentColor" stroke-width="1.5" class="w-8 h-8 text-rose-500"><path d="M19 14c1.49-1.46 3-3.21 3-5.5A5.5 5.5 0 0 0 16.5 3c-1.76 0-3 .5-4.5 2-1.5-1.5-2.74-2-4.5-2A5.5 5.5 0 0 0 2 8.5c0 2.3 1.5 4.05 3 5.5l7 7Z"></path></svg></span>
+                        <span class="wishlist-icon-outline {% if in_wishlist %}hidden{% endif %}"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" class="w-8 h-8 group-hover:text-rose-500"><path d="M19 14c1.49-1.46 3-3.21 3-5.5A5.5 5.5 0 0 0 16.5 3c-1.76 0-3 .5-4.5 2-1.5-1.5-2.74-2-4.5-2A5.5 5.5 0 0 0 2 8.5c0 2.3 1.5 4.05 3 5.5l7 7Z"></path></svg></span>
+                        <span class="wishlist-count text-xs text-gray-400 group-hover:text-gray-600">{{ wishlist_count }} {% if wishlist_count == 1 %}person{% else %}people{% endif %} shortlisted</span>
+                    </button>
+                    {% else %}
+                    <a href="{% url 'login' %}?next={{ request.get_full_path|urlencode }}" class="flex flex-col items-center gap-0.5 shrink-0 p-2 text-gray-500 hover:text-rose-500 transition-colors group no-underline">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" class="w-8 h-8 group-hover:text-rose-500"><path d="M19 14c1.49-1.46 3-3.21 3-5.5A5.5 5.5 0 0 0 16.5 3c-1.76 0-3 .5-4.5 2-1.5-1.5-2.74-2-4.5-2A5.5 5.5 0 0 0 2 8.5c0 2.3 1.5 4.05 3 5.5l7 7Z"></path></svg>
+                        <span class="text-xs text-gray-400 group-hover:text-gray-600">{{ wishlist_count }} {% if wishlist_count == 1 %}person{% else %}people{% endif %} shortlisted</span>
+                    </a>
+                    {% endif %}
+                </div>
+                <div class="flex flex-wrap gap-2">
+                    <span class="px-3 py-1.5 bg-gray-50 border border-gray-200 text-gray-700 rounded-lg text-sm font-medium">{{ car.mileage|floatformat:0 }} km</span>
+                    <span class="px-3 py-1.5 bg-gray-50 border border-gray-200 text-gray-700 rounded-lg text-sm font-medium">{{ car.ownership }}</span>
+                    <span class="px-3 py-1.5 bg-gray-50 border border-gray-200 text-gray-700 rounded-lg text-sm font-medium">{{ car.get_transmission_display }}</span>
+                    <span class="px-3 py-1.5 bg-gray-50 border border-gray-200 text-gray-700 rounded-lg text-sm font-medium">{{ car.get_fuel_type_display }}</span>
+                    {% if car.rto %}
+                    <span class="px-3 py-1.5 bg-gray-50 border border-gray-200 text-gray-700 rounded-lg text-sm font-medium">{{ car.rto }}</span>
+                    {% endif %}
+                </div>
+            </div>
+            <div class="flex flex-col gap-4 overflow-hidden bg-gray-50 border border-gray-200 rounded-2xl pt-6 pr-6 pb-6 pl-6 relative">
+                <div class="absolute top-0 right-0 w-32 h-32 bg-gradient-to-br from-blue-100/50 to-transparent rounded-bl-full pointer-events-none"></div>
+                <div class="flex flex-col gap-1 relative z-10">
+                    <span class="text-xs text-gray-500 uppercase tracking-wide">Car price</span>
+                    <span class="text-4xl font-semibold text-gray-900 tracking-tight">{{ car.price_display }}</span>
+                    <p class="text-sm text-gray-500 mt-1">+ Price will be negotiable. Contact us now.</p>
+                </div>
+                {% if car.original_price %}
+                <div class="flex items-center gap-2 text-base relative z-10">
+                    <span class="text-gray-500 line-through">{{ car.original_price_display }}</span>
+                    {% if car.savings_display %}
+                    <span class="text-emerald-600 font-medium bg-emerald-50 px-2 py-0.5 rounded text-sm">(Save {{ car.savings_display }})</span>
+                    {% endif %}
+                </div>
+                {% endif %}
+            </div>
+            <div class="flex flex-col gap-3">
+                <a href="{% url 'contact' %}?car={{ car.pk }}" class="w-full bg-[#ea580c] hover:bg-[#c2410c] text-white py-4 rounded-xl text-lg font-semibold transition-all shadow-sm hover:shadow-md hover:-translate-y-0.5 text-center no-underline flex items-center justify-center">
+                    Contact Us
+                </a>
+                <button type="button" class="share-btn w-full bg-white border border-gray-200 hover:bg-gray-50 text-gray-700 py-4 rounded-xl text-lg font-semibold transition-all flex items-center justify-center gap-2" data-share-url="{{ request.build_absolute_uri }}" data-share-title="{{ car.title }} - {{ car.price_display }}" onclick="event.stopPropagation(); event.preventDefault(); if(window.doShare) window.doShare(this); return false;">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/></svg>
+                    Share
+                </button>
+            </div>
+            {% if car.contact_number %}
+            <div class="bg-white border border-gray-200 rounded-2xl p-6">
+                <h3 class="font-semibold text-gray-900 mb-3">Seller Contact</h3>
+                {% if car.contact_name %}
+                <p class="text-sm text-gray-600 mb-1">{{ car.contact_name }}</p>
+                {% endif %}
+                <a href="tel:{{ car.contact_number }}" class="text-blue-600 font-medium">{{ car.contact_number }}</a>
+            </div>
+            {% endif %}
+        </div>
+
+        <!-- Car Overview -->
+        <section>
+            <h2 class="text-2xl font-semibold text-gray-900 tracking-tight mb-8">Car Overview</h2>
+            <div class="grid grid-cols-2 md:grid-cols-3 gap-y-10 gap-x-6 border-t border-gray-100 pt-8">
+                <div class="flex flex-col gap-1.5">
+                    <span class="text-sm text-gray-500">Make Year</span>
+                    <span class="text-base font-medium text-gray-900">{{ car.make_year_display }}</span>
+                </div>
+                {% if car.registration_year %}
+                <div class="flex flex-col gap-1.5">
+                    <span class="text-sm text-gray-500">Registration Year</span>
+                    <span class="text-base font-medium text-gray-900">{{ car.registration_year }}</span>
+                </div>
+                {% endif %}
+                <div class="flex flex-col gap-1.5">
+                    <span class="text-sm text-gray-500">Fuel Type</span>
+                    <span class="text-base font-medium text-gray-900">{{ car.get_fuel_type_display }}</span>
+                </div>
+                <div class="flex flex-col gap-1.5">
+                    <span class="text-sm text-gray-500">Km Driven</span>
+                    <span class="text-base font-medium text-gray-900">{{ car.mileage_display }}</span>
+                </div>
+                <div class="flex flex-col gap-1.5">
+                    <span class="text-sm text-gray-500">Transmission</span>
+                    <span class="text-base font-medium text-gray-900">{{ car.get_transmission_display }}</span>
+                </div>
+                <div class="flex flex-col gap-1.5">
+                    <span class="text-sm text-gray-500">No. of Owner</span>
+                    <span class="text-base font-medium text-gray-900">{{ car.ownership }}</span>
+                </div>
+                {% if car.insurance_validity %}
+                <div class="flex flex-col gap-1.5">
+                    <span class="text-sm text-gray-500">Insurance Validity</span>
+                    <span class="text-base font-medium text-gray-900">{{ car.insurance_validity }}</span>
+                </div>
+                {% endif %}
+                {% if car.insurance_type %}
+                <div class="flex flex-col gap-1.5">
+                    <span class="text-sm text-gray-500">Insurance Type</span>
+                    <span class="text-base font-medium text-gray-900">{{ car.insurance_type }}</span>
+                </div>
+                {% endif %}
+                {% if car.rto %}
+                <div class="flex flex-col gap-1.5">
+                    <span class="text-sm text-gray-500">RTO</span>
+                    <span class="text-base font-medium text-gray-900">{{ car.rto }}</span>
+                </div>
+                {% endif %}
+                {% if car.color %}
+                <div class="flex flex-col gap-1.5">
+                    <span class="text-sm text-gray-500">Color</span>
+                    <span class="text-base font-medium text-gray-900">{{ car.color }}</span>
+                </div>
+                {% endif %}
+            </div>
+        </section>
+
+        {% if car.description %}
+        <section>
+            <h2 class="text-2xl font-semibold text-gray-900 tracking-tight mb-4">Description</h2>
+            <p class="text-gray-600 leading-relaxed">{{ car.description }}</p>
+        </section>
+        {% endif %}
+
+        <!-- Similar Cars - last section above footer on mobile -->
+        {% if similar_cars %}
+        <section class="bg-[#f8fafc] -mx-4 sm:-mx-6 lg:mx-0 px-4 sm:px-6 lg:px-10 py-12 rounded-none lg:rounded-3xl border border-transparent lg:border-gray-100">
+            <h2 class="text-2xl font-semibold text-gray-900 tracking-tight mb-6 lg:mb-8">Similar Cars</h2>
+            <div class="flex gap-4 overflow-x-auto scrollbar-hide snap-x snap-mandatory pb-2 lg:grid lg:grid-cols-2 xl:grid-cols-3 lg:overflow-visible lg:gap-6" style="-webkit-overflow-scrolling: touch;">
+                {% for scar in similar_cars %}
+                <article class="w-[280px] min-w-[280px] shrink-0 snap-start bg-white rounded-2xl border border-gray-100 overflow-hidden flex flex-col shadow-sm hover:shadow-lg transition-all duration-300 hover:-translate-y-0 lg:hover:-translate-y-1 group lg:w-auto lg:min-w-0 lg:shrink cursor-pointer" data-car-url="{% url 'car_detail' scar.pk %}" onclick="var u=this.getAttribute('data-car-url');if(u)location.href=u;">
+                    <div class="relative aspect-[4/3] bg-slate-100 overflow-hidden flex items-center justify-center">
+                        {% if scar.primary_image %}
+                        <img src="{{ scar.primary_image.display_url }}" alt="{{ scar.title }}" width="800" height="600" loading="lazy" decoding="async" class="w-full h-full max-h-full object-contain group-hover:scale-[1.02] transition-transform duration-500">
+                        {% else %}
+                        <div class="w-full h-full bg-gray-200"></div>
+                        {% endif %}
+                    </div>
+                    <div class="p-5 flex flex-col flex-1">
+                        <h3 class="text-lg font-semibold text-gray-900 mb-1 tracking-tight">{{ scar.title }}</h3>
+                        <p class="text-sm text-gray-500 mb-4">{{ scar.specs_short }}</p>
+                        <p class="text-xl font-semibold text-gray-900 tracking-tight mb-6">{{ scar.price_display }}</p>
+                        <div class="mt-auto flex gap-3" onclick="event.stopPropagation()">
+                            <a href="{% url 'car_detail' scar.pk %}" class="flex-1 bg-blue-600 hover:bg-blue-700 text-white py-2.5 rounded-xl text-sm font-medium transition-colors shadow-sm text-center no-underline">Book Now</a>
+                            <button type="button" class="share-btn px-5 bg-white border border-gray-200 hover:bg-gray-50 text-gray-700 py-2.5 rounded-xl text-sm font-medium transition-colors" data-share-url="{% url 'car_detail' scar.pk %}" data-share-title="{{ scar.title }} - {{ scar.price_display }}" onclick="event.stopPropagation(); event.preventDefault(); if(window.doShare) window.doShare(this); return false;">Share</button>
+                        </div>
+                    </div>
+                </article>
+                {% endfor %}
+            </div>
+        </section>
+        {% endif %}
+
+        <!-- Testimonials -->
+        {% if testimonials %}
+        <section class="bg-[#0f172a] -mx-4 sm:-mx-6 lg:mx-0 px-4 sm:px-6 lg:px-10 py-16 rounded-none lg:rounded-[2rem] text-white">
+            <h2 class="text-3xl font-semibold text-center tracking-tight mb-12">Stories from Happy Customers</h2>
+            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+                {% for t in testimonials %}
+                <div class="relative rounded-2xl overflow-hidden aspect-[3/4] group cursor-pointer">
+                    <img src="{{ t.image.url }}" alt="{{ t.name }}" width="600" height="800" loading="lazy" decoding="async" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700">
+                    <div class="absolute inset-0 bg-gradient-to-t from-black/90 via-black/20 to-transparent"></div>
+                    <div class="absolute bottom-6 left-6 right-6">
+                        <h4 class="text-lg font-semibold mb-1">{{ t.name }}</h4>
+                        <p class="text-sm text-gray-300 leading-snug">{{ t.designation }}</p>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+        </section>
+        {% endif %}
+    </div>
 </main>
 {% endblock %}
 
