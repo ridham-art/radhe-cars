@@ -31,11 +31,6 @@
     touch-action: none;
   }
   .car-zoom-cursor { cursor: zoom-in; }
-  /* Car overview tiles: equal-height rows, label/value clearly separated */
-  [data-car-detail-page] .car-overview-cell { min-height: 5.25rem; }
-  @media (min-width: 640px) {
-    [data-car-detail-page] .car-overview-cell { min-height: 5.5rem; }
-  }
 </style>
 {% endblock %}
 
@@ -230,59 +225,59 @@
             {% endif %}
         </div>
 
-        {# Car Overview: Spinny-style panel — full width, 2-col tiles on mobile, 3-col on md+ #}
-        <section class="min-w-0 w-full">
-            <div class="w-full rounded-2xl border border-gray-200/90 bg-gradient-to-br from-slate-50 via-white to-indigo-50/35 p-4 sm:p-6 md:p-8 shadow-sm ring-1 ring-gray-100">
-                <h2 class="text-lg sm:text-xl font-semibold text-gray-900 tracking-tight mb-4 sm:mb-6 md:mb-8">Car Overview</h2>
-                <div class="grid grid-cols-2 md:grid-cols-3 gap-3 sm:gap-4 md:gap-x-8 md:gap-y-6 w-full">
-                <div class="car-overview-cell rounded-xl bg-white/90 border border-gray-200/80 p-3.5 sm:p-4 min-w-0 shadow-sm flex flex-col">
-                    <span class="text-[11px] sm:text-xs font-medium text-gray-500 leading-snug mb-2 sm:mb-2.5">Make Year</span>
-                    <span class="text-sm sm:text-base font-semibold text-gray-900 leading-snug break-words mt-auto">{{ car.make_year_display }}</span>
+        {# Car Overview: panel + compact tiles (no mt-auto / min-height — those caused empty vertical space on mobile) #}
+        <section class="min-w-0 w-full max-w-full">
+            <div class="w-full max-w-full min-w-0 rounded-2xl border border-gray-200/90 bg-gradient-to-br from-slate-50 via-white to-indigo-50/35 p-3 sm:p-6 md:p-8 shadow-sm ring-1 ring-gray-100 box-border">
+                <h2 class="text-lg sm:text-xl font-semibold text-gray-900 tracking-tight mb-3 sm:mb-6 md:mb-8">Car Overview</h2>
+                <div class="grid w-full min-w-0 grid-cols-2 md:grid-cols-3 gap-2.5 sm:gap-4 md:gap-x-8 md:gap-y-6">
+                <div class="car-overview-cell rounded-xl bg-white/90 border border-gray-200/80 p-3 sm:p-4 min-w-0 w-full max-w-full shadow-sm flex flex-col gap-1">
+                    <span class="text-[11px] sm:text-xs font-medium text-gray-500 leading-snug">Make Year</span>
+                    <span class="text-sm sm:text-base font-semibold text-gray-900 leading-snug break-words">{{ car.make_year_display }}</span>
                 </div>
                 {% if car.registration_year %}
-                <div class="car-overview-cell rounded-xl bg-white/90 border border-gray-200/80 p-3.5 sm:p-4 min-w-0 shadow-sm flex flex-col">
-                    <span class="text-[11px] sm:text-xs font-medium text-gray-500 leading-snug mb-2 sm:mb-2.5">Registration Year</span>
-                    <span class="text-sm sm:text-base font-semibold text-gray-900 leading-snug break-words mt-auto">{{ car.registration_year }}</span>
+                <div class="car-overview-cell rounded-xl bg-white/90 border border-gray-200/80 p-3 sm:p-4 min-w-0 w-full max-w-full shadow-sm flex flex-col gap-1">
+                    <span class="text-[11px] sm:text-xs font-medium text-gray-500 leading-snug">Registration Year</span>
+                    <span class="text-sm sm:text-base font-semibold text-gray-900 leading-snug break-words">{{ car.registration_year }}</span>
                 </div>
                 {% endif %}
-                <div class="car-overview-cell rounded-xl bg-white/90 border border-gray-200/80 p-3.5 sm:p-4 min-w-0 shadow-sm flex flex-col">
-                    <span class="text-[11px] sm:text-xs font-medium text-gray-500 leading-snug mb-2 sm:mb-2.5">Fuel Type</span>
-                    <span class="text-sm sm:text-base font-semibold text-gray-900 leading-snug break-words mt-auto">{{ car.get_fuel_type_display }}</span>
+                <div class="car-overview-cell rounded-xl bg-white/90 border border-gray-200/80 p-3 sm:p-4 min-w-0 w-full max-w-full shadow-sm flex flex-col gap-1">
+                    <span class="text-[11px] sm:text-xs font-medium text-gray-500 leading-snug">Fuel Type</span>
+                    <span class="text-sm sm:text-base font-semibold text-gray-900 leading-snug break-words">{{ car.get_fuel_type_display }}</span>
                 </div>
-                <div class="car-overview-cell rounded-xl bg-white/90 border border-gray-200/80 p-3.5 sm:p-4 min-w-0 shadow-sm flex flex-col">
-                    <span class="text-[11px] sm:text-xs font-medium text-gray-500 leading-snug mb-2 sm:mb-2.5">Km Driven</span>
-                    <span class="text-sm sm:text-base font-semibold text-gray-900 leading-snug break-words mt-auto">{{ car.mileage_display }}</span>
+                <div class="car-overview-cell rounded-xl bg-white/90 border border-gray-200/80 p-3 sm:p-4 min-w-0 w-full max-w-full shadow-sm flex flex-col gap-1">
+                    <span class="text-[11px] sm:text-xs font-medium text-gray-500 leading-snug">Km Driven</span>
+                    <span class="text-sm sm:text-base font-semibold text-gray-900 leading-snug break-words">{{ car.mileage_display }}</span>
                 </div>
-                <div class="car-overview-cell rounded-xl bg-white/90 border border-gray-200/80 p-3.5 sm:p-4 min-w-0 shadow-sm flex flex-col">
-                    <span class="text-[11px] sm:text-xs font-medium text-gray-500 leading-snug mb-2 sm:mb-2.5">Transmission</span>
-                    <span class="text-sm sm:text-base font-semibold text-gray-900 leading-snug break-words mt-auto">{{ car.get_transmission_display }}</span>
+                <div class="car-overview-cell rounded-xl bg-white/90 border border-gray-200/80 p-3 sm:p-4 min-w-0 w-full max-w-full shadow-sm flex flex-col gap-1">
+                    <span class="text-[11px] sm:text-xs font-medium text-gray-500 leading-snug">Transmission</span>
+                    <span class="text-sm sm:text-base font-semibold text-gray-900 leading-snug break-words">{{ car.get_transmission_display }}</span>
                 </div>
-                <div class="car-overview-cell rounded-xl bg-white/90 border border-gray-200/80 p-3.5 sm:p-4 min-w-0 shadow-sm flex flex-col">
-                    <span class="text-[11px] sm:text-xs font-medium text-gray-500 leading-snug mb-2 sm:mb-2.5">No. of Owner</span>
-                    <span class="text-sm sm:text-base font-semibold text-gray-900 leading-snug break-words mt-auto">{{ car.ownership }}</span>
+                <div class="car-overview-cell rounded-xl bg-white/90 border border-gray-200/80 p-3 sm:p-4 min-w-0 w-full max-w-full shadow-sm flex flex-col gap-1">
+                    <span class="text-[11px] sm:text-xs font-medium text-gray-500 leading-snug">No. of Owner</span>
+                    <span class="text-sm sm:text-base font-semibold text-gray-900 leading-snug break-words">{{ car.ownership }}</span>
                 </div>
                 {% if car.insurance_validity %}
-                <div class="car-overview-cell rounded-xl bg-white/90 border border-gray-200/80 p-3.5 sm:p-4 min-w-0 shadow-sm flex flex-col">
-                    <span class="text-[11px] sm:text-xs font-medium text-gray-500 leading-snug mb-2 sm:mb-2.5">Insurance Validity</span>
-                    <span class="text-sm sm:text-base font-semibold text-gray-900 leading-snug break-words mt-auto">{{ car.insurance_validity }}</span>
+                <div class="car-overview-cell rounded-xl bg-white/90 border border-gray-200/80 p-3 sm:p-4 min-w-0 w-full max-w-full shadow-sm flex flex-col gap-1">
+                    <span class="text-[11px] sm:text-xs font-medium text-gray-500 leading-snug">Insurance Validity</span>
+                    <span class="text-sm sm:text-base font-semibold text-gray-900 leading-snug break-words">{{ car.insurance_validity }}</span>
                 </div>
                 {% endif %}
                 {% if car.insurance_type %}
-                <div class="car-overview-cell rounded-xl bg-white/90 border border-gray-200/80 p-3.5 sm:p-4 min-w-0 shadow-sm flex flex-col">
-                    <span class="text-[11px] sm:text-xs font-medium text-gray-500 leading-snug mb-2 sm:mb-2.5">Insurance Type</span>
-                    <span class="text-sm sm:text-base font-semibold text-gray-900 leading-snug break-words mt-auto">{{ car.insurance_type }}</span>
+                <div class="car-overview-cell rounded-xl bg-white/90 border border-gray-200/80 p-3 sm:p-4 min-w-0 w-full max-w-full shadow-sm flex flex-col gap-1">
+                    <span class="text-[11px] sm:text-xs font-medium text-gray-500 leading-snug">Insurance Type</span>
+                    <span class="text-sm sm:text-base font-semibold text-gray-900 leading-snug break-words">{{ car.insurance_type }}</span>
                 </div>
                 {% endif %}
                 {% if car.rto %}
-                <div class="car-overview-cell rounded-xl bg-white/90 border border-gray-200/80 p-3.5 sm:p-4 min-w-0 shadow-sm flex flex-col">
-                    <span class="text-[11px] sm:text-xs font-medium text-gray-500 leading-snug mb-2 sm:mb-2.5">RTO</span>
-                    <span class="text-sm sm:text-base font-semibold text-gray-900 leading-snug break-words mt-auto">{{ car.rto }}</span>
+                <div class="car-overview-cell rounded-xl bg-white/90 border border-gray-200/80 p-3 sm:p-4 min-w-0 w-full max-w-full shadow-sm flex flex-col gap-1">
+                    <span class="text-[11px] sm:text-xs font-medium text-gray-500 leading-snug">RTO</span>
+                    <span class="text-sm sm:text-base font-semibold text-gray-900 leading-snug break-words">{{ car.rto }}</span>
                 </div>
                 {% endif %}
                 {% if car.color %}
-                <div class="car-overview-cell rounded-xl bg-white/90 border border-gray-200/80 p-3.5 sm:p-4 min-w-0 shadow-sm flex flex-col">
-                    <span class="text-[11px] sm:text-xs font-medium text-gray-500 leading-snug mb-2 sm:mb-2.5">Color</span>
-                    <span class="text-sm sm:text-base font-semibold text-gray-900 leading-snug break-words mt-auto">{{ car.color }}</span>
+                <div class="car-overview-cell rounded-xl bg-white/90 border border-gray-200/80 p-3 sm:p-4 min-w-0 w-full max-w-full shadow-sm flex flex-col gap-1">
+                    <span class="text-[11px] sm:text-xs font-medium text-gray-500 leading-snug">Color</span>
+                    <span class="text-sm sm:text-base font-semibold text-gray-900 leading-snug break-words">{{ car.color }}</span>
                 </div>
                 {% endif %}
                 </div>
