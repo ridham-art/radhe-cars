@@ -34,7 +34,7 @@
         <a href="{% url 'wishlist' %}" id="nav-wishlist-link" class="flex flex-col gap-0.5 cursor-pointer group text-slate-950 items-center no-underline relative" aria-label="Wishlist">
             <span class="relative inline-flex h-[22px] w-[22px] items-center justify-center">
                 <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" class="group-hover:text-rose-400 transition-colors text-rose-400" aria-hidden="true"><path d="M19 14c1.49-1.46 3-3.21 3-5.5A5.5 5.5 0 0 0 16.5 3c-1.76 0-3 .5-4.5 2-1.5-1.5-2.74-2-4.5-2A5.5 5.5 0 0 0 2 8.5c0 2.3 1.5 4.05 3 5.5l7 7Z"></path></svg>
-                <span id="nav-wishlist-count" class="pointer-events-none absolute right-0 top-0 z-10 flex h-[1.125rem] min-w-[1.125rem] translate-x-[calc(50%+4px)] -translate-y-1/2 items-center justify-center rounded-full bg-rose-500 px-0.5 text-[10px] font-bold leading-none text-white ring-2 ring-slate-50" aria-live="polite">{{ nav_wishlist_count }}</span>
+                <span id="nav-wishlist-count" class="pointer-events-none absolute right-0 top-0 z-10 flex h-[1.125rem] min-w-[1.125rem] translate-x-[calc(50%+3px)] -translate-y-1/2 items-center justify-center rounded-full bg-rose-500 px-0.5 text-[10px] font-bold leading-none text-white ring-2 ring-slate-50" aria-live="polite">{{ nav_wishlist_count }}</span>
             </span>
             <span class="text-xs text-gray-600">Wishlist</span>
         </a>
@@ -99,7 +99,7 @@
             <a href="{% url 'wishlist' %}" id="nav-wishlist-link-mobile" class="flex items-center gap-3 py-3 px-4 rounded-xl hover:bg-gray-50 text-gray-700 font-medium no-underline">
                 <span class="relative inline-flex h-5 w-5 shrink-0 items-center justify-center">
                     <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M19 14c1.49-1.46 3-3.21 3-5.5A5.5 5.5 0 0 0 16.5 3c-1.76 0-3 .5-4.5 2-1.5-1.5-2.74-2-4.5-2A5.5 5.5 0 0 0 2 8.5c0 2.3 1.5 4.05 3 5.5l7 7Z"/></svg>
-                    <span id="nav-wishlist-count-mobile" class="pointer-events-none absolute right-0 top-0 z-10 flex h-[1.125rem] min-w-[1.125rem] translate-x-[calc(50%+4px)] -translate-y-1/2 items-center justify-center rounded-full bg-rose-500 px-0.5 text-[10px] font-bold leading-none text-white ring-2 ring-white">{{ nav_wishlist_count }}</span>
+                    <span id="nav-wishlist-count-mobile" class="pointer-events-none absolute right-0 top-0 z-10 flex h-[1.125rem] min-w-[1.125rem] translate-x-[calc(50%+3px)] -translate-y-1/2 items-center justify-center rounded-full bg-rose-500 px-0.5 text-[10px] font-bold leading-none text-white ring-2 ring-white">{{ nav_wishlist_count }}</span>
                 </span>
                 Wishlist
             </a>
