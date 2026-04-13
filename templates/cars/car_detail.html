@@ -14,9 +14,22 @@
   [data-car-detail-page] .contact-cta-primary:hover {
     background-color: #c2410c !important;
   }
-  #car-lightbox { touch-action: none; }
-  #car-lightbox-stage { touch-action: none; }
-  #car-lightbox-panwrap { will-change: transform; }
+  /* Must sit above sticky header (z-50); lightbox in <main> was trapped below it */
+  #car-lightbox {
+    touch-action: none;
+    z-index: 9999;
+    isolation: isolate;
+  }
+  /* Stage is full-bleed but does not capture taps — backdrop gets letterbox + “outside image” */
+  #car-lightbox-stage {
+    touch-action: none;
+    pointer-events: none;
+  }
+  #car-lightbox-panwrap {
+    will-change: transform;
+    pointer-events: auto;
+    touch-action: none;
+  }
   .car-zoom-cursor { cursor: zoom-in; }
 </style>
 {% endblock %}
@@ -333,23 +346,23 @@
 {% endif %}
 ]</script>
 
-    <div id="car-lightbox" class="fixed inset-0 z-[200] hidden items-center justify-center" role="dialog" aria-modal="true" aria-label="Photo viewer">
-        <button type="button" id="car-lightbox-backdrop" class="absolute inset-0 bg-black/90 border-0 cursor-default" aria-label="Close photo viewer"></button>
-        <div class="absolute top-3 right-3 left-auto z-10 flex items-center gap-2">
+    <div id="car-lightbox" class="fixed inset-0 hidden items-center justify-center" role="dialog" aria-modal="true" aria-label="Photo viewer">
+        <button type="button" id="car-lightbox-backdrop" class="absolute inset-0 z-0 bg-black/90 border-0 cursor-default" aria-label="Close photo viewer"></button>
+        <div class="absolute top-[max(0.75rem,env(safe-area-inset-top,0px))] right-3 left-auto z-[100] flex items-center gap-2 pointer-events-auto">
             <button type="button" id="car-lightbox-zoom-out" class="w-11 h-11 rounded-full bg-white/15 hover:bg-white/25 text-white text-2xl font-light leading-none flex items-center justify-center border border-white/20" aria-label="Zoom out">−</button>
             <button type="button" id="car-lightbox-zoom-in" class="w-11 h-11 rounded-full bg-white/15 hover:bg-white/25 text-white text-2xl font-light leading-none flex items-center justify-center border border-white/20" aria-label="Zoom in">+</button>
-            <button type="button" id="car-lightbox-close" class="w-11 h-11 rounded-full bg-white/15 hover:bg-white/25 text-white flex items-center justify-center border border-white/20" aria-label="Close">
-                <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M18 6 6 18M6 6l12 12"/></svg>
+            <button type="button" id="car-lightbox-close" class="w-12 h-12 min-w-[3rem] min-h-[3rem] rounded-full bg-white text-gray-900 shadow-lg flex items-center justify-center border-2 border-white/90 hover:bg-gray-100 active:bg-gray-200 touch-manipulation" aria-label="Close">
+                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" aria-hidden="true"><path d="M18 6 6 18M6 6l12 12"/></svg>
             </button>
         </div>
-        <button type="button" id="car-lightbox-prev" class="hidden absolute left-2 top-1/2 -translate-y-1/2 z-10 w-12 h-12 rounded-full bg-white/15 hover:bg-white/25 text-white flex items-center justify-center border border-white/20 lg:left-4" aria-label="Previous photo">
+        <button type="button" id="car-lightbox-prev" class="hidden absolute left-2 top-1/2 -translate-y-1/2 z-[90] w-12 h-12 rounded-full bg-white/15 hover:bg-white/25 text-white flex items-center justify-center border border-white/20 pointer-events-auto lg:left-4" aria-label="Previous photo">
             <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="m15 18-6-6 6-6"/></svg>
         </button>
-        <button type="button" id="car-lightbox-next" class="hidden absolute right-2 top-1/2 -translate-y-1/2 z-10 w-12 h-12 rounded-full bg-white/15 hover:bg-white/25 text-white flex items-center justify-center border border-white/20 lg:right-4" aria-label="Next photo">
+        <button type="button" id="car-lightbox-next" class="hidden absolute right-2 top-1/2 -translate-y-1/2 z-[90] w-12 h-12 rounded-full bg-white/15 hover:bg-white/25 text-white flex items-center justify-center border border-white/20 pointer-events-auto lg:right-4" aria-label="Next photo">
             <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="m9 18 6-6-6-6"/></svg>
         </button>
-        <div id="car-lightbox-stage" class="absolute inset-0 top-14 bottom-6 flex items-center justify-center overflow-hidden px-2">
-            <div id="car-lightbox-panwrap" class="relative max-w-full max-h-full">
+        <div id="car-lightbox-stage" class="absolute inset-0 top-14 bottom-6 z-[1] flex items-center justify-center overflow-hidden px-2">
+            <div id="car-lightbox-panwrap" class="relative z-[2] max-w-full max-h-full">
                 <img id="car-lightbox-img" src="" alt="{{ car.title }}" class="max-h-[85vh] max-w-[96vw] w-auto h-auto object-contain select-none pointer-events-none" draggable="false">
             </div>
         </div>
@@ -372,7 +385,6 @@
     var lb = document.getElementById('car-lightbox');
     var lbImg = document.getElementById('car-lightbox-img');
     var lbPan = document.getElementById('car-lightbox-panwrap');
-    var lbStage = document.getElementById('car-lightbox-stage');
     var lbBackdrop = document.getElementById('car-lightbox-backdrop');
     var lbClose = document.getElementById('car-lightbox-close');
     var lbPrev = document.getElementById('car-lightbox-prev');
@@ -381,6 +393,11 @@
     var lbZoomOut = document.getElementById('car-lightbox-zoom-out');
     var lbCounter = document.getElementById('car-lightbox-counter');
     if (!lb || !lbImg || !lbPan) return;
+
+    /* Render above sticky header: <main> stacks below header; fixed z-index only competes inside main */
+    if (lb.parentNode !== document.body) {
+        document.body.appendChild(lb);
+    }
 
     var lbIndex = 0;
     var scale = 1;
@@ -453,7 +470,8 @@
         if (urls.length > 1 && e.key === 'ArrowRight') { setLbImage(lbIndex + 1); return; }
     });
 
-    lbStage.addEventListener('wheel', function(e) {
+    /* Wheel / pinch / drag on panwrap — stage uses pointer-events:none so backdrop receives outside taps */
+    lbPan.addEventListener('wheel', function(e) {
         if (lb.classList.contains('hidden')) return;
         if (e.ctrlKey || e.metaKey) {
             e.preventDefault();
@@ -465,7 +483,7 @@
     }, { passive: false });
 
     var pinchDist = 0;
-    lbStage.addEventListener('touchstart', function(e) {
+    lbPan.addEventListener('touchstart', function(e) {
         if (e.touches.length === 2) {
             var dx = e.touches[0].clientX - e.touches[1].clientX;
             var dy = e.touches[0].clientY - e.touches[1].clientY;
@@ -473,7 +491,7 @@
         }
     }, { passive: true });
 
-    lbStage.addEventListener('touchmove', function(e) {
+    lbPan.addEventListener('touchmove', function(e) {
         if (e.touches.length === 2 && pinchDist > 0) {
             e.preventDefault();
             var dx = e.touches[0].clientX - e.touches[1].clientX;
@@ -487,13 +505,13 @@
         }
     }, { passive: false });
 
-    lbStage.addEventListener('touchend', function(e) {
+    lbPan.addEventListener('touchend', function(e) {
         if (e.touches.length < 2) pinchDist = 0;
     }, { passive: true });
 
     var dragLb = false;
     var lastX = 0, lastY = 0;
-    lbStage.addEventListener('mousedown', function(e) {
+    lbPan.addEventListener('mousedown', function(e) {
         if (scale <= 1) return;
         if (e.button !== 0) return;
         dragLb = true;
