@@ -10,11 +10,11 @@
 </section>
 
 <section class="max-w-7xl mx-auto px-6 pb-16">
-    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-6">
+    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
         {% for car in cars %}
-        {% include 'partials/car_card.html' with car=car in_wishlist=True variant="grid" %}
+        {% include 'partials/car_card.html' with car=car in_wishlist=True %}
         {% empty %}
-        <div class="col-span-full text-center py-16">
+        <div class="col-span-4 text-center py-16">
             <p class="text-gray-500 text-lg">Your wishlist is empty.</p>
             <a href="{% url 'car_list' %}" class="text-blue-600 hover:text-blue-700 font-medium mt-2 inline-block">Browse Cars</a>
         </div>
