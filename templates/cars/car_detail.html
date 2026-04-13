@@ -225,58 +225,58 @@
             {% endif %}
         </div>
 
-        <!-- Car Overview -->
-        <section>
-            <h2 class="text-2xl font-semibold text-gray-900 tracking-tight mb-6">Car Overview</h2>
-            <div class="grid grid-cols-2 md:grid-cols-3 gap-y-6 md:gap-y-8 gap-x-4 md:gap-x-8 border-t border-gray-100 pt-6">
-                <div class="flex flex-col gap-1.5">
-                    <span class="text-sm text-gray-500">Make Year</span>
-                    <span class="text-base font-medium text-gray-900">{{ car.make_year_display }}</span>
+        <!-- Car Overview: same 3-column flow as desktop — 2-col mobile grid reordered fields and looked cluttered -->
+        <section class="min-w-0">
+            <h2 class="text-xl sm:text-2xl font-semibold text-gray-900 tracking-tight mb-4 sm:mb-6">Car Overview</h2>
+            <div class="grid grid-cols-3 gap-x-2.5 sm:gap-x-5 md:gap-x-8 gap-y-7 sm:gap-y-8 border-t border-gray-100 pt-6 sm:pt-7 items-start">
+                <div class="flex flex-col gap-1 sm:gap-1.5 min-w-0 pr-0.5">
+                    <span class="text-[11px] leading-tight sm:text-sm text-gray-500">Make Year</span>
+                    <span class="text-sm sm:text-base font-medium text-gray-900 leading-snug break-words">{{ car.make_year_display }}</span>
                 </div>
                 {% if car.registration_year %}
-                <div class="flex flex-col gap-1.5">
-                    <span class="text-sm text-gray-500">Registration Year</span>
-                    <span class="text-base font-medium text-gray-900">{{ car.registration_year }}</span>
+                <div class="flex flex-col gap-1 sm:gap-1.5 min-w-0 pr-0.5">
+                    <span class="text-[11px] leading-tight sm:text-sm text-gray-500">Registration Year</span>
+                    <span class="text-sm sm:text-base font-medium text-gray-900 leading-snug break-words">{{ car.registration_year }}</span>
                 </div>
                 {% endif %}
-                <div class="flex flex-col gap-1.5">
-                    <span class="text-sm text-gray-500">Fuel Type</span>
-                    <span class="text-base font-medium text-gray-900">{{ car.get_fuel_type_display }}</span>
+                <div class="flex flex-col gap-1 sm:gap-1.5 min-w-0 pr-0.5">
+                    <span class="text-[11px] leading-tight sm:text-sm text-gray-500">Fuel Type</span>
+                    <span class="text-sm sm:text-base font-medium text-gray-900 leading-snug break-words">{{ car.get_fuel_type_display }}</span>
                 </div>
-                <div class="flex flex-col gap-1.5">
-                    <span class="text-sm text-gray-500">Km Driven</span>
-                    <span class="text-base font-medium text-gray-900">{{ car.mileage_display }}</span>
+                <div class="flex flex-col gap-1 sm:gap-1.5 min-w-0 pr-0.5">
+                    <span class="text-[11px] leading-tight sm:text-sm text-gray-500">Km Driven</span>
+                    <span class="text-sm sm:text-base font-medium text-gray-900 leading-snug break-words">{{ car.mileage_display }}</span>
                 </div>
-                <div class="flex flex-col gap-1.5">
-                    <span class="text-sm text-gray-500">Transmission</span>
-                    <span class="text-base font-medium text-gray-900">{{ car.get_transmission_display }}</span>
+                <div class="flex flex-col gap-1 sm:gap-1.5 min-w-0 pr-0.5">
+                    <span class="text-[11px] leading-tight sm:text-sm text-gray-500">Transmission</span>
+                    <span class="text-sm sm:text-base font-medium text-gray-900 leading-snug break-words">{{ car.get_transmission_display }}</span>
                 </div>
-                <div class="flex flex-col gap-1.5">
-                    <span class="text-sm text-gray-500">No. of Owner</span>
-                    <span class="text-base font-medium text-gray-900">{{ car.ownership }}</span>
+                <div class="flex flex-col gap-1 sm:gap-1.5 min-w-0 pr-0.5">
+                    <span class="text-[11px] leading-tight sm:text-sm text-gray-500">No. of Owner</span>
+                    <span class="text-sm sm:text-base font-medium text-gray-900 leading-snug break-words">{{ car.ownership }}</span>
                 </div>
                 {% if car.insurance_validity %}
-                <div class="flex flex-col gap-1.5">
-                    <span class="text-sm text-gray-500">Insurance Validity</span>
-                    <span class="text-base font-medium text-gray-900">{{ car.insurance_validity }}</span>
+                <div class="flex flex-col gap-1 sm:gap-1.5 min-w-0 pr-0.5">
+                    <span class="text-[11px] leading-tight sm:text-sm text-gray-500">Insurance Validity</span>
+                    <span class="text-sm sm:text-base font-medium text-gray-900 leading-snug break-words">{{ car.insurance_validity }}</span>
                 </div>
                 {% endif %}
                 {% if car.insurance_type %}
-                <div class="flex flex-col gap-1.5">
-                    <span class="text-sm text-gray-500">Insurance Type</span>
-                    <span class="text-base font-medium text-gray-900">{{ car.insurance_type }}</span>
+                <div class="flex flex-col gap-1 sm:gap-1.5 min-w-0 pr-0.5">
+                    <span class="text-[11px] leading-tight sm:text-sm text-gray-500">Insurance Type</span>
+                    <span class="text-sm sm:text-base font-medium text-gray-900 leading-snug break-words">{{ car.insurance_type }}</span>
                 </div>
                 {% endif %}
                 {% if car.rto %}
-                <div class="flex flex-col gap-1.5">
-                    <span class="text-sm text-gray-500">RTO</span>
-                    <span class="text-base font-medium text-gray-900">{{ car.rto }}</span>
+                <div class="flex flex-col gap-1 sm:gap-1.5 min-w-0 pr-0.5">
+                    <span class="text-[11px] leading-tight sm:text-sm text-gray-500">RTO</span>
+                    <span class="text-sm sm:text-base font-medium text-gray-900 leading-snug break-words">{{ car.rto }}</span>
                 </div>
                 {% endif %}
                 {% if car.color %}
-                <div class="flex flex-col gap-1.5">
-                    <span class="text-sm text-gray-500">Color</span>
-                    <span class="text-base font-medium text-gray-900">{{ car.color }}</span>
+                <div class="flex flex-col gap-1 sm:gap-1.5 min-w-0 pr-0.5">
+                    <span class="text-[11px] leading-tight sm:text-sm text-gray-500">Color</span>
+                    <span class="text-sm sm:text-base font-medium text-gray-900 leading-snug break-words">{{ car.color }}</span>
                 </div>
                 {% endif %}
             </div>
