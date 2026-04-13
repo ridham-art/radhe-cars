@@ -4,13 +4,13 @@
 {% block title %}{{ car.title }} - Radhe Cars{% endblock %}
 
 {% block content %}
-<main class="max-w-[1440px] mx-auto px-4 sm:px-6 lg:px-8 py-8 lg:py-12 flex flex-col gap-10 lg:gap-12 relative">
+<main class="max-w-[1440px] mx-auto px-4 sm:px-6 lg:px-8 py-8 lg:py-12 flex flex-col gap-6 lg:gap-8 relative">
 
     <!-- Hero: gallery + desktop booking side-by-side (Spinny-style split) -->
     <div class="w-full flex flex-col lg:flex-row lg:items-start lg:gap-8 xl:gap-10 min-w-0">
 
-        <section class="flex flex-col gap-2 w-full max-w-[min(100%,380px)] mx-auto lg:mx-0 lg:flex-1 lg:min-w-0 lg:max-w-[min(100%,460px)] min-w-0">
-            <div class="relative w-full aspect-[4/3] max-h-[220px] sm:max-h-[260px] bg-gray-100 rounded-xl overflow-hidden group flex items-center justify-center">
+        <section class="flex flex-col gap-2 w-full max-w-[min(100%,400px)] mx-auto lg:mx-0 lg:flex-1 lg:min-w-0 lg:max-w-[min(100%,540px)] min-w-0">
+            <div class="relative w-full aspect-[4/3] max-h-[min(50vh,420px)] sm:max-h-[min(52vh,460px)] lg:max-h-[min(54vh,480px)] bg-gray-100 rounded-xl overflow-hidden group flex items-center justify-center">
                 {% if car.images.all %}
                 <div id="gallery-track" class="flex w-full h-full" style="transform: translateX(-100%); transition: transform 700ms cubic-bezier(0.25, 0.46, 0.45, 0.94); will-change: transform">
                     {% for img in car.images.all %}
@@ -40,7 +40,7 @@
             {% if car.images.all %}
             <div class="flex gap-1.5 overflow-x-auto pb-1 scrollbar-hide snap-x max-w-full" id="gallery-thumbs">
                 {% for img in car.images.all %}
-                <button type="button" class="gallery-thumb relative h-10 w-10 sm:h-11 sm:w-11 shrink-0 rounded-md overflow-hidden border-2 bg-gray-100 flex items-center justify-center {% if forloop.first %}border-blue-600{% else %}border-transparent hover:border-gray-300{% endif %} transition-colors snap-start group" data-index="{{ forloop.counter0 }}" data-src="{{ img.display_url }}">
+                <button type="button" class="gallery-thumb relative h-11 w-11 sm:h-12 sm:w-12 shrink-0 rounded-md overflow-hidden border-2 bg-gray-100 flex items-center justify-center {% if forloop.first %}border-blue-600{% else %}border-transparent hover:border-gray-300{% endif %} transition-colors snap-start group" data-index="{{ forloop.counter0 }}" data-src="{{ img.display_url }}">
                     <img src="{{ img.display_url }}" alt="Thumbnail {{ forloop.counter }}" width="128" height="128" loading="lazy" decoding="async" class="max-w-full max-h-full object-contain {% if not forloop.first %}opacity-80 group-hover:opacity-100{% endif %} transition-opacity">
                 </button>
                 {% endfor %}
@@ -123,7 +123,7 @@
     </div>
 
     <!-- Below hero: mobile booking + specs + rest (full width) -->
-    <div class="w-full flex flex-col gap-10 lg:gap-12 min-w-0">
+    <div class="w-full flex flex-col gap-6 lg:gap-8 min-w-0">
 
         <!-- Mobile-only: Booking panel (title, price, buttons, seller) - shown after gallery, before overview -->
         <div class="lg:hidden flex flex-col gap-6">
@@ -191,7 +191,7 @@
 
         <!-- Car Overview -->
         <section>
-            <h2 class="text-2xl font-semibold text-gray-900 tracking-tight mb-8">Car Overview</h2>
+            <h2 class="text-2xl font-semibold text-gray-900 tracking-tight mb-6">Car Overview</h2>
             <div class="grid grid-cols-2 md:grid-cols-3 gap-y-10 gap-x-6 border-t border-gray-100 pt-8">
                 <div class="flex flex-col gap-1.5">
                     <span class="text-sm text-gray-500">Make Year</span>
