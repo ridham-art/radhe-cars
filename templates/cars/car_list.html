@@ -48,7 +48,6 @@
 @media (max-width: 1023px) {
     #filter-sidebar { display: none !important; }
     main { overflow-x: hidden; }
-    #car-grid > div { width: 100% !important; max-width: 100% !important; }
 }
 @media (min-width: 1024px) {
     #mobile-filter-bar { display: none !important; }
@@ -86,7 +85,7 @@
         <input type="hidden" name="page" id="page-input" value="{{ request.GET.page|default:1 }}">
         <input type="hidden" name="q" id="filter-q" value="{{ request.GET.q|default:'' }}">
         <input type="hidden" name="sort" id="sort-input" value="{{ request.GET.sort|default:'relevance' }}">
-        <input type="hidden" name="per_page" id="per-page-input" value="{{ request.GET.per_page|default:30 }}">
+        <input type="hidden" name="per_page" id="per-page-input" value="30">
         <!-- Mobile filter inputs (always in DOM, updated by mobile filter bar) -->
         <input type="hidden" name="brand" id="mf-brand" value="{{ request.GET.brand|default:'' }}">
         <input type="hidden" name="model" id="mf-model" value="{{ request.GET.model|default:'' }}">
@@ -414,7 +413,7 @@
             <p class="text-gray-500 text-sm mt-3">Loading cars...</p>
         </div>
 
-        <section id="car-grid" class="flex flex-col md:flex-row md:flex-wrap gap-4 md:gap-6 min-w-0 w-full">
+        <section id="car-grid" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-6 min-w-0 w-full items-stretch">
             {% include 'cars/_car_grid.html' %}
         </section>
 
@@ -519,7 +518,7 @@
             if (mf('mf-max_km')) data.max_km = mf('mf-max_km');
             params = new URLSearchParams(data).toString();
         } else {
-            document.getElementById('per-page-input').value = '9';
+            document.getElementById('per-page-input').value = '30';
             ['mf-brand','mf-model','mf-body_type','mf-fuel','mf-transmission','mf-ownership','mf-min_price','mf-max_price','mf-min_year','mf-max_year','mf-min_km','mf-max_km'].forEach(function(id){ var el = document.getElementById(id); if (el) el.removeAttribute('name'); });
             var priceMin = document.getElementById('price-min');
             var priceMax = document.getElementById('price-max');

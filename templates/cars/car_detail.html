@@ -184,9 +184,9 @@
             <div class="flex gap-4 overflow-x-auto scrollbar-hide snap-x snap-mandatory pb-2 lg:grid lg:grid-cols-2 xl:grid-cols-3 lg:overflow-visible lg:gap-6" style="-webkit-overflow-scrolling: touch;">
                 {% for scar in similar_cars %}
                 <article class="w-[280px] min-w-[280px] shrink-0 snap-start bg-white rounded-2xl border border-gray-100 overflow-hidden flex flex-col shadow-sm hover:shadow-lg transition-all duration-300 hover:-translate-y-0 lg:hover:-translate-y-1 group lg:w-auto lg:min-w-0 lg:shrink cursor-pointer" data-car-url="{% url 'car_detail' scar.pk %}" onclick="var u=this.getAttribute('data-car-url');if(u)location.href=u;">
-                    <div class="relative aspect-[4/3] bg-slate-100 overflow-hidden">
+                    <div class="relative aspect-[4/3] bg-slate-100 overflow-hidden flex items-center justify-center">
                         {% if scar.primary_image %}
-                        <img src="{{ scar.primary_image.display_url }}" alt="{{ scar.title }}" width="800" height="600" loading="lazy" decoding="async" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500">
+                        <img src="{{ scar.primary_image.display_url }}" alt="{{ scar.title }}" width="800" height="600" loading="lazy" decoding="async" class="w-full h-full max-h-full object-contain group-hover:scale-[1.02] transition-transform duration-500">
                         {% else %}
                         <div class="w-full h-full bg-gray-200"></div>
                         {% endif %}

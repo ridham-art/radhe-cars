@@ -11,7 +11,7 @@
             {% for img in object.images.all %}
             <li class="relative w-36 shrink-0 rounded-lg border border-slate-200 overflow-hidden bg-slate-50">
                 {% if img.display_url %}
-                <img src="{{ img.display_url }}" alt="" class="w-full h-28 object-cover">
+                <img src="{{ img.display_url }}" alt="" class="w-full h-28 object-contain bg-slate-100">
                 {% else %}
                 <div class="w-full h-28 flex items-center justify-center text-xs text-slate-400">No preview</div>
                 {% endif %}

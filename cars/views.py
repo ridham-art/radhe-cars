@@ -144,11 +144,8 @@ def car_list(request):
     current_year = datetime.datetime.now().year
     year_range = list(range(current_year, 2004, -1))
 
-    per_page = request.GET.get('per_page', 30)
-    try:
-        per_page = min(50, max(9, int(per_page)))
-    except (ValueError, TypeError):
-        per_page = 30
+    # Fixed page size: 3 columns × 10 rows on desktop
+    per_page = 30
     paginator = Paginator(cars, per_page)
     page_number = request.GET.get('page', 1)
     page_obj = paginator.get_page(page_number)
