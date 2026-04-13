@@ -14,29 +14,17 @@
   [data-car-detail-page] .contact-cta-primary:hover {
     background-color: #c2410c !important;
   }
-  @media (min-width: 1024px) {
-    [data-car-detail-page] #gallery-dots button {
-      width: 0.5rem;
-      height: 0.5rem;
-    }
-  }
-  @media (min-width: 1280px) {
-    [data-car-detail-page] #gallery-dots button {
-      width: 0.625rem;
-      height: 0.625rem;
-    }
-  }
 </style>
 {% endblock %}
 
 {% block content %}
 {# Use a single page <main> from base.html; avoid nested <main> which breaks layout in some browsers #}
-<div class="max-w-[1440px] 2xl:max-w-[min(100%,1680px)] mx-auto px-4 sm:px-6 lg:px-8 xl:px-10 2xl:px-12 py-8 lg:py-12 flex flex-col gap-6 lg:gap-8 relative" data-car-detail-page>
+<div class="w-full max-w-[min(100%,1920px)] mx-auto px-4 sm:px-6 lg:px-6 xl:px-8 2xl:px-10 py-8 lg:py-12 flex flex-col gap-6 lg:gap-8 relative" data-car-detail-page>
 
-    <!-- Hero: gallery + desktop booking side-by-side -->
-    <div class="w-full flex flex-col lg:flex-row lg:items-start lg:gap-8 xl:gap-10 2xl:gap-12 min-w-0">
+    <!-- Hero: grid on lg so gallery fills space; aside fixed width — no empty gap on the right -->
+    <div class="w-full flex flex-col lg:grid lg:grid-cols-[minmax(0,1fr)_minmax(300px,460px)] xl:grid-cols-[minmax(0,1fr)_minmax(320px,480px)] lg:items-start lg:gap-6 xl:gap-8 2xl:gap-10 min-w-0">
 
-        <section class="flex flex-col gap-3 w-full max-w-[min(100%,400px)] mx-auto lg:mx-0 lg:flex-1 lg:min-w-0 lg:max-w-none xl:max-w-[min(100%,720px)] min-w-0">
+        <section class="flex flex-col gap-3 w-full max-w-[min(100%,400px)] mx-auto lg:mx-0 lg:max-w-none lg:min-w-0 lg:w-full min-w-0">
             <div class="relative w-full aspect-[4/3] max-h-[min(44vh,400px)] sm:max-h-[min(46vh,420px)] lg:max-h-[min(56vh,540px)] lg:min-h-[min(52vw,320px)] xl:min-h-[360px] bg-gray-100 rounded-xl lg:rounded-2xl overflow-hidden group flex items-center justify-center shadow-sm lg:shadow-md ring-1 ring-gray-200/80">
                 {% if car.images.all %}
                 <div id="gallery-track" class="flex w-full h-full" style="transform: translateX(-100%); transition: transform 700ms cubic-bezier(0.25, 0.46, 0.45, 0.94); will-change: transform">
@@ -64,7 +52,8 @@
             </div>
 
             {% if car.images.all %}
-            <div id="gallery-dots" class="flex flex-wrap justify-center items-center gap-2 lg:gap-2.5 min-h-[1.25rem] lg:min-h-[1.5rem] px-1" aria-hidden="true"></div>
+            {# Dots only on mobile/tablet; desktop uses thumbnails + arrows #}
+            <div id="gallery-dots" class="flex lg:hidden flex-wrap justify-center items-center gap-2 min-h-[1.25rem] px-1" aria-hidden="true"></div>
             {% endif %}
 
             {% if car.images.all %}
@@ -79,7 +68,7 @@
         </section>
 
     <!-- Desktop: sticky booking beside gallery -->
-    <aside class="hidden lg:flex w-full lg:w-[min(100%,400px)] xl:w-[440px] shrink-0 lg:sticky lg:top-[120px] h-fit flex-col gap-5 xl:gap-6 lg:pb-8 min-w-[280px] rounded-2xl border border-gray-200 bg-white p-5 xl:p-6 shadow-md">
+    <aside class="hidden lg:flex w-full max-w-full shrink-0 lg:sticky lg:top-[120px] h-fit flex-col gap-5 xl:gap-6 lg:pb-8 rounded-2xl border border-gray-200 bg-white p-5 xl:p-6 shadow-md lg:justify-self-stretch">
 
         <div class="flex flex-col gap-4">
             <div class="flex items-start justify-between gap-4">
@@ -331,7 +320,7 @@
         </section>
         {% endif %}
     </div>
-</main>
+</div>
 {% endblock %}
 
 {% block extra_js %}
@@ -417,14 +406,19 @@
         }
     });
 
+    function showDotNav() {
+        return typeof window.matchMedia !== 'undefined' && window.matchMedia('(max-width: 1023px)').matches;
+    }
+
     function updateThumbsDots() {
         if (!dotsEl) return;
         var idx = realIdx();
         thumbs.forEach(function(t, j){
             t.classList.toggle('border-blue-600', j === idx);
-            t.classList.toggle('border-transparent', j !== idx);
+            t.classList.toggle('border-gray-200', j !== idx);
         });
         dotsEl.innerHTML = '';
+        if (!showDotNav()) return;
         for (var i = 0; i < total; i++) {
             var d = document.createElement('button');
             d.type = 'button';
@@ -434,6 +428,12 @@
             dotsEl.appendChild(d);
         }
     }
+
+    var resizeDotsTimer;
+    window.addEventListener('resize', function() {
+        clearTimeout(resizeDotsTimer);
+        resizeDotsTimer = setTimeout(updateThumbsDots, 150);
+    });
 
     function resetTimer() {
         clearInterval(timer);
