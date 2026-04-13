@@ -103,6 +103,9 @@ INSTALLED_APPS = [
     'cars',
 ]
 
+if DEBUG:
+    INSTALLED_APPS = [*INSTALLED_APPS, 'debug_toolbar']
+
 # django.contrib.sites: set domain to www.radheauto.com (or canonical host) in Admin → Sites.
 SITE_ID = 1
 
@@ -128,6 +131,7 @@ SOCIALACCOUNT_PROVIDERS = {
 
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
+    'radhe_cars.middleware.AdminPanelTimingMiddleware',
     'radhe_cars.middleware.NormalizeAdminPanelPathMiddleware',
     'whitenoise.middleware.WhiteNoiseMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
@@ -139,6 +143,17 @@ MIDDLEWARE = [
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
 ]
+
+
+def _debug_toolbar_show(_request):
+    """Toolbar only loaded when DEBUG; show for any client (e.g. Docker) without INTERNAL_IPS tuning."""
+    return True
+
+
+if DEBUG:
+    MIDDLEWARE.insert(1, 'debug_toolbar.middleware.DebugToolbarMiddleware')
+    INTERNAL_IPS = ['127.0.0.1', '::1']
+    DEBUG_TOOLBAR_CONFIG = {'SHOW_TOOLBAR_CALLBACK': _debug_toolbar_show}
 
 ROOT_URLCONF = 'radhe_cars.urls'
 
@@ -328,6 +343,11 @@ LOGGING = {
         'cars.admin_panel.auth': {
             'handlers': ['console'],
             'level': 'DEBUG' if DEBUG else 'INFO',
+            'propagate': False,
+        },
+        'radhe_cars.admin_panel_timing': {
+            'handlers': ['console'],
+            'level': 'INFO',
             'propagate': False,
         },
     },

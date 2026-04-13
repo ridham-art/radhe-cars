@@ -21,9 +21,10 @@ Production-oriented **used-car marketplace** for **Gujarat, India** (Ahmedabad a
 13. [URLs overview](#urls-overview)  
 14. [Deployment](#deployment)  
 15. [Operations checklist](#operations-checklist)  
-16. [Troubleshooting](#troubleshooting)  
-17. [License](#license)  
-18. [Contributing](#contributing-for-new-developers)
+16. [Admin panel performance (profiling)](#admin-panel-performance-profiling)  
+17. [Troubleshooting](#troubleshooting)  
+18. [License](#license)  
+19. [Contributing](#contributing-for-new-developers)
 
 ---
 
@@ -331,6 +332,33 @@ sudo systemctl restart <your-gunicorn.service>
 | Static | `python manage.py collectstatic --noinput` |
 | Staff user | `createsuperuser` + `is_staff` |
 | CSS | `npm run build:css` before release if templates/classes changed |
+
+---
+
+## Admin panel performance (profiling)
+
+Total “load time” in the browser is **not** the same as Django-only time. Split the problem:
+
+| Part | What it is | How to see it |
+|------|------------|----------------|
+| **TTFB** (time to first byte) | Server + DB work before HTML starts | Chrome DevTools → **Network** → document row → **Timing** (or **Waiting** in the waterfall) |
+| **Download** | Size of HTML/CSS/JS | Same row → **Size**, **Content Download** |
+| **After HTML** | Fonts, CSS parse, paint | **Performance** / **Lighthouse** |
+
+**Steps (staff pages, e.g. `/admin-panel/cars/`):**
+
+1. Open DevTools (**F12**) → **Network**. Check **Disable cache**, reload (**Ctrl+Shift+R**).
+2. Click the **document** request (first row or the HTML for the page). Note **Time** (total) vs the **Waiting** / **TTFB** portion.
+3. If **TTFB** is most of the delay, optimize **server + database** (queries, indexes, DB region, connection pooling). If the document is fast but **total** is slow, optimize **static assets** (Tailwind CSS, fonts in `admin_panel/base.html`), HTTP/2, CDN.
+
+**Django Debug Toolbar (local, `DEBUG=True` only):**
+
+- Installed when `DEBUG=True`. Open any page and use the **DjDT** sidebar to see **SQL** query count and time. **Do not** enable Debug Toolbar in production.
+- Toolbar URL: `/__debug__/`
+
+**Server-side timing logs (staging or local):**
+
+- Set `ADMIN_PANEL_TIMING_LOG=1` in `.env`. Restart the app. Logs go to the console (logger `radhe_cars.admin_panel_timing`) with `elapsed_ms` for each `/admin-panel/` request. Compare **elapsed_ms** with browser **TTFB** (they should be in the same ballpark if the bottleneck is the app).
 
 ---
 

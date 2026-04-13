@@ -4,9 +4,14 @@ Fix typo URLs (space or underscore in 'admin panel').
 - GET: redirect to /admin-panel/... so the address bar shows the correct URL.
 - POST: rewrite path in place (do not redirect, or the POST body would be lost).
 """
+import logging
+import os
+import time
 from urllib.parse import unquote
 
 from django.http import HttpResponseRedirect
+
+logger = logging.getLogger('radhe_cars.admin_panel_timing')
 
 
 def _rewrite_admin_panel_path(path: str) -> str | None:
@@ -40,3 +45,30 @@ class NormalizeAdminPanelPathMiddleware:
         script_name = request.META.get('SCRIPT_NAME', '') or ''
         request.path = '%s/%s' % (script_name.rstrip('/'), new_path.replace('/', '', 1))
         return self.get_response(request)
+
+
+class AdminPanelTimingMiddleware:
+    """
+    Log server-side duration for /admin-panel/ when ADMIN_PANEL_TIMING_LOG=1 (or true/yes).
+    Use to compare with browser DevTools TTFB (see README).
+    """
+
+    def __init__(self, get_response):
+        self.get_response = get_response
+
+    def __call__(self, request):
+        if not request.path.startswith('/admin-panel/'):
+            return self.get_response(request)
+        if os.environ.get('ADMIN_PANEL_TIMING_LOG', '').lower() not in ('1', 'true', 'yes'):
+            return self.get_response(request)
+        start = time.perf_counter()
+        response = self.get_response(request)
+        elapsed_ms = (time.perf_counter() - start) * 1000
+        logger.info(
+            'path=%s method=%s status=%s elapsed_ms=%.1f',
+            request.path,
+            request.method,
+            getattr(response, 'status_code', '?'),
+            elapsed_ms,
+        )
+        return response
