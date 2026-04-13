@@ -14,6 +14,10 @@
   [data-car-detail-page] .contact-cta-primary:hover {
     background-color: #c2410c !important;
   }
+  #car-lightbox { touch-action: none; }
+  #car-lightbox-stage { touch-action: none; }
+  #car-lightbox-panwrap { will-change: transform; }
+  .car-zoom-cursor { cursor: zoom-in; }
 </style>
 {% endblock %}
 
@@ -30,12 +34,12 @@
                 <div id="gallery-track" class="flex w-full h-full" style="transform: translateX(-100%); transition: transform 700ms cubic-bezier(0.25, 0.46, 0.45, 0.94); will-change: transform">
                     {% for img in car.images.all %}
                     <div class="gallery-slide w-full h-full shrink-0 flex items-center justify-center bg-gray-100">
-                        <img src="{{ img.display_url }}" alt="{{ car.title }}" width="1920" height="1080" decoding="async" class="max-w-full max-h-full w-full h-full object-contain">
+                        <img src="{{ img.display_url }}" alt="{{ car.title }}" width="1920" height="1080" decoding="async" data-slide-index="{{ forloop.counter0 }}" class="car-zoom-cursor max-w-full max-h-full w-full h-full object-contain">
                     </div>
                     {% endfor %}
                 </div>
                 {% elif car.primary_image %}
-                <img id="main-image" src="{{ car.primary_image.display_url }}" alt="{{ car.title }}" width="1920" height="1080" decoding="async" class="max-w-full max-h-full w-full h-full object-contain">
+                <img id="main-image" src="{{ car.primary_image.display_url }}" alt="{{ car.title }}" width="1920" height="1080" decoding="async" class="car-zoom-cursor max-w-full max-h-full w-full h-full object-contain">
                 {% else %}
                 <div id="main-image-placeholder" class="w-full h-full bg-gray-200 flex items-center justify-center">
                     <svg xmlns="http://www.w3.org/2000/svg" width="64" height="64" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1" class="text-gray-400"><path d="M19 17h2c.6 0 1-.4 1-1v-3c0-.9-.7-1.7-1.5-1.9C18.7 10.6 16 10 16 10s-1.3-1.4-2.2-2.3c-.5-.4-1.1-.7-1.8-.7H5c-.6 0-1.1.4-1.4.9l-1.4 2.9A3.7 3.7 0 0 0 2 12v4c0 .6.4 1 1 1h2"></path><circle cx="7" cy="17" r="2"></circle><path d="M9 17h6"></path><circle cx="17" cy="17" r="2"></circle></svg>
@@ -320,10 +324,212 @@
         </section>
         {% endif %}
     </div>
+
+    {% if car.images.all or car.primary_image %}
+    <script type="application/json" id="car-gallery-urls">[
+{% if car.images.all %}{% for img in car.images.all %}"{{ img.display_url|escapejs }}"{% if not forloop.last %},{% endif %}{% endfor %}
+{% elif car.primary_image %}
+"{{ car.primary_image.display_url|escapejs }}"
+{% endif %}
+]</script>
+
+    <div id="car-lightbox" class="fixed inset-0 z-[200] hidden items-center justify-center" role="dialog" aria-modal="true" aria-label="Photo viewer">
+        <button type="button" id="car-lightbox-backdrop" class="absolute inset-0 bg-black/90 border-0 cursor-default" aria-label="Close photo viewer"></button>
+        <div class="absolute top-3 right-3 left-auto z-10 flex items-center gap-2">
+            <button type="button" id="car-lightbox-zoom-out" class="w-11 h-11 rounded-full bg-white/15 hover:bg-white/25 text-white text-2xl font-light leading-none flex items-center justify-center border border-white/20" aria-label="Zoom out">−</button>
+            <button type="button" id="car-lightbox-zoom-in" class="w-11 h-11 rounded-full bg-white/15 hover:bg-white/25 text-white text-2xl font-light leading-none flex items-center justify-center border border-white/20" aria-label="Zoom in">+</button>
+            <button type="button" id="car-lightbox-close" class="w-11 h-11 rounded-full bg-white/15 hover:bg-white/25 text-white flex items-center justify-center border border-white/20" aria-label="Close">
+                <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M18 6 6 18M6 6l12 12"/></svg>
+            </button>
+        </div>
+        <button type="button" id="car-lightbox-prev" class="hidden absolute left-2 top-1/2 -translate-y-1/2 z-10 w-12 h-12 rounded-full bg-white/15 hover:bg-white/25 text-white flex items-center justify-center border border-white/20 lg:left-4" aria-label="Previous photo">
+            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="m15 18-6-6 6-6"/></svg>
+        </button>
+        <button type="button" id="car-lightbox-next" class="hidden absolute right-2 top-1/2 -translate-y-1/2 z-10 w-12 h-12 rounded-full bg-white/15 hover:bg-white/25 text-white flex items-center justify-center border border-white/20 lg:right-4" aria-label="Next photo">
+            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="m9 18 6-6-6-6"/></svg>
+        </button>
+        <div id="car-lightbox-stage" class="absolute inset-0 top-14 bottom-6 flex items-center justify-center overflow-hidden px-2">
+            <div id="car-lightbox-panwrap" class="relative max-w-full max-h-full">
+                <img id="car-lightbox-img" src="" alt="{{ car.title }}" class="max-h-[85vh] max-w-[96vw] w-auto h-auto object-contain select-none pointer-events-none" draggable="false">
+            </div>
+        </div>
+        <p id="car-lightbox-counter" class="absolute bottom-4 left-0 right-0 text-center text-sm text-white/80 pointer-events-none"></p>
+    </div>
+    {% endif %}
 </div>
 {% endblock %}
 
 {% block extra_js %}
+{% if car.images.all or car.primary_image %}
+<script>
+(function() {
+    var urlsEl = document.getElementById('car-gallery-urls');
+    if (!urlsEl) return;
+    var urls = [];
+    try { urls = JSON.parse(urlsEl.textContent); } catch (e) { return; }
+    if (!urls || !urls.length) return;
+
+    var lb = document.getElementById('car-lightbox');
+    var lbImg = document.getElementById('car-lightbox-img');
+    var lbPan = document.getElementById('car-lightbox-panwrap');
+    var lbStage = document.getElementById('car-lightbox-stage');
+    var lbBackdrop = document.getElementById('car-lightbox-backdrop');
+    var lbClose = document.getElementById('car-lightbox-close');
+    var lbPrev = document.getElementById('car-lightbox-prev');
+    var lbNext = document.getElementById('car-lightbox-next');
+    var lbZoomIn = document.getElementById('car-lightbox-zoom-in');
+    var lbZoomOut = document.getElementById('car-lightbox-zoom-out');
+    var lbCounter = document.getElementById('car-lightbox-counter');
+    if (!lb || !lbImg || !lbPan) return;
+
+    var lbIndex = 0;
+    var scale = 1;
+    var tx = 0, ty = 0;
+    var minScale = 1;
+    var maxScale = 4;
+
+    function applyLbTransform() {
+        lbPan.style.transform = 'translate(' + tx + 'px,' + ty + 'px) scale(' + scale + ')';
+    }
+
+    function resetLbView() {
+        scale = 1;
+        tx = 0;
+        ty = 0;
+        applyLbTransform();
+    }
+
+    function showLbNav() {
+        var multi = urls.length > 1;
+        if (lbPrev) lbPrev.classList.toggle('hidden', !multi);
+        if (lbNext) lbNext.classList.toggle('hidden', !multi);
+        if (lbCounter) lbCounter.textContent = multi ? (lbIndex + 1) + ' / ' + urls.length : '';
+    }
+
+    function setLbImage(i) {
+        lbIndex = ((i % urls.length) + urls.length) % urls.length;
+        lbImg.src = urls[lbIndex];
+        resetLbView();
+        showLbNav();
+    }
+
+    function openLightbox(index) {
+        setLbImage(index);
+        lb.classList.remove('hidden');
+        lb.classList.add('flex');
+        document.body.style.overflow = 'hidden';
+        if (lbClose) lbClose.focus();
+    }
+
+    function closeLightbox() {
+        lb.classList.add('hidden');
+        lb.classList.remove('flex');
+        document.body.style.overflow = '';
+        resetLbView();
+    }
+
+    window.carDetailOpenLightbox = openLightbox;
+
+    if (lbClose) lbClose.addEventListener('click', function(e) { e.stopPropagation(); closeLightbox(); });
+    if (lbBackdrop) lbBackdrop.addEventListener('click', closeLightbox);
+    if (lbPrev) lbPrev.addEventListener('click', function(e) { e.stopPropagation(); setLbImage(lbIndex - 1); });
+    if (lbNext) lbNext.addEventListener('click', function(e) { e.stopPropagation(); setLbImage(lbIndex + 1); });
+    if (lbZoomIn) lbZoomIn.addEventListener('click', function(e) {
+        e.stopPropagation();
+        scale = Math.min(maxScale, scale + 0.25);
+        applyLbTransform();
+    });
+    if (lbZoomOut) lbZoomOut.addEventListener('click', function(e) {
+        e.stopPropagation();
+        scale = Math.max(minScale, scale - 0.25);
+        if (scale <= minScale) { tx = 0; ty = 0; }
+        applyLbTransform();
+    });
+
+    document.addEventListener('keydown', function(e) {
+        if (lb.classList.contains('hidden')) return;
+        if (e.key === 'Escape') { closeLightbox(); return; }
+        if (urls.length > 1 && e.key === 'ArrowLeft') { setLbImage(lbIndex - 1); return; }
+        if (urls.length > 1 && e.key === 'ArrowRight') { setLbImage(lbIndex + 1); return; }
+    });
+
+    lbStage.addEventListener('wheel', function(e) {
+        if (lb.classList.contains('hidden')) return;
+        if (e.ctrlKey || e.metaKey) {
+            e.preventDefault();
+            var delta = e.deltaY > 0 ? -0.1 : 0.1;
+            scale = Math.max(minScale, Math.min(maxScale, scale + delta));
+            if (scale <= minScale) { tx = 0; ty = 0; }
+            applyLbTransform();
+        }
+    }, { passive: false });
+
+    var pinchDist = 0;
+    lbStage.addEventListener('touchstart', function(e) {
+        if (e.touches.length === 2) {
+            var dx = e.touches[0].clientX - e.touches[1].clientX;
+            var dy = e.touches[0].clientY - e.touches[1].clientY;
+            pinchDist = Math.sqrt(dx * dx + dy * dy);
+        }
+    }, { passive: true });
+
+    lbStage.addEventListener('touchmove', function(e) {
+        if (e.touches.length === 2 && pinchDist > 0) {
+            e.preventDefault();
+            var dx = e.touches[0].clientX - e.touches[1].clientX;
+            var dy = e.touches[0].clientY - e.touches[1].clientY;
+            var dist = Math.sqrt(dx * dx + dy * dy);
+            var factor = dist / pinchDist;
+            pinchDist = dist;
+            scale = Math.max(minScale, Math.min(maxScale, scale * factor));
+            if (scale <= minScale) { tx = 0; ty = 0; }
+            applyLbTransform();
+        }
+    }, { passive: false });
+
+    lbStage.addEventListener('touchend', function(e) {
+        if (e.touches.length < 2) pinchDist = 0;
+    }, { passive: true });
+
+    var dragLb = false;
+    var lastX = 0, lastY = 0;
+    lbStage.addEventListener('mousedown', function(e) {
+        if (scale <= 1) return;
+        if (e.button !== 0) return;
+        dragLb = true;
+        lastX = e.clientX;
+        lastY = e.clientY;
+    });
+    document.addEventListener('mousemove', function(e) {
+        if (!dragLb) return;
+        tx += e.clientX - lastX;
+        ty += e.clientY - lastY;
+        lastX = e.clientX;
+        lastY = e.clientY;
+        applyLbTransform();
+    });
+    document.addEventListener('mouseup', function() { dragLb = false; });
+
+    var mainImg = document.getElementById('main-image');
+    if (mainImg) {
+        mainImg.addEventListener('click', function() { openLightbox(0); });
+    }
+
+    var track = document.getElementById('gallery-track');
+    if (track) {
+        track.addEventListener('click', function(e) {
+            if (e.target.closest && e.target.closest('.gallery-arrow')) return;
+            var img = e.target.closest && e.target.closest('img');
+            if (!img || !track.contains(img)) return;
+            var idx = img.getAttribute('data-slide-index');
+            if (idx !== null && idx !== '') {
+                openLightbox(parseInt(idx, 10));
+            }
+        });
+    }
+})();
+</script>
+{% endif %}
 {% if car.images.all %}
 <script>
 (function() {
@@ -440,11 +646,15 @@
         timer = setInterval(slideNext, 5000);
     }
 
-    prevBtn.addEventListener('click', slidePrev);
-    nextBtn.addEventListener('click', slideNext);
+    prevBtn.addEventListener('click', function(e) { e.stopPropagation(); slidePrev(); });
+    nextBtn.addEventListener('click', function(e) { e.stopPropagation(); slideNext(); });
 
     thumbs.forEach(function(t, i){
-        t.addEventListener('click', function(){ slideTo(i); });
+        t.addEventListener('click', function(e) {
+            e.stopPropagation();
+            slideTo(i);
+            if (window.carDetailOpenLightbox) window.carDetailOpenLightbox(i);
+        });
     });
 
     if (total === 1) {
