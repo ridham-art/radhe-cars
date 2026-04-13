@@ -68,13 +68,17 @@
             var visible = Math.max(1, Math.round(track.parentElement.offsetWidth / cardW));
             var origCount = track.children.length;
 
+            // Only duplicate cards for infinite-scroll when more items exist than fit in view.
+            // If origCount <= visible (e.g. 2 cars, 2 slots), cloning would repeat the same cars.
             if (!track.dataset.cloned) {
-                var clones = [];
-                for (var i = 0; i < visible; i++) {
-                    clones.push(track.children[i % origCount].cloneNode(true));
-                }
-                for (var j = 0; j < clones.length; j++) {
-                    track.appendChild(clones[j]);
+                if (origCount > visible) {
+                    var clones = [];
+                    for (var i = 0; i < visible; i++) {
+                        clones.push(track.children[i % origCount].cloneNode(true));
+                    }
+                    for (var j = 0; j < clones.length; j++) {
+                        track.appendChild(clones[j]);
+                    }
                 }
                 track.dataset.cloned = 'true';
             }
