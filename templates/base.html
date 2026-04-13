@@ -64,6 +64,11 @@
         #share-fallback .share-close { background: #e2e8f0; color: #334155; width: 100%; }
         .body-type-btn[data-selected="true"] { background-color: #2563eb !important; color: #fff !important; border: none !important; }
         .body-type-btn[data-selected="true"]:hover { background-color: #1d4ed8 !important; color: #fff !important; }
+        /* Wishlist nav badge: prebuilt tailwind.css may not include translate-x-1/2 or arbitrary translate */
+        #nav-wishlist-count,
+        #nav-wishlist-count-mobile {
+            transform: translate(calc(50% + 6px), -50%);
+        }
         /* Fixed toasts (base-app.js) — top of viewport, no document flow space */
         #toast-container {
             position: fixed;
