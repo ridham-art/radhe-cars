@@ -44,6 +44,13 @@ from cars.admin_panel.cache_utils import get_cached_nav_counts, invalidate_admin
 
 logger = logging.getLogger('cars.admin_panel.auth')
 
+ADMIN_PRIMARY_IMAGE_PREFETCH = Prefetch(
+    'images',
+    queryset=CarImage.objects.filter(is_primary=True).only(
+        'id', 'car_id', 'image', 'image_url', 'is_primary'
+    ),
+)
+
 
 def filter_car_list_queryset(request):
     """
@@ -52,7 +59,7 @@ def filter_car_list_queryset(request):
     """
     qs = (
         Car.objects.select_related('brand', 'model')
-        .prefetch_related('images')
+        .prefetch_related(ADMIN_PRIMARY_IMAGE_PREFETCH)
         .exclude(submit_via_sell_form=True)
     )
     q = request.GET.get('q', '').strip()
@@ -512,7 +519,9 @@ class SellCarInquiryListView(
     paginate_by = 25
 
     def dispatch(self, request, *args, **kwargs):
-        if request.method == 'GET':
+        # Mark sell inquiries as seen only on the initial list open
+        # (skip for filter/pagination clicks to reduce repeated write work).
+        if request.method == 'GET' and not request.GET:
             n = Car.objects.filter(submit_via_sell_form=True, sell_inquiry_seen=False).update(
                 sell_inquiry_seen=True
             )
@@ -523,7 +532,7 @@ class SellCarInquiryListView(
     def get_queryset(self):
         qs = Car.objects.filter(submit_via_sell_form=True).select_related(
             'brand', 'model', 'seller'
-        ).prefetch_related('images')
+        ).prefetch_related(ADMIN_PRIMARY_IMAGE_PREFETCH)
         q = self.request.GET.get('q', '').strip()
         if q:
             qs = qs.filter(Q(title__icontains=q) | Q(contact_number__icontains=q))

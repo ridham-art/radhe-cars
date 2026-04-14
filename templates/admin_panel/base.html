@@ -116,7 +116,11 @@
     <div id="toast-container"></div>
     <script>
     (function(){
+        var pollTimer = null;
+        var POLL_MS = 30000;
+
         function pollUnread(){
+            if (document.visibilityState === 'hidden') return;
             fetch('{% url "admin_panel:api_unread_count" %}', { credentials: 'same-origin', headers: { 'Accept': 'application/json' }})
                 .then(function(r){ return r.json(); })
                 .then(function(d){
@@ -134,7 +138,21 @@
                     }
                 }).catch(function(){});
         }
-        setInterval(pollUnread, 10000);
+
+        function schedulePoll() {
+            clearInterval(pollTimer);
+            pollTimer = setInterval(pollUnread, POLL_MS);
+        }
+
+        document.addEventListener('visibilitychange', function () {
+            if (document.visibilityState === 'visible') {
+                pollUnread();
+                schedulePoll();
+            }
+        });
+
+        pollUnread();
+        schedulePoll();
     })();
     (function () {
         var sidebar = document.getElementById('ap-sidebar');

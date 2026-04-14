@@ -238,12 +238,17 @@ class Car(models.Model):
         cache = getattr(self, '_prefetched_objects_cache', None)
         if cache and 'images' in cache:
             imgs = list(self.images.all())
-            if not imgs:
-                return None
             for img in imgs:
                 if img.is_primary:
                     return img
-            return imgs[0]
+            if imgs:
+                return imgs[0]
+            # Prefetch may be intentionally restricted (e.g., only primary rows).
+            # Fallback to DB for legacy rows where primary flag is missing.
+            img = self.images.filter(is_primary=True).first()
+            if img:
+                return img
+            return self.images.first()
         img = self.images.filter(is_primary=True).first()
         if not img:
             img = self.images.first()
@@ -293,6 +298,18 @@ class Car(models.Model):
 
     class Meta:
         ordering = ['-created_at']
+        indexes = [
+            models.Index(fields=['status', 'created_at'], name='car_status_created_idx'),
+            models.Index(fields=['brand', 'status'], name='car_brand_status_idx'),
+            models.Index(
+                fields=['submit_via_sell_form', 'sell_inquiry_seen'],
+                name='car_sell_seen_idx',
+            ),
+            models.Index(
+                fields=['submit_via_sell_form', 'status', 'created_at'],
+                name='car_sell_status_created_idx',
+            ),
+        ]
 
 
 class CarImage(models.Model):

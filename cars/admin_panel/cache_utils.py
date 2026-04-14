@@ -3,7 +3,7 @@
 from django.core.cache import cache
 
 ADMIN_NAV_COUNTS_CACHE_KEY = 'admin_panel:nav_counts_v1'
-ADMIN_NAV_COUNTS_TTL = 45
+ADMIN_NAV_COUNTS_TTL = 180
 
 
 def build_nav_counts_dict():
