@@ -30,7 +30,7 @@
         </ul>
     </div>
     {% endif %}
-<form method="post" enctype="multipart/form-data" class="space-y-6">
+<form id="car-admin-form" method="post" enctype="multipart/form-data" class="space-y-6">
     {% csrf_token %}
     {% if return_to_sell %}<input type="hidden" name="return" value="sell">{% endif %}
     {% if form.non_field_errors %}<div class="text-red-600 text-sm">{{ form.non_field_errors }}</div>{% endif %}
@@ -48,7 +48,8 @@
     <div class="bg-white rounded-xl border border-slate-200 p-6">
         <h2 class="font-semibold text-slate-800 mb-2">{% if object %}Add images{% else %}Images{% endif %}</h2>
         <p class="text-xs text-slate-500 mb-2">{% if object %}Upload additional images (optional).{% else %}Upload images (optional).{% endif %}</p>
-        <input type="file" name="images" multiple accept="image/*" class="ap-input">
+        <p class="text-xs text-slate-400 mb-2">Large phone images are auto-compressed before upload.</p>
+        <input id="admin-images-input" type="file" name="images" multiple accept="image/*" class="ap-input">
     </div>
     <div class="flex flex-wrap gap-2 items-center">
         <button type="submit" class="inline-flex items-center px-5 py-2.5 bg-blue-600 text-white text-sm font-medium rounded-lg border border-blue-700 shadow-sm hover:bg-blue-700">Save</button>
@@ -80,6 +81,108 @@
     {% if object %}
     loadModels(brandEl.value, {{ object.model_id }});
     {% endif %}
+})();
+
+(function(){
+    var formEl = document.getElementById('car-admin-form');
+    var imagesInput = document.getElementById('admin-images-input');
+    if (!formEl || !imagesInput) return;
+
+    function toWebpName(filename) {
+        var base = filename.replace(/\.[^/.]+$/, '');
+        return base + '.webp';
+    }
+
+    function drawToCanvas(imgLike, width, height) {
+        var canvas = document.createElement('canvas');
+        canvas.width = width;
+        canvas.height = height;
+        var ctx = canvas.getContext('2d');
+        if (!ctx) return null;
+        ctx.drawImage(imgLike, 0, 0, width, height);
+        return canvas;
+    }
+
+    function canvasToWebpFile(canvas, originalFile, quality) {
+        return new Promise(function(resolve) {
+            canvas.toBlob(function(blob) {
+                if (!blob) {
+                    resolve(originalFile);
+                    return;
+                }
+                var maybeCompressed = new File(
+                    [blob],
+                    toWebpName(originalFile.name),
+                    { type: 'image/webp', lastModified: Date.now() }
+                );
+                // Keep original if conversion is not meaningfully smaller.
+                if (maybeCompressed.size >= (originalFile.size * 0.95)) {
+                    resolve(originalFile);
+                } else {
+                    resolve(maybeCompressed);
+                }
+            }, 'image/webp', quality);
+        });
+    }
+
+    function compressFile(file) {
+        if (!file || !file.type || file.type.indexOf('image/') !== 0) {
+            return Promise.resolve(file);
+        }
+
+        var maxSide = 1920;
+        var quality = 0.78;
+
+        if (window.createImageBitmap) {
+            return createImageBitmap(file).then(function(bitmap) {
+                var w = bitmap.width;
+                var h = bitmap.height;
+                var scale = Math.min(1, maxSide / Math.max(w, h));
+                var tw = Math.max(1, Math.round(w * scale));
+                var th = Math.max(1, Math.round(h * scale));
+                var canvas = drawToCanvas(bitmap, tw, th);
+                if (!canvas) return file;
+                return canvasToWebpFile(canvas, file, quality);
+            }).catch(function() {
+                return file;
+            });
+        }
+
+        return Promise.resolve(file);
+    }
+
+    formEl.addEventListener('submit', function(e) {
+        if (formEl.dataset.compressedOnce === '1') return;
+        if (!imagesInput.files || !imagesInput.files.length) return;
+        if (typeof DataTransfer === 'undefined') return;
+
+        e.preventDefault();
+        formEl.dataset.compressedOnce = '1';
+
+        var submitBtn = formEl.querySelector('button[type="submit"]');
+        var originalText = submitBtn ? submitBtn.textContent : '';
+        if (submitBtn) {
+            submitBtn.disabled = true;
+            submitBtn.textContent = 'Compressing images...';
+        }
+
+        var files = Array.prototype.slice.call(imagesInput.files);
+        Promise.all(files.map(compressFile)).then(function(processedFiles) {
+            var dt = new DataTransfer();
+            processedFiles.forEach(function(f) { if (f) dt.items.add(f); });
+            imagesInput.files = dt.files;
+            if (submitBtn) {
+                submitBtn.textContent = 'Saving...';
+            }
+            formEl.submit();
+        }).catch(function() {
+            if (submitBtn) {
+                submitBtn.disabled = false;
+                submitBtn.textContent = originalText || 'Save';
+            }
+            delete formEl.dataset.compressedOnce;
+        });
+    });
 })();
 </script>
 {% endblock %}
