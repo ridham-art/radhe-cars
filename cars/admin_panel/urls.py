@@ -39,6 +39,11 @@ urlpatterns = [
         views.CarImageDeleteView.as_view(),
         name='car_image_delete',
     ),
+    path(
+        'cars/<int:car_pk>/images/delete-all/',
+        views.CarImageDeleteAllView.as_view(),
+        name='car_image_delete_all',
+    ),
     path('cars/<int:pk>/delete/', views.CarDeleteView.as_view(), name='car_delete'),
     path('cars/bulk-delete/', views.CarBulkDeleteView.as_view(), name='car_bulk_delete'),
     path('api/brands/<int:pk>/models/', views.BrandModelsJsonView.as_view(), name='api_brand_models'),

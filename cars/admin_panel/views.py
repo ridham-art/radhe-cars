@@ -469,6 +469,27 @@ class CarImageDeleteView(StaffRequiredMixin, View):
         return HttpResponseRedirect(url)
 
 
+class CarImageDeleteAllView(StaffRequiredMixin, View):
+    http_method_names = ['post']
+
+    def post(self, request, car_pk):
+        car = get_object_or_404(Car, pk=car_pk)
+        images = list(car.images.all())
+        if not images:
+            messages.info(request, 'No images to remove.')
+        else:
+            for car_image in images:
+                if car_image.image and getattr(car_image.image, 'name', None):
+                    _safe_delete_stored_file(car_image.image.name)
+            CarImage.objects.filter(car_id=car.pk).delete()
+            messages.success(request, f'Removed all images ({len(images)}).')
+
+        url = reverse('admin_panel:car_edit', kwargs={'pk': car_pk})
+        if request.POST.get('return') == 'sell':
+            url = f'{url}?{urlencode({"return": "sell"})}'
+        return HttpResponseRedirect(url)
+
+
 class CarDeleteView(StaffRequiredMixin, AdminPanelContextMixin, DeleteView):
     model = Car
     template_name = 'admin_panel/car_confirm_delete.html'
