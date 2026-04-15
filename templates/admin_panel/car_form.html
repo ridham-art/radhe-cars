@@ -26,13 +26,6 @@
                     <span class="inline-flex items-center px-2 py-0.5 text-[10px] font-semibold tracking-wide text-blue-700 bg-blue-100 rounded-full">Primary</span>
                     {% endif %}
                 </div>
-                <form method="post" action="{% url 'admin_panel:car_image_delete' car_pk=object.pk image_pk=img.pk %}" class="absolute top-2 right-2 z-10" onsubmit="return confirm('Remove this image?');">
-                    {% csrf_token %}
-                    {% if return_to_sell %}<input type="hidden" name="return" value="sell">{% endif %}
-                    <button type="submit" class="inline-flex items-center justify-center w-7 h-7 rounded-full border border-red-200 bg-white/95 text-red-600 hover:bg-red-50" title="Remove image" aria-label="Remove image">
-                        &times;
-                    </button>
-                </form>
                 {% if img.display_url %}
                 <div class="aspect-[4/3] bg-slate-100">
                     <img src="{{ img.display_url }}" alt="" class="w-full h-full object-cover transition-transform duration-200 group-hover:scale-[1.02]">
@@ -40,6 +33,15 @@
                 {% else %}
                 <div class="aspect-[4/3] w-full flex items-center justify-center text-xs text-slate-400">No preview</div>
                 {% endif %}
+                <div class="p-2 bg-white border-t border-slate-200">
+                    <form method="post" action="{% url 'admin_panel:car_image_delete' car_pk=object.pk image_pk=img.pk %}" onsubmit="return confirm('Remove this image?');">
+                        {% csrf_token %}
+                        {% if return_to_sell %}<input type="hidden" name="return" value="sell">{% endif %}
+                        <button type="submit" class="w-full inline-flex items-center justify-center px-2 py-1.5 text-xs font-medium text-red-700 bg-red-50 border border-red-200 rounded-md hover:bg-red-100" title="Remove image" aria-label="Remove image">
+                            Remove image
+                        </button>
+                    </form>
+                </div>
             </li>
             {% endfor %}
         </ul>
