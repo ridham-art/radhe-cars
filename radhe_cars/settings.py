@@ -26,6 +26,17 @@ def _prefer_ipv4_for_supabase(db):
         pass
 
 
+def _bytes_from_mb_env(var_name, default_mb):
+    """Parse optional env as megabytes (float). Returns integer bytes."""
+    raw = os.environ.get(var_name)
+    if not raw:
+        return int(float(default_mb) * 1024 * 1024)
+    try:
+        return int(float(raw) * 1024 * 1024)
+    except ValueError:
+        return int(float(default_mb) * 1024 * 1024)
+
+
 # -----------------------------------------------------------------------------
 # Paths & env
 # -----------------------------------------------------------------------------
@@ -249,6 +260,11 @@ STATIC_ROOT = os.path.join(BASE_DIR, 'staticfiles')
 
 MEDIA_URL = '/media/'
 MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
+
+# Multipart uploads: Nginx `client_max_body_size` usually causes 413 before Django.
+# These control how much of the body / each file is buffered in memory vs temp disk.
+DATA_UPLOAD_MAX_MEMORY_SIZE = _bytes_from_mb_env('DATA_UPLOAD_MAX_MEMORY_MB', 12)
+FILE_UPLOAD_MAX_MEMORY_SIZE = _bytes_from_mb_env('FILE_UPLOAD_MAX_MEMORY_MB', 5)
 
 # Production: compressed static files via WhiteNoise. Dev: default finder storage.
 if not DEBUG:

@@ -378,7 +378,7 @@
                   <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14"/></svg>
                 </div>
                 <p class="font-medium text-slate-700">Click to upload</p>
-                <p class="text-sm text-slate-500 mt-1">PNG or JPG, 3-20 images</p>
+                <p class="text-sm text-slate-500 mt-1">PNG or JPG, 3-20 images. Large photos are compressed before upload.</p>
                 <input id="images" name="images" type="file" class="hidden" multiple accept="image/*" onchange="showPics(this)">
               </div>
               <div id="pic-grid" class="grid grid-cols-4 gap-2 mt-3"></div>
@@ -872,11 +872,52 @@ function showPics(input){
   });
 }
 
+function toWebpName(filename){
+  const base=filename.replace(/\.[^/.]+$/, '');
+  return base+'.webp';
+}
+function drawToCanvas(imgLike,width,height){
+  const canvas=document.createElement('canvas');
+  canvas.width=width;
+  canvas.height=height;
+  const ctx=canvas.getContext('2d');
+  if(!ctx)return null;
+  ctx.drawImage(imgLike,0,0,width,height);
+  return canvas;
+}
+function canvasToWebpFile(canvas,originalFile,quality){
+  return new Promise(function(resolve){
+    canvas.toBlob(function(blob){
+      if(!blob){resolve(originalFile);return;}
+      const maybeCompressed=new File([blob],toWebpName(originalFile.name),{type:'image/webp',lastModified:Date.now()});
+      if(maybeCompressed.size>=originalFile.size*0.95)resolve(originalFile);
+      else resolve(maybeCompressed);
+    },'image/webp',quality);
+  });
+}
+function compressSellImage(file){
+  if(!file||!file.type||file.type.indexOf('image/')!==0)return Promise.resolve(file);
+  const maxSide=1920,quality=0.78;
+  if(window.createImageBitmap){
+    return createImageBitmap(file).then(function(bitmap){
+      const w=bitmap.width,h=bitmap.height;
+      const scale=Math.min(1,maxSide/Math.max(w,h));
+      const tw=Math.max(1,Math.round(w*scale)),th=Math.max(1,Math.round(h*scale));
+      const canvas=drawToCanvas(bitmap,tw,th);
+      if(!canvas)return file;
+      return canvasToWebpFile(canvas,file,quality);
+    }).catch(function(){return file;});
+  }
+  return Promise.resolve(file);
+}
+
 document.getElementById('sell-form').addEventListener('submit', function(e) {
   e.preventDefault();
+  const form=this;
   const minImg={{ min_images }};
   const maxImg={{ max_images }};
-  const count=document.getElementById('images').files.length;
+  const imagesInput=document.getElementById('images');
+  const count=imagesInput.files.length;
   if(count<minImg){
     document.getElementById('sell-error').classList.remove('hidden');
     document.getElementById('sell-error-msg').textContent='Please upload at least '+minImg+' images.';
@@ -889,35 +930,59 @@ document.getElementById('sell-form').addEventListener('submit', function(e) {
     document.getElementById('sell-success').classList.add('hidden');
     return;
   }
-  const btn=this.querySelector('button[type="submit"]');
+  const btn=form.querySelector('button[type="submit"]');
   const origText=btn.textContent;
-  btn.disabled=true;
-  btn.textContent='Submitting...';
+
+  function runFetch(){
+    btn.disabled=true;
+    btn.textContent='Submitting...';
+    fetch('{% url "sell_car" %}', {
+      method: 'POST',
+      headers: { 'X-Requested-With': 'XMLHttpRequest' },
+      body: new FormData(form)
+    }).then(r=>r.json().then(d=>({ok:r.ok,data:d}))).then(res=>{
+      btn.disabled=false;
+      btn.textContent=origText;
+      if(res.ok){
+        if(cur===11){
+          go(12);
+          document.getElementById('prog').classList.add('hidden');
+          document.getElementById('breadcrumb').classList.add('hidden');
+          document.getElementById('sell-footer').classList.add('hidden');
+        }
+      }else{
+        document.getElementById('sell-error-msg').textContent=res.data.message||'Something went wrong.';
+        document.getElementById('sell-error').classList.remove('hidden');
+      }
+      window.scrollTo({top:0,behavior:'smooth'});
+    }).catch(()=>{
+      btn.disabled=false;
+      btn.textContent=origText;
+      document.getElementById('sell-error-msg').textContent='Something went wrong. Please try again.';
+      document.getElementById('sell-error').classList.remove('hidden');
+      window.scrollTo({top:0,behavior:'smooth'});
+    });
+  }
+
   document.getElementById('sell-success').classList.add('hidden');
   document.getElementById('sell-error').classList.add('hidden');
-  fetch('{% url "sell_car" %}', {
-    method: 'POST',
-    headers: { 'X-Requested-With': 'XMLHttpRequest' },
-    body: new FormData(this)
-  }).then(r=>r.json().then(d=>({ok:r.ok,data:d}))).then(res=>{
+
+  if(typeof DataTransfer==='undefined'||!imagesInput.files.length){
+    runFetch();
+    return;
+  }
+  btn.disabled=true;
+  btn.textContent='Compressing...';
+  Promise.all(Array.from(imagesInput.files).map(compressSellImage)).then(function(processed){
+    const dt=new DataTransfer();
+    processed.forEach(function(f){if(f)dt.items.add(f);});
+    imagesInput.files=dt.files;
+    showPics(imagesInput);
+    runFetch();
+  }).catch(function(){
     btn.disabled=false;
     btn.textContent=origText;
-    if(res.ok){
-      if(cur===11){
-        go(12);
-        document.getElementById('prog').classList.add('hidden');
-        document.getElementById('breadcrumb').classList.add('hidden');
-        document.getElementById('sell-footer').classList.add('hidden');
-      }
-    }else{
-      document.getElementById('sell-error-msg').textContent=res.data.message||'Something went wrong.';
-      document.getElementById('sell-error').classList.remove('hidden');
-    }
-    window.scrollTo({top:0,behavior:'smooth'});
-  }).catch(()=>{
-    btn.disabled=false;
-    btn.textContent=origText;
-    document.getElementById('sell-error-msg').textContent='Something went wrong. Please try again.';
+    document.getElementById('sell-error-msg').textContent='Could not prepare images. Please try again.';
     document.getElementById('sell-error').classList.remove('hidden');
     window.scrollTo({top:0,behavior:'smooth'});
   });
