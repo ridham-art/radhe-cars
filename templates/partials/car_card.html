@@ -27,7 +27,12 @@
             <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" class="w-4 h-4"><path d="M19 14c1.49-1.46 3-3.21 3-5.5A5.5 5.5 0 0 0 16.5 3c-1.76 0-3 .5-4.5 2-1.5-1.5-2.74-2-4.5-2A5.5 5.5 0 0 0 2 8.5c0 2.3 1.5 4.05 3 5.5l7 7Z"></path></svg>
         </a>
         {% endif %}
-        <span class="absolute top-2 left-2 md:top-4 md:left-4 text-[10px] md:text-xs font-medium px-2 py-0.5 md:px-2.5 md:py-1 rounded-full {% if car.ownership == '1st Owner' %}bg-green-500 text-white{% else %}bg-gray-200 text-gray-700{% endif %}">{{ car.ownership }}</span>
+        <div class="absolute top-2 left-2 md:top-4 md:left-4 z-10 flex flex-col items-start gap-1.5">
+            {% if car.status == 'ON_HOLD' or car.status == 'SOLD' %}
+            <span class="text-[10px] md:text-xs font-medium px-2 py-0.5 md:px-2.5 md:py-1 rounded-full bg-red-500 text-white">{{ car.get_status_display }}</span>
+            {% endif %}
+            <span class="text-[10px] md:text-xs font-medium px-2 py-0.5 md:px-2.5 md:py-1 rounded-full {% if car.ownership == '1st Owner' %}bg-green-500 text-white{% else %}bg-gray-200 text-gray-700{% endif %}">{{ car.ownership }}</span>
+        </div>
     </div>
     <div class="p-3 md:p-4 flex flex-col flex-1 min-h-0">
         <h2 class="font-medium text-sm md:text-base text-gray-900 line-clamp-2">{{ car.title }}</h2>
@@ -60,7 +65,12 @@
             <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" class="w-4 h-4"><path d="M2 9.5a5.5 5.5 0 0 1 9.591-3.676.56.56 0 0 0 .818 0A5.49 5.49 0 0 1 22 9.5c0 2.29-1.5 4-3 5.5l-5.492 5.313a2 2 0 0 1-3 .019L5 15c-1.5-1.5-3-3.2-3-5.5"></path></svg>
         </a>
         {% endif %}
-        <span class="absolute top-3 left-3 text-[10px] sm:text-xs font-medium px-2 py-0.5 sm:px-2.5 sm:py-1 rounded-full {% if car.ownership == '1st Owner' %}bg-green-500 text-white{% else %}bg-gray-200 text-gray-700{% endif %}">{{ car.ownership }}</span>
+        <div class="absolute top-3 left-3 z-10 flex flex-col items-start gap-1.5">
+            {% if car.status == 'ON_HOLD' or car.status == 'SOLD' %}
+            <span class="text-[10px] sm:text-xs font-medium px-2 py-0.5 sm:px-2.5 sm:py-1 rounded-full bg-red-500 text-white">{{ car.get_status_display }}</span>
+            {% endif %}
+            <span class="text-[10px] sm:text-xs font-medium px-2 py-0.5 sm:px-2.5 sm:py-1 rounded-full {% if car.ownership == '1st Owner' %}bg-green-500 text-white{% else %}bg-gray-200 text-gray-700{% endif %}">{{ car.ownership }}</span>
+        </div>
     </div>
     <h3 class="font-medium text-sm sm:text-base text-gray-900 line-clamp-2">{{ car.title }}</h3>
     <p class="text-xs sm:text-sm text-gray-500 mt-1 truncate">{{ car.specs_short }}</p>
