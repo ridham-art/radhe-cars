@@ -33,15 +33,15 @@
                 {% else %}
                 <div class="aspect-[4/3] w-full flex items-center justify-center text-xs text-slate-400">No preview</div>
                 {% endif %}
-                <div class="p-2 bg-white border-t border-slate-200 space-y-2">
-                    <label class="flex items-center gap-2 text-xs text-slate-700 cursor-pointer">
+                <div class="p-2 bg-white border-t border-slate-200 flex items-center justify-between gap-2">
+                    <label class="inline-flex items-center gap-2 text-[11px] font-medium text-slate-700 cursor-pointer">
                         <input type="radio" form="car-admin-form" name="primary_image_choice" value="existing:{{ img.pk }}" class="ap-checkbox" {% if img.is_primary %}checked{% endif %}>
                         <span>Set as primary</span>
                     </label>
                     <form method="post" action="{% url 'admin_panel:car_image_delete' car_pk=object.pk image_pk=img.pk %}" onsubmit="return confirm('Remove this image?');">
                         {% csrf_token %}
                         {% if return_to_sell %}<input type="hidden" name="return" value="sell">{% endif %}
-                        <button type="submit" class="w-full inline-flex items-center justify-center px-2 py-1.5 text-xs font-medium text-red-700 bg-red-50 border border-red-200 rounded-md hover:bg-red-100" title="Remove image" aria-label="Remove image">
+                        <button type="submit" class="inline-flex items-center justify-center px-2 py-1 text-[11px] font-medium text-red-600 hover:text-red-700 hover:underline" title="Remove image" aria-label="Remove image">
                             Remove image
                         </button>
                     </form>
@@ -214,14 +214,14 @@
             item.appendChild(media);
 
             var meta = document.createElement('div');
-            meta.className = 'p-2 space-y-1 border-t border-slate-200';
+            meta.className = 'p-2 border-t border-slate-200 bg-white';
             var name = document.createElement('p');
             name.className = 'text-[11px] text-slate-500 truncate';
             name.textContent = file.name;
             meta.appendChild(name);
 
             var label = document.createElement('label');
-            label.className = 'flex items-center gap-2 text-xs text-slate-700 cursor-pointer';
+            label.className = 'inline-flex items-center gap-2 text-[11px] font-medium text-slate-700 cursor-pointer';
             var radio = document.createElement('input');
             radio.type = 'radio';
             radio.name = 'primary_image_choice';
