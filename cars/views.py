@@ -9,6 +9,8 @@ from django.core.paginator import Paginator
 from django.db.models import Q, F, Prefetch, Count
 from django.db.models.functions import Coalesce
 from django.http import HttpResponse, JsonResponse
+from django.utils import timezone
+from datetime import timedelta
 from cars.admin_panel.cache_utils import invalidate_admin_nav_counts_cache
 from .models import Car, Brand, CarModel, CarImage, Testimonial, Wishlist
 
@@ -30,7 +32,16 @@ from .forms import SignUpForm, ContactForm
 
 MIN_IMAGES = 3
 MAX_IMAGES = 20
-PUBLIC_VISIBLE_STATUSES = ('APPROVED', 'ON_HOLD', 'SOLD')
+PUBLIC_BASE_STATUSES = ('APPROVED', 'ON_HOLD')
+PUBLIC_SOLD_VISIBLE_DAYS = 7
+
+
+def _public_visible_cars_queryset():
+    sold_cutoff = timezone.now() - timedelta(days=PUBLIC_SOLD_VISIBLE_DAYS)
+    return Car.objects.filter(
+        Q(status__in=PUBLIC_BASE_STATUSES)
+        | Q(status='SOLD', sold_at__gte=sold_cutoff)
+    )
 
 
 def health_check(request):
@@ -40,12 +51,12 @@ def health_check(request):
 
 def home(request):
     featured_cars = _cars_with_related(
-        Car.objects.filter(status__in=PUBLIC_VISIBLE_STATUSES, is_featured=True).annotate(
+        _public_visible_cars_queryset().filter(is_featured=True).annotate(
             wishlist_entry_count=Count('wishlisted_by')
         )
     )[:12]
     recent_cars = _cars_with_related(
-        Car.objects.filter(status__in=PUBLIC_VISIBLE_STATUSES).order_by('-created_at').annotate(
+        _public_visible_cars_queryset().order_by('-created_at').annotate(
             wishlist_entry_count=Count('wishlisted_by')
         )
     )[:12]
@@ -68,7 +79,7 @@ def home_cars_api(request):
     """AJAX: Return cars filtered by body_type for home page Recently Added section."""
     from django.template.loader import render_to_string
     cars = _cars_with_related(
-        Car.objects.filter(status__in=PUBLIC_VISIBLE_STATUSES).order_by('-created_at').annotate(
+        _public_visible_cars_queryset().order_by('-created_at').annotate(
             wishlist_entry_count=Count('wishlisted_by')
         )
     )
@@ -84,7 +95,7 @@ def home_cars_api(request):
 
 
 def car_list(request):
-    cars = Car.objects.filter(status__in=PUBLIC_VISIBLE_STATUSES)
+    cars = _public_visible_cars_queryset()
     brands = Brand.objects.all()
 
     q = request.GET.get('q')
@@ -192,11 +203,11 @@ def car_list(request):
 
 def car_detail(request, pk):
     car = get_object_or_404(
-        _cars_with_related(Car.objects.filter(status__in=PUBLIC_VISIBLE_STATUSES)),
+        _cars_with_related(_public_visible_cars_queryset()),
         pk=pk,
     )
     similar_cars = _cars_with_related(
-        Car.objects.filter(status__in=PUBLIC_VISIBLE_STATUSES, brand=car.brand).exclude(pk=car.pk)
+        _public_visible_cars_queryset().filter(brand=car.brand).exclude(pk=car.pk)
     )[:3]
     testimonials = Testimonial.objects.filter(is_active=True)[:3]
     wishlist_count = car.wishlisted_by.count()
@@ -219,7 +230,7 @@ def _public_car_for_contact(pk):
         pk = int(pk)
     except (TypeError, ValueError):
         return None
-    return Car.objects.filter(pk=pk, status__in=PUBLIC_VISIBLE_STATUSES).first()
+    return _public_visible_cars_queryset().filter(pk=pk).first()
 
 
 def contact(request):

@@ -206,6 +206,13 @@ class Car(models.Model):
         editable=False,
         help_text='When the car was first approved / listed (set automatically; not shown on the public site).',
     )
+    sold_at = models.DateTimeField(
+        null=True,
+        blank=True,
+        db_index=True,
+        editable=False,
+        help_text='When the car was marked sold (used to auto-hide sold cars from public pages after 7 days).',
+    )
 
     def __str__(self):
         return f"{self.year} {self.brand.name} {self.model.name} - {self.title}"
@@ -213,8 +220,20 @@ class Car(models.Model):
     def save(self, *args, **kwargs):
         from django.utils import timezone as dj_tz
 
+        prev_status = None
+        if self.pk:
+            try:
+                prev_status = Car.objects.only('status').get(pk=self.pk).status
+            except Car.DoesNotExist:
+                prev_status = None
+
         if self.status == 'APPROVED' and self.listed_at is None:
             self.listed_at = dj_tz.now()
+        if self.status == 'SOLD':
+            if prev_status != 'SOLD' or self.sold_at is None:
+                self.sold_at = dj_tz.now()
+        elif prev_status == 'SOLD':
+            self.sold_at = None
         super().save(*args, **kwargs)
 
     def clean(self):
