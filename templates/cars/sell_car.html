@@ -378,7 +378,7 @@
                   <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14"/></svg>
                 </div>
                 <p class="font-medium text-slate-700">Click to upload</p>
-                <p class="text-sm text-slate-500 mt-1">PNG or JPG, 3-20 images. Large photos are compressed before upload.</p>
+                <p class="text-sm text-slate-500 mt-1">PNG or JPG, 3-20 images. Large photos are compressed before upload (targets ~200-300KB where possible).</p>
                 <input id="images" name="images" type="file" class="hidden" multiple accept="image/*" onchange="showPics(this)">
               </div>
               <div id="pic-grid" class="grid grid-cols-4 gap-2 mt-3"></div>
@@ -857,10 +857,15 @@ document.addEventListener('click', function(e){
 function showPics(input){
   const g=document.getElementById('pic-grid');
   const n=document.getElementById('pic-num');
+  const files=Array.from(input.files||[]);
+  const totalBytes=files.reduce((sum,f)=>sum+(f&&f.size?f.size:0),0);
   g.innerHTML='';
-  n.textContent=input.files.length+' photo(s) selected';
+  n.textContent=files.length+' photo(s) selected · '+(Math.max(1,Math.round(totalBytes/1024)))+' KB total';
+  if(window.__sellCompressionSummary){
+    n.textContent+=' (was '+window.__sellCompressionSummary.before+', now '+window.__sellCompressionSummary.after+')';
+  }
   n.classList.remove('hidden');
-  Array.from(input.files).forEach(f=>{
+  files.forEach(f=>{
     const r=new FileReader();
     r.onload=function(e){
       const d=document.createElement('div');
@@ -885,30 +890,59 @@ function drawToCanvas(imgLike,width,height){
   ctx.drawImage(imgLike,0,0,width,height);
   return canvas;
 }
-function canvasToWebpFile(canvas,originalFile,quality){
+function canvasToWebpBlob(canvas,quality){
   return new Promise(function(resolve){
     canvas.toBlob(function(blob){
-      if(!blob){resolve(originalFile);return;}
-      const maybeCompressed=new File([blob],toWebpName(originalFile.name),{type:'image/webp',lastModified:Date.now()});
-      if(maybeCompressed.size>=originalFile.size*0.95)resolve(originalFile);
-      else resolve(maybeCompressed);
+      resolve(blob||null);
     },'image/webp',quality);
   });
 }
-function compressSellImage(file){
-  if(!file||!file.type||file.type.indexOf('image/')!==0)return Promise.resolve(file);
-  const maxSide=1920,quality=0.78;
-  if(window.createImageBitmap){
-    return createImageBitmap(file).then(function(bitmap){
-      const w=bitmap.width,h=bitmap.height;
-      const scale=Math.min(1,maxSide/Math.max(w,h));
+async function compressSellImage(file){
+  if(!file||!file.type||file.type.indexOf('image/')!==0)return file;
+  if(file.size<=300*1024)return file;
+  if(!window.createImageBitmap)return file;
+
+  const targetMin=200*1024;
+  const targetMax=300*1024;
+  const targetMid=250*1024;
+  const maxSide=1920;
+  const scaleSteps=[1,0.9,0.8,0.72,0.64];
+  const qualitySteps=[0.82,0.74,0.66,0.58,0.5,0.42];
+
+  try{
+    const bitmap=await createImageBitmap(file);
+    const w=bitmap.width,h=bitmap.height;
+    let bestFile=null;
+    let bestDistance=Number.MAX_SAFE_INTEGER;
+
+    for(let i=0;i<scaleSteps.length;i++){
+      const baseScale=Math.min(1,maxSide/Math.max(w,h));
+      const scale=Math.min(1,baseScale*scaleSteps[i]);
       const tw=Math.max(1,Math.round(w*scale)),th=Math.max(1,Math.round(h*scale));
       const canvas=drawToCanvas(bitmap,tw,th);
-      if(!canvas)return file;
-      return canvasToWebpFile(canvas,file,quality);
-    }).catch(function(){return file;});
+      if(!canvas)continue;
+
+      for(let j=0;j<qualitySteps.length;j++){
+        const blob=await canvasToWebpBlob(canvas,qualitySteps[j]);
+        if(!blob)continue;
+        const candidate=new File([blob],toWebpName(file.name),{type:'image/webp',lastModified:Date.now()});
+        const distance=Math.abs(candidate.size-targetMid);
+        if(!bestFile||distance<bestDistance){
+          bestFile=candidate;
+          bestDistance=distance;
+        }
+        if(candidate.size>=targetMin&&candidate.size<=targetMax){
+          return candidate;
+        }
+      }
+    }
+
+    if(!bestFile)return file;
+    if(bestFile.size>=file.size*0.98)return file;
+    return bestFile;
+  }catch(_err){
+    return file;
   }
-  return Promise.resolve(file);
 }
 
 document.getElementById('sell-form').addEventListener('submit', function(e) {
@@ -917,6 +951,7 @@ document.getElementById('sell-form').addEventListener('submit', function(e) {
   const minImg={{ min_images }};
   const maxImg={{ max_images }};
   const imagesInput=document.getElementById('images');
+  window.__sellCompressionSummary=null;
   const count=imagesInput.files.length;
   if(count<minImg){
     document.getElementById('sell-error').classList.remove('hidden');
@@ -974,6 +1009,12 @@ document.getElementById('sell-form').addEventListener('submit', function(e) {
   btn.disabled=true;
   btn.textContent='Compressing...';
   Promise.all(Array.from(imagesInput.files).map(compressSellImage)).then(function(processed){
+    const beforeTotal=Array.from(imagesInput.files).reduce((sum,f)=>sum+(f&&f.size?f.size:0),0);
+    const afterTotal=processed.reduce((sum,f)=>sum+(f&&f.size?f.size:0),0);
+    window.__sellCompressionSummary={
+      before: Math.max(1,Math.round(beforeTotal/1024))+' KB',
+      after: Math.max(1,Math.round(afterTotal/1024))+' KB',
+    };
     const dt=new DataTransfer();
     processed.forEach(function(f){if(f)dt.items.add(f);});
     imagesInput.files=dt.files;

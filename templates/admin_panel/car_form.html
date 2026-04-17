@@ -69,7 +69,7 @@
     <div class="bg-white rounded-xl border border-slate-200 p-6">
         <h2 class="font-semibold text-slate-800 mb-2">{% if object %}Add images{% else %}Images{% endif %}</h2>
         <p class="text-xs text-slate-500 mb-2">{% if object %}Upload additional images (optional).{% else %}Upload images (optional).{% endif %}</p>
-        <p class="text-xs text-slate-400 mb-2">Large phone images are auto-compressed before upload.</p>
+        <p class="text-xs text-slate-400 mb-2">Large phone images are auto-compressed before upload (targets ~200-300KB where possible).</p>
         <input id="admin-images-input" type="file" name="images" multiple accept="image/*" class="ap-input">
         <div id="admin-new-image-preview-wrap" class="hidden mt-3">
             <p class="text-xs text-slate-500 mb-2">New upload preview (choose one as primary if needed).</p>
@@ -115,6 +115,13 @@
     var previewGrid = document.getElementById('admin-new-image-preview-grid');
     if (!formEl || !imagesInput) return;
     var previewObjectUrls = [];
+    var compressionMeta = [];
+
+    function formatSize(bytes) {
+        if (!bytes || bytes < 0) return '0 KB';
+        if (bytes < 1024 * 1024) return Math.max(1, Math.round(bytes / 1024)) + ' KB';
+        return (bytes / (1024 * 1024)).toFixed(2) + ' MB';
+    }
 
     function toWebpName(filename) {
         var base = filename.replace(/\.[^/.]+$/, '');
@@ -131,52 +138,66 @@
         return canvas;
     }
 
-    function canvasToWebpFile(canvas, originalFile, quality) {
+    function canvasToWebpBlob(canvas, quality) {
         return new Promise(function(resolve) {
             canvas.toBlob(function(blob) {
-                if (!blob) {
-                    resolve(originalFile);
-                    return;
-                }
-                var maybeCompressed = new File(
-                    [blob],
-                    toWebpName(originalFile.name),
-                    { type: 'image/webp', lastModified: Date.now() }
-                );
-                // Keep original if conversion is not meaningfully smaller.
-                if (maybeCompressed.size >= (originalFile.size * 0.95)) {
-                    resolve(originalFile);
-                } else {
-                    resolve(maybeCompressed);
-                }
+                resolve(blob || null);
             }, 'image/webp', quality);
         });
     }
 
-    function compressFile(file) {
-        if (!file || !file.type || file.type.indexOf('image/') !== 0) {
-            return Promise.resolve(file);
-        }
+    async function compressFile(file) {
+        if (!file || !file.type || file.type.indexOf('image/') !== 0) return file;
+        if (file.size <= 300 * 1024) return file;
+        if (!window.createImageBitmap) return file;
 
+        var targetMin = 200 * 1024;
+        var targetMax = 300 * 1024;
+        var targetMid = 250 * 1024;
         var maxSide = 1920;
-        var quality = 0.78;
+        var scaleSteps = [1, 0.9, 0.8, 0.72, 0.64];
+        var qualitySteps = [0.82, 0.74, 0.66, 0.58, 0.5, 0.42];
 
-        if (window.createImageBitmap) {
-            return createImageBitmap(file).then(function(bitmap) {
-                var w = bitmap.width;
-                var h = bitmap.height;
-                var scale = Math.min(1, maxSide / Math.max(w, h));
+        try {
+            var bitmap = await createImageBitmap(file);
+            var w = bitmap.width;
+            var h = bitmap.height;
+            var bestFile = null;
+            var bestDistance = Number.MAX_SAFE_INTEGER;
+
+            for (var i = 0; i < scaleSteps.length; i++) {
+                var baseScale = Math.min(1, maxSide / Math.max(w, h));
+                var scale = Math.min(1, baseScale * scaleSteps[i]);
                 var tw = Math.max(1, Math.round(w * scale));
                 var th = Math.max(1, Math.round(h * scale));
                 var canvas = drawToCanvas(bitmap, tw, th);
-                if (!canvas) return file;
-                return canvasToWebpFile(canvas, file, quality);
-            }).catch(function() {
-                return file;
-            });
-        }
+                if (!canvas) continue;
 
-        return Promise.resolve(file);
+                for (var j = 0; j < qualitySteps.length; j++) {
+                    var blob = await canvasToWebpBlob(canvas, qualitySteps[j]);
+                    if (!blob) continue;
+                    var candidate = new File(
+                        [blob],
+                        toWebpName(file.name),
+                        { type: 'image/webp', lastModified: Date.now() }
+                    );
+                    var distance = Math.abs(candidate.size - targetMid);
+                    if (!bestFile || distance < bestDistance) {
+                        bestFile = candidate;
+                        bestDistance = distance;
+                    }
+                    if (candidate.size >= targetMin && candidate.size <= targetMax) {
+                        return candidate;
+                    }
+                }
+            }
+
+            if (!bestFile) return file;
+            if (bestFile.size >= file.size * 0.98) return file;
+            return bestFile;
+        } catch (_err) {
+            return file;
+        }
     }
 
     function clearPreview() {
@@ -220,6 +241,16 @@
             name.textContent = file.name;
             meta.appendChild(name);
 
+            var sizeInfo = document.createElement('p');
+            sizeInfo.className = 'text-[10px] text-slate-400';
+            var metaEntry = compressionMeta[index];
+            if (metaEntry && metaEntry.before > 0) {
+                sizeInfo.textContent = formatSize(metaEntry.before) + ' -> ' + formatSize(metaEntry.after);
+            } else {
+                sizeInfo.textContent = 'Size: ' + formatSize(file.size);
+            }
+            meta.appendChild(sizeInfo);
+
             var label = document.createElement('label');
             label.className = 'inline-flex items-center gap-1.5 text-xs font-medium text-slate-700 cursor-pointer whitespace-nowrap';
             var radio = document.createElement('input');
@@ -241,7 +272,10 @@
         });
     }
 
-    imagesInput.addEventListener('change', renderNewImagePreview);
+    imagesInput.addEventListener('change', function() {
+        compressionMeta = [];
+        renderNewImagePreview();
+    });
 
     formEl.addEventListener('submit', function(e) {
         if (formEl.dataset.compressedOnce === '1') return;
@@ -262,6 +296,13 @@
         Promise.all(files.map(compressFile)).then(function(processedFiles) {
             var dt = new DataTransfer();
             processedFiles.forEach(function(f) { if (f) dt.items.add(f); });
+            compressionMeta = files.map(function(beforeFile, idx) {
+                var afterFile = processedFiles[idx];
+                return {
+                    before: beforeFile && beforeFile.size ? beforeFile.size : 0,
+                    after: afterFile && afterFile.size ? afterFile.size : 0,
+                };
+            });
             imagesInput.files = dt.files;
             renderNewImagePreview();
             if (submitBtn) {
