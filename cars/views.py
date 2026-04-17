@@ -30,6 +30,7 @@ from .forms import SignUpForm, ContactForm
 
 MIN_IMAGES = 3
 MAX_IMAGES = 20
+PUBLIC_VISIBLE_STATUSES = ('APPROVED', 'ON_HOLD', 'SOLD')
 
 
 def health_check(request):
@@ -39,10 +40,14 @@ def health_check(request):
 
 def home(request):
     featured_cars = _cars_with_related(
-        Car.objects.filter(status='APPROVED', is_featured=True).annotate(wishlist_entry_count=Count('wishlisted_by'))
+        Car.objects.filter(status__in=PUBLIC_VISIBLE_STATUSES, is_featured=True).annotate(
+            wishlist_entry_count=Count('wishlisted_by')
+        )
     )[:12]
     recent_cars = _cars_with_related(
-        Car.objects.filter(status='APPROVED').order_by('-created_at').annotate(wishlist_entry_count=Count('wishlisted_by'))
+        Car.objects.filter(status__in=PUBLIC_VISIBLE_STATUSES).order_by('-created_at').annotate(
+            wishlist_entry_count=Count('wishlisted_by')
+        )
     )[:12]
     testimonials = Testimonial.objects.filter(is_active=True)[:4]
     wishlisted_ids = set()
@@ -63,7 +68,9 @@ def home_cars_api(request):
     """AJAX: Return cars filtered by body_type for home page Recently Added section."""
     from django.template.loader import render_to_string
     cars = _cars_with_related(
-        Car.objects.filter(status='APPROVED').order_by('-created_at').annotate(wishlist_entry_count=Count('wishlisted_by'))
+        Car.objects.filter(status__in=PUBLIC_VISIBLE_STATUSES).order_by('-created_at').annotate(
+            wishlist_entry_count=Count('wishlisted_by')
+        )
     )
     body_type = request.GET.get('body_type', '').strip()
     if body_type:
@@ -77,7 +84,7 @@ def home_cars_api(request):
 
 
 def car_list(request):
-    cars = Car.objects.filter(status='APPROVED')
+    cars = Car.objects.filter(status__in=PUBLIC_VISIBLE_STATUSES)
     brands = Brand.objects.all()
 
     q = request.GET.get('q')
@@ -185,11 +192,11 @@ def car_list(request):
 
 def car_detail(request, pk):
     car = get_object_or_404(
-        _cars_with_related(Car.objects.filter(status='APPROVED')),
+        _cars_with_related(Car.objects.filter(status__in=PUBLIC_VISIBLE_STATUSES)),
         pk=pk,
     )
     similar_cars = _cars_with_related(
-        Car.objects.filter(status='APPROVED', brand=car.brand).exclude(pk=car.pk)
+        Car.objects.filter(status__in=PUBLIC_VISIBLE_STATUSES, brand=car.brand).exclude(pk=car.pk)
     )[:3]
     testimonials = Testimonial.objects.filter(is_active=True)[:3]
     wishlist_count = car.wishlisted_by.count()
@@ -205,14 +212,14 @@ def car_detail(request, pk):
     return render(request, 'cars/car_detail.html', context)
 
 
-def _approved_car_for_contact(pk):
+def _public_car_for_contact(pk):
     if pk is None or pk == '':
         return None
     try:
         pk = int(pk)
     except (TypeError, ValueError):
         return None
-    return Car.objects.filter(pk=pk, status='APPROVED').first()
+    return Car.objects.filter(pk=pk, status__in=PUBLIC_VISIBLE_STATUSES).first()
 
 
 def contact(request):
@@ -230,11 +237,11 @@ def contact(request):
                 return redirect(f"{reverse('contact')}?car={inquiry.car_id}")
             return redirect('contact')
         else:
-            selected_car = _approved_car_for_contact(request.POST.get('car'))
+            selected_car = _public_car_for_contact(request.POST.get('car'))
             if is_ajax:
                 return JsonResponse({'success': False, 'errors': form.errors}, status=400)
     else:
-        selected_car = _approved_car_for_contact(request.GET.get('car'))
+        selected_car = _public_car_for_contact(request.GET.get('car'))
         initial = {}
         if selected_car:
             initial['car'] = selected_car.pk
