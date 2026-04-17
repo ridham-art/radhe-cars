@@ -209,7 +209,7 @@
         if (previewWrap) previewWrap.classList.add('hidden');
     }
 
-    function renderNewImagePreview() {
+    function renderNewImagePreview(preferredChoice) {
         if (!previewWrap || !previewGrid) return;
         clearPreview();
         var files = Array.prototype.slice.call(imagesInput.files || []);
@@ -217,7 +217,8 @@
         previewWrap.classList.remove('hidden');
 
         var selectedForForm = document.querySelector('input[name="primary_image_choice"]:checked');
-        var keepExistingChoice = selectedForForm && selectedForForm.value.indexOf('existing:') === 0;
+        var selectedChoice = preferredChoice || (selectedForForm ? selectedForForm.value : '');
+        var keepExistingChoice = selectedChoice && selectedChoice.indexOf('existing:') === 0;
 
         files.forEach(function(file, index) {
             var item = document.createElement('li');
@@ -258,7 +259,9 @@
             radio.name = 'primary_image_choice';
             radio.value = 'new:' + index;
             radio.className = 'ap-checkbox';
-            if (!keepExistingChoice && index === 0) {
+            if (selectedChoice && radio.value === selectedChoice) {
+                radio.checked = true;
+            } else if (!selectedChoice && !keepExistingChoice && index === 0) {
                 radio.checked = true;
             }
             var text = document.createElement('span');
@@ -292,6 +295,10 @@
             submitBtn.textContent = 'Compressing images...';
         }
 
+        var selectedBeforeCompress = '';
+        var selectedRadio = document.querySelector('input[name="primary_image_choice"]:checked');
+        if (selectedRadio) selectedBeforeCompress = selectedRadio.value;
+
         var files = Array.prototype.slice.call(imagesInput.files);
         Promise.all(files.map(compressFile)).then(function(processedFiles) {
             var dt = new DataTransfer();
@@ -304,7 +311,7 @@
                 };
             });
             imagesInput.files = dt.files;
-            renderNewImagePreview();
+            renderNewImagePreview(selectedBeforeCompress);
             if (submitBtn) {
                 submitBtn.textContent = 'Saving...';
             }
