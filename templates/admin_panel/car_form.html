@@ -21,12 +21,11 @@
         <ul class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3">
             {% for img in object.images.all %}
             <li class="group relative rounded-xl border border-slate-200 overflow-hidden bg-slate-50 shadow-sm">
-                <label class="absolute top-2 left-2 z-10 cursor-pointer">
-                    <input type="radio" form="car-admin-form" name="primary_image_choice" value="existing:{{ img.pk }}" class="sr-only" {% if img.is_primary %}checked{% endif %}>
-                    <span class="inline-flex items-center px-2 py-0.5 text-[10px] tracking-wide rounded-full {% if img.is_primary %}font-semibold text-blue-700 bg-blue-100{% else %}font-medium text-slate-700 bg-white/95 border border-slate-200 hover:bg-slate-100{% endif %}" data-primary-pill>
-                        {% if img.is_primary %}Primary{% else %}Set primary{% endif %}
-                    </span>
-                </label>
+                <div class="absolute top-2 left-2 z-10">
+                    {% if img.is_primary %}
+                    <span class="inline-flex items-center px-2 py-0.5 text-[10px] font-semibold tracking-wide text-blue-700 bg-blue-100 rounded-full">Primary</span>
+                    {% endif %}
+                </div>
                 {% if img.display_url %}
                 <div class="aspect-[4/3] bg-slate-100">
                     <img src="{{ img.display_url }}" alt="" class="w-full h-full object-cover transition-transform duration-200 group-hover:scale-[1.02]">
@@ -34,7 +33,11 @@
                 {% else %}
                 <div class="aspect-[4/3] w-full flex items-center justify-center text-xs text-slate-400">No preview</div>
                 {% endif %}
-                <div class="p-2 bg-white border-t border-slate-200">
+                <div class="p-2 bg-white border-t border-slate-200 space-y-2">
+                    <label class="flex items-center gap-2 text-xs text-slate-700 cursor-pointer">
+                        <input type="radio" form="car-admin-form" name="primary_image_choice" value="existing:{{ img.pk }}" class="ap-checkbox" {% if img.is_primary %}checked{% endif %}>
+                        <span>Set as primary</span>
+                    </label>
                     <form method="post" action="{% url 'admin_panel:car_image_delete' car_pk=object.pk image_pk=img.pk %}" onsubmit="return confirm('Remove this image?');">
                         {% csrf_token %}
                         {% if return_to_sell %}<input type="hidden" name="return" value="sell">{% endif %}
@@ -175,30 +178,6 @@
 
         return Promise.resolve(file);
     }
-
-    function syncExistingPrimaryPills() {
-        var existingRadios = document.querySelectorAll('input[type="radio"][name="primary_image_choice"][value^="existing:"]');
-        existingRadios.forEach(function(radio) {
-            var pill = radio.parentElement ? radio.parentElement.querySelector('[data-primary-pill]') : null;
-            if (!pill) return;
-            if (radio.checked) {
-                pill.textContent = 'Primary';
-                pill.classList.remove('font-medium', 'text-slate-700', 'bg-white/95', 'border', 'border-slate-200', 'hover:bg-slate-100');
-                pill.classList.add('font-semibold', 'text-blue-700', 'bg-blue-100');
-            } else {
-                pill.textContent = 'Set primary';
-                pill.classList.remove('font-semibold', 'text-blue-700', 'bg-blue-100');
-                pill.classList.add('font-medium', 'text-slate-700', 'bg-white/95', 'border', 'border-slate-200', 'hover:bg-slate-100');
-            }
-        });
-    }
-
-    formEl.addEventListener('change', function(e) {
-        if (e.target && e.target.name === 'primary_image_choice') {
-            syncExistingPrimaryPills();
-        }
-    });
-    syncExistingPrimaryPills();
 
     function clearPreview() {
         previewObjectUrls.forEach(function(url) {
