@@ -121,6 +121,56 @@ def _parse_bulk_list(text):
         out.append(n)
     return out
 
+
+def _resolve_primary_image_id(choice, car, created_images):
+    if not choice:
+        return None
+    choice = str(choice).strip()
+    if choice.startswith('existing:'):
+        raw_id = choice.split(':', 1)[1]
+        if raw_id.isdigit():
+            image_id = int(raw_id)
+            if car.images.filter(pk=image_id).exists():
+                return image_id
+        return None
+    if choice.startswith('new:'):
+        raw_idx = choice.split(':', 1)[1]
+        if raw_idx.isdigit():
+            idx = int(raw_idx)
+            if 0 <= idx < len(created_images):
+                return created_images[idx].pk
+        return None
+    return None
+
+
+def _save_car_images_with_primary(request, car):
+    files = [f for f in request.FILES.getlist('images') if f]
+    created_images = []
+    for f in files:
+        created_images.append(
+            CarImage.objects.create(
+                car=car,
+                image=f,
+                is_primary=False,
+            )
+        )
+
+    selected_primary_id = _resolve_primary_image_id(
+        request.POST.get('primary_image_choice'),
+        car,
+        created_images,
+    )
+    if selected_primary_id:
+        CarImage.objects.filter(car_id=car.pk).update(is_primary=False)
+        CarImage.objects.filter(car_id=car.pk, pk=selected_primary_id).update(is_primary=True)
+        return
+
+    if not car.images.filter(is_primary=True).exists():
+        first = CarImage.objects.filter(car_id=car.pk).order_by('id').first()
+        if first:
+            CarImage.objects.filter(car_id=car.pk).update(is_primary=False)
+            CarImage.objects.filter(pk=first.pk).update(is_primary=True)
+
 # Force username/password auth to ModelBackend (avoids ambiguity with allauth backends).
 _MODEL_BACKEND = 'django.contrib.auth.backends.ModelBackend'
 
@@ -380,18 +430,7 @@ class CarCreateView(StaffRequiredMixin, AdminPanelContextMixin, CreateView):
         return response
 
     def _save_images(self, car):
-        files = self.request.FILES.getlist('images')
-        has_primary = car.images.filter(is_primary=True).exists()
-        first_new = True
-        for f in files:
-            if not f:
-                continue
-            CarImage.objects.create(
-                car=car,
-                image=f,
-                is_primary=not has_primary and first_new,
-            )
-            first_new = False
+        _save_car_images_with_primary(self.request, car)
 
 
 class CarUpdateView(StaffRequiredMixin, AdminPanelContextMixin, UpdateView):
@@ -430,20 +469,7 @@ class CarUpdateView(StaffRequiredMixin, AdminPanelContextMixin, UpdateView):
         return response
 
     def _save_images(self, car):
-        files = self.request.FILES.getlist('images')
-        if not files:
-            return
-        has_primary = car.images.filter(is_primary=True).exists()
-        first_new = True
-        for f in files:
-            if not f:
-                continue
-            CarImage.objects.create(
-                car=car,
-                image=f,
-                is_primary=not has_primary and first_new,
-            )
-            first_new = False
+        _save_car_images_with_primary(self.request, car)
 
 
 class CarImageDeleteView(StaffRequiredMixin, View):
