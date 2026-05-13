@@ -1,0 +1,197 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}Admin{% endblock %} · Radhe Auto</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter+Tight:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="{% static 'css/admin-panel-shell.css' %}">
+    {% block extra_css %}{% endblock %}
+</head>
+<body>
+    <div id="ap-sidebar-backdrop" class="ap-sidebar-backdrop" aria-hidden="true"></div>
+    <div class="app">
+        <aside id="ap-sidebar" class="sidebar">
+            <div class="brand">
+                <img src="{% static 'images/radhe-auto-logo.png' %}" alt="Radhe Auto" class="brand-logo" width="120" height="28" decoding="async">
+                <div class="brand-text">
+                    <span class="brand-sub">Staff panel</span>
+                </div>
+                <button type="button" id="ap-sidebar-close" class="sidebar-close" aria-label="Close menu">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M18 6 6 18M6 6l12 12"/></svg>
+                </button>
+            </div>
+
+            <div class="nav-section">Workspace</div>
+            <nav class="nav" aria-label="Admin navigation">
+                {% with n=request.resolver_match.url_name %}
+                <a href="{% url 'admin_panel:dashboard' %}" class="nav-item{% if n == 'shell_preview' or n == 'dashboard' %} active{% endif %}">
+                    <span class="label">Dashboard</span>
+                </a>
+                <a href="{% url 'admin_panel:car_list' %}" class="nav-item{% if n == 'car_list' or n == 'car_add' or n == 'car_edit' or n == 'car_delete' or n == 'car_bulk_delete' %} active{% endif %}">
+                    <span class="label">Cars</span>
+                </a>
+                <a href="{% url 'admin_panel:brand_list' %}" class="nav-item{% if 'brand' in n %} active{% endif %}">
+                    <span class="label">Brands</span>
+                </a>
+                <a href="{% url 'admin_panel:carmodel_list' %}" class="nav-item{% if 'carmodel' in n %} active{% endif %}">
+                    <span class="label">Models</span>
+                </a>
+                <a href="{% url 'admin_panel:customer_list' %}" class="nav-item{% if n == 'customer_list' %} active{% endif %}">
+                    <span class="label">Customers</span>
+                </a>
+                <a href="{% url 'admin_panel:wishlist_list' %}" class="nav-item{% if n == 'wishlist_list' %} active{% endif %}">
+                    <span class="label">Wishlist</span>
+                </a>
+                <a href="{% url 'admin_panel:inquiry_list' %}" class="nav-item{% if n|slice:':8' == 'inquiry_' %} active{% endif %}">
+                    <span class="label">Buy car inquiries</span>
+                    <span id="nav-inquiry-badge" class="count count-inquiry{% if not unread_inquiry_count %} is-hidden{% endif %}">{{ unread_inquiry_count|default:0 }}</span>
+                </a>
+                <a href="{% url 'admin_panel:sell_car_inquiry_list' %}" class="nav-item{% if 'sell_car_inquiry' in n %} active{% endif %}">
+                    <span class="label">Sell car inquiries</span>
+                    <span id="nav-sell-badge" class="count count-sell{% if not sell_inquiry_unread_count %} is-hidden{% endif %}">{{ sell_inquiry_unread_count|default:0 }}</span>
+                </a>
+                <a href="{% url 'admin_panel:csv_import' %}" class="nav-item{% if 'csv' in n %} active{% endif %}">
+                    <span class="label">CSV Import</span>
+                </a>
+                {% endwith %}
+            </nav>
+
+            <div class="sidebar-foot">
+                <div class="avatar" aria-hidden="true">{{ request.user.get_username|slice:":1"|upper }}</div>
+                <div class="who">
+                    <span class="who-name">{{ request.user.get_full_name|default:request.user.username }}</span>
+                    <span class="who-role">Staff</span>
+                </div>
+                <form method="post" action="{% url 'admin_panel:logout' %}" id="ap-logout-form">
+                    {% csrf_token %}
+                    <button type="submit" class="logout-btn" title="Logout" aria-label="Logout">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" aria-hidden="true"><path d="M14 8V5.5A1.5 1.5 0 0 0 12.5 4h-7A1.5 1.5 0 0 0 4 5.5v13A1.5 1.5 0 0 0 5.5 20h7A1.5 1.5 0 0 0 14 18.5V16"/><path d="M9 12h11M17 9l3 3-3 3"/></svg>
+                    </button>
+                </form>
+            </div>
+        </aside>
+
+        <div class="main">
+            <header class="topbar">
+                <button type="button" id="ap-menu-open" class="menu-open" aria-label="Open menu" aria-expanded="false" aria-controls="ap-sidebar">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M4 6h16M4 12h16M4 18h16"/></svg>
+                </button>
+                <div class="crumbs">
+                    <span>Radhe Auto</span>
+                    <span class="sep" aria-hidden="true">›</span>
+                    <span class="cur">{% block heading %}Dashboard{% endblock %}</span>
+                </div>
+                <div class="top-actions">
+                    <a href="{% url 'home' %}" class="btn-view-site">View site</a>
+                </div>
+            </header>
+
+            {% if messages %}
+            <div class="ap-messages">
+                {% for message in messages %}
+                <div class="ap-message {% if message.tags == 'success' %}success{% elif message.tags == 'error' %}error{% elif message.tags == 'warning' %}warning{% else %}info{% endif %}">{{ message }}</div>
+                {% endfor %}
+            </div>
+            {% endif %}
+
+            <main class="page">
+                {% block content %}{% endblock %}
+            </main>
+        </div>
+    </div>
+
+    <script>
+    (function(){
+        var pollTimer = null;
+        var POLL_MS = 30000;
+
+        function pollUnread(){
+            if (document.visibilityState === 'hidden') return;
+            fetch('{% url "admin_panel:api_unread_count" %}', { credentials: 'same-origin', headers: { 'Accept': 'application/json' }})
+                .then(function(r){ return r.json(); })
+                .then(function(d){
+                    var n = (typeof d.inquiries === 'number' ? d.inquiries : d.count) || 0;
+                    var el = document.getElementById('nav-inquiry-badge');
+                    if (el) {
+                        el.textContent = n;
+                        el.classList.toggle('is-hidden', n === 0);
+                    }
+                    var s = (typeof d.sell_inquiries === 'number' ? d.sell_inquiries : 0) || 0;
+                    var sellEl = document.getElementById('nav-sell-badge');
+                    if (sellEl) {
+                        sellEl.textContent = s;
+                        sellEl.classList.toggle('is-hidden', s === 0);
+                    }
+                }).catch(function(){});
+        }
+
+        function schedulePoll() {
+            clearInterval(pollTimer);
+            pollTimer = setInterval(pollUnread, POLL_MS);
+        }
+
+        document.addEventListener('visibilitychange', function () {
+            if (document.visibilityState === 'visible') {
+                pollUnread();
+                schedulePoll();
+            }
+        });
+
+        pollUnread();
+        schedulePoll();
+    })();
+    (function () {
+        var sidebar = document.getElementById('ap-sidebar');
+        var backdrop = document.getElementById('ap-sidebar-backdrop');
+        var openBtn = document.getElementById('ap-menu-open');
+        var closeBtn = document.getElementById('ap-sidebar-close');
+        if (!sidebar || !backdrop) return;
+
+        function isMobile() {
+            return window.matchMedia('(max-width: 767.98px)').matches;
+        }
+
+        function setNavOpen(open) {
+            if (open) {
+                sidebar.classList.add('is-open');
+                backdrop.classList.add('is-open');
+                document.body.classList.add('overflow-hidden');
+                if (openBtn) openBtn.setAttribute('aria-expanded', 'true');
+            } else {
+                sidebar.classList.remove('is-open');
+                backdrop.classList.remove('is-open');
+                document.body.classList.remove('overflow-hidden');
+                if (openBtn) openBtn.setAttribute('aria-expanded', 'false');
+            }
+        }
+
+        if (openBtn) openBtn.addEventListener('click', function () { setNavOpen(true); });
+        if (closeBtn) closeBtn.addEventListener('click', function () { setNavOpen(false); });
+        backdrop.addEventListener('click', function () { setNavOpen(false); });
+        document.addEventListener('keydown', function (e) {
+            if (e.key === 'Escape') setNavOpen(false);
+        });
+        window.addEventListener('resize', function () {
+            if (!isMobile()) setNavOpen(false);
+        });
+
+        sidebar.querySelectorAll('nav a[href]').forEach(function (a) {
+            a.addEventListener('click', function () {
+                if (isMobile()) setNavOpen(false);
+            });
+        });
+        var logoutForm = document.getElementById('ap-logout-form');
+        if (logoutForm) {
+            logoutForm.addEventListener('submit', function () {
+                if (isMobile()) setNavOpen(false);
+            });
+        }
+    })();
+    </script>
+    {% block extra_js %}{% endblock %}
+</body>
+</html>

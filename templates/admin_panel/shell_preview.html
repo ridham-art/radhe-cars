@@ -1,0 +1,14 @@
+{% extends "admin_panel/base_new.html" %}
+{% block title %}UI preview{% endblock %}
+{% block heading %}UI preview{% endblock %}
+{% block content %}
+<div style="background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 24px; box-shadow: var(--shadow-sm);">
+    <h2 style="margin: 0 0 8px; font-size: 18px; font-weight: 700; color: var(--text);">New admin shell</h2>
+    <p style="margin: 0 0 16px; color: var(--text-muted); font-size: 14px;">
+        Session 1 layout preview. The sidebar and top bar use the new design; page content will be migrated in later sessions.
+    </p>
+    <p style="margin: 0; color: var(--text-faint); font-size: 13px;">
+        Use the sidebar to jump to existing admin pages (they still use the old UI until each page is migrated).
+    </p>
+</div>
+{% endblock %}

@@ -1,0 +1,3236 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<title>AutoVault — Admin</title>
+<meta name="viewport" content="width=1440" />
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Inter+Tight:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet" />
+<style>
+  :root {
+    --sidebar-bg: #0f1419;
+    --sidebar-bg-2: #161c24;
+    --sidebar-border: #1f2730;
+    --sidebar-text: #8a96a3;
+    --sidebar-text-strong: #e6ebf2;
+    --sidebar-active: #1c2430;
+    --sidebar-accent: #6ea8ff;
+
+    --bg: #f4f5f7;
+    --surface: #ffffff;
+    --surface-2: #fafbfc;
+    --border: #e6e8ec;
+    --border-strong: #d6d9df;
+    --text: #1a1f29;
+    --text-muted: #6b7280;
+    --text-faint: #97a0ad;
+
+    --green: #0f9d58;
+    --green-soft: #e6f4ec;
+    --blue: #2563eb;
+    --blue-soft: #e6efff;
+    --amber: #c8881a;
+    --amber-soft: #fbf1de;
+    --red: #c0392b;
+    --red-soft: #fbe9e6;
+    --violet: #6d4aff;
+
+    --radius: 10px;
+    --radius-sm: 6px;
+    --shadow-sm: 0 1px 2px rgba(15, 20, 25, 0.04);
+    --shadow: 0 1px 3px rgba(15, 20, 25, 0.06), 0 1px 2px rgba(15, 20, 25, 0.04);
+  }
+
+  * { box-sizing: border-box; }
+  html, body {
+    margin: 0;
+    padding: 0;
+    background: var(--bg);
+    color: var(--text);
+    font-family: "Inter Tight", -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    font-size: 14px;
+    line-height: 1.45;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  .app {
+    display: grid;
+    grid-template-columns: 248px 1fr;
+    min-height: 100vh;
+  }
+
+  /* ---------------- SIDEBAR ---------------- */
+  .sidebar {
+    background: var(--sidebar-bg);
+    border-right: 1px solid var(--sidebar-border);
+    color: var(--sidebar-text);
+    display: flex;
+    flex-direction: column;
+    position: sticky;
+    top: 0;
+    height: 100vh;
+  }
+
+  .brand {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 22px 20px 22px 20px;
+    border-bottom: 1px solid var(--sidebar-border);
+  }
+  .brand-mark {
+    width: 32px;
+    height: 32px;
+    border-radius: 8px;
+    background: linear-gradient(135deg, #2a3441 0%, #1a2230 100%);
+    display: grid;
+    place-items: center;
+    color: var(--sidebar-accent);
+    border: 1px solid #2a3441;
+  }
+  .brand-name {
+    color: var(--sidebar-text-strong);
+    font-weight: 700;
+    font-size: 16px;
+    letter-spacing: -0.01em;
+  }
+  .brand-sub {
+    display: block;
+    font-size: 10.5px;
+    font-weight: 500;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: #5b6776;
+    margin-top: 1px;
+  }
+
+  .nav-section {
+    padding: 18px 12px 8px;
+    font-size: 10.5px;
+    font-weight: 600;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: #4d5764;
+  }
+
+  .nav {
+    flex: 1;
+    overflow-y: auto;
+    padding: 4px 12px;
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+  }
+  .nav-item {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 10px 12px;
+    border-radius: 8px;
+    color: var(--sidebar-text);
+    cursor: pointer;
+    font-weight: 500;
+    font-size: 13.5px;
+    user-select: none;
+    border: 1px solid transparent;
+    transition: background 0.12s ease, color 0.12s ease;
+  }
+  .nav-item:hover {
+    background: #141a22;
+    color: var(--sidebar-text-strong);
+  }
+  .nav-item.active {
+    background: var(--sidebar-active);
+    color: var(--sidebar-text-strong);
+    border-color: #232c39;
+    box-shadow: inset 2px 0 0 var(--sidebar-accent);
+  }
+  .nav-item > span:not(.icon):not(.count) { white-space: nowrap; }
+  .nav-item .icon {
+    width: 18px;
+    height: 18px;
+    display: grid;
+    place-items: center;
+    color: currentColor;
+    opacity: 0.85;
+  }
+  .nav-item.active .icon { opacity: 1; }
+  .nav-item .count {
+    margin-left: auto;
+    background: #232c39;
+    color: #cdd6e0;
+    font-size: 11px;
+    font-weight: 600;
+    padding: 2px 7px;
+    border-radius: 999px;
+    font-variant-numeric: tabular-nums;
+  }
+  .nav-item.active .count {
+    background: var(--sidebar-accent);
+    color: #0f1419;
+  }
+
+  .sidebar-foot {
+    border-top: 1px solid var(--sidebar-border);
+    padding: 12px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+  .avatar {
+    width: 34px;
+    height: 34px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, #4a5568, #2d3748);
+    color: #fff;
+    display: grid;
+    place-items: center;
+    font-weight: 600;
+    font-size: 12.5px;
+    letter-spacing: 0.02em;
+  }
+  .who { display: flex; flex-direction: column; line-height: 1.15; }
+  .who-name { color: var(--sidebar-text-strong); font-weight: 600; font-size: 13px; }
+  .who-role { color: #5b6776; font-size: 11.5px; }
+  .logout {
+    margin-left: auto;
+    width: 32px;
+    height: 32px;
+    border-radius: 8px;
+    display: grid;
+    place-items: center;
+    color: #6b7787;
+    cursor: pointer;
+  }
+  .logout:hover { color: var(--sidebar-text-strong); background: #141a22; }
+
+  /* ---------------- MAIN ---------------- */
+  .main {
+    display: flex;
+    flex-direction: column;
+    min-width: 0;
+  }
+
+  .topbar {
+    height: 64px;
+    background: var(--surface);
+    border-bottom: 1px solid var(--border);
+    display: flex;
+    align-items: center;
+    padding: 0 28px;
+    gap: 20px;
+    position: sticky;
+    top: 0;
+    z-index: 5;
+  }
+  .crumbs {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    color: var(--text-muted);
+    font-size: 13px;
+  }
+  .crumbs .sep { color: var(--text-faint); }
+  .crumbs .cur { color: var(--text); font-weight: 600; }
+
+  .search {
+    margin-left: 16px;
+    flex: 1;
+    max-width: 380px;
+    position: relative;
+  }
+  .search input {
+    width: 100%;
+    height: 36px;
+    border-radius: 8px;
+    border: 1px solid var(--border);
+    background: var(--surface-2);
+    padding: 0 12px 0 36px;
+    font: inherit;
+    color: var(--text);
+    outline: none;
+  }
+  .search input:focus { border-color: #c5cbd4; background: #fff; }
+  .search svg {
+    position: absolute;
+    left: 11px;
+    top: 50%;
+    transform: translateY(-50%);
+    color: var(--text-faint);
+  }
+
+  .top-actions { margin-left: auto; display: flex; align-items: center; gap: 8px; }
+  .icon-btn {
+    width: 36px;
+    height: 36px;
+    border-radius: 8px;
+    border: 1px solid var(--border);
+    background: var(--surface);
+    display: grid;
+    place-items: center;
+    color: var(--text-muted);
+    cursor: pointer;
+    position: relative;
+  }
+  .icon-btn:hover { color: var(--text); border-color: var(--border-strong); }
+  .icon-btn .dot {
+    position: absolute;
+    top: 7px;
+    right: 8px;
+    width: 7px;
+    height: 7px;
+    border-radius: 50%;
+    background: var(--red);
+    border: 2px solid var(--surface);
+  }
+  .btn-primary {
+    height: 36px;
+    padding: 0 14px;
+    border-radius: 8px;
+    background: #1a1f29;
+    color: #fff;
+    border: 1px solid #1a1f29;
+    font: 600 13px "Inter Tight", sans-serif;
+    display: inline-flex;
+    align-items: center;
+    gap: 7px;
+    cursor: pointer;
+    white-space: nowrap;
+  }
+  .btn-primary:hover { background: #2a3441; border-color: #2a3441; }
+
+  /* ---------------- PAGE ---------------- */
+  .page {
+    padding: 28px;
+    display: flex;
+    flex-direction: column;
+    gap: 24px;
+  }
+
+  .page-head { display: flex; align-items: flex-end; justify-content: space-between; }
+  .page-head h1 {
+    margin: 0;
+    font-size: 22px;
+    font-weight: 700;
+    letter-spacing: -0.015em;
+    color: var(--text);
+  }
+  .page-head .sub {
+    color: var(--text-muted);
+    font-size: 13px;
+    margin-top: 4px;
+  }
+  .range-toggle {
+    display: inline-flex;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 3px;
+    gap: 2px;
+  }
+  .range-toggle button {
+    border: none;
+    background: transparent;
+    color: var(--text-muted);
+    font: 500 12.5px "Inter Tight", sans-serif;
+    padding: 6px 12px;
+    border-radius: 6px;
+    cursor: pointer;
+  }
+  .range-toggle button.on {
+    background: #1a1f29;
+    color: #fff;
+  }
+
+  /* Stat cards */
+  .stats {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 16px;
+  }
+  .stat {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 18px 20px;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    position: relative;
+    box-shadow: var(--shadow-sm);
+  }
+  .stat-head {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+  .stat-ic {
+    width: 36px;
+    height: 36px;
+    border-radius: 9px;
+    display: grid;
+    place-items: center;
+    background: #f1f2f5;
+    color: #475063;
+  }
+  .stat.green  .stat-ic { background: var(--green-soft);  color: var(--green); }
+  .stat.blue   .stat-ic { background: var(--blue-soft);   color: var(--blue); }
+  .stat.amber  .stat-ic { background: var(--amber-soft);  color: var(--amber); }
+
+  .stat-label { color: var(--text-muted); font-size: 12.5px; font-weight: 500; }
+  .stat-value {
+    font-size: 30px;
+    font-weight: 700;
+    letter-spacing: -0.02em;
+    line-height: 1.05;
+    font-variant-numeric: tabular-nums;
+  }
+  .stat-foot {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 12px;
+    color: var(--text-muted);
+  }
+  .delta {
+    font-weight: 600;
+    font-size: 12px;
+    display: inline-flex;
+    align-items: center;
+    gap: 3px;
+    padding: 2px 7px;
+    border-radius: 999px;
+    font-variant-numeric: tabular-nums;
+  }
+  .delta.up { color: var(--green); background: var(--green-soft); }
+  .delta.down { color: var(--red); background: var(--red-soft); }
+  .delta.flat { color: var(--text-muted); background: #f1f2f5; }
+
+  /* Charts row */
+  .grid-2 {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 16px;
+  }
+  .card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    box-shadow: var(--shadow-sm);
+    display: flex;
+    flex-direction: column;
+  }
+  .card-head {
+    padding: 18px 20px 14px;
+    border-bottom: 1px solid var(--border);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 16px;
+  }
+  .card-title {
+    font-size: 15px;
+    font-weight: 600;
+    letter-spacing: -0.01em;
+  }
+  .card-sub { color: var(--text-muted); font-size: 12.5px; margin-top: 2px; }
+  .card-body { padding: 16px 20px 20px; }
+  .pill-toggle {
+    display: inline-flex;
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 2px;
+    gap: 2px;
+    background: var(--surface-2);
+  }
+  .pill-toggle button {
+    border: none;
+    background: transparent;
+    color: var(--text-muted);
+    font: 500 12px "Inter Tight", sans-serif;
+    padding: 5px 10px;
+    border-radius: 6px;
+    cursor: pointer;
+  }
+  .pill-toggle button.on { background: var(--surface); color: var(--text); box-shadow: var(--shadow-sm); }
+
+  /* Donut legend */
+  .donut-wrap {
+    display: grid;
+    grid-template-columns: 220px 1fr;
+    gap: 24px;
+    align-items: center;
+  }
+  .donut-legend {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+  }
+  .legend-row {
+    display: grid;
+    grid-template-columns: 12px 1fr auto auto;
+    gap: 10px;
+    align-items: center;
+    padding: 8px 4px;
+    border-bottom: 1px dashed var(--border);
+    font-size: 13px;
+  }
+  .legend-row:last-child { border-bottom: none; }
+  .legend-sw { width: 10px; height: 10px; border-radius: 3px; }
+  .legend-name { color: var(--text); font-weight: 500; }
+  .legend-val { color: var(--text-muted); font-variant-numeric: tabular-nums; }
+  .legend-pct { color: var(--text); font-weight: 600; font-variant-numeric: tabular-nums; min-width: 38px; text-align: right; }
+
+  /* Bottom row */
+  .grid-tables {
+    display: grid;
+    grid-template-columns: 60fr 40fr;
+    gap: 16px;
+  }
+
+  /* Tables */
+  table.tbl {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 13px;
+  }
+  .tbl thead th {
+    text-align: left;
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    color: var(--text-faint);
+    padding: 10px 20px;
+    border-bottom: 1px solid var(--border);
+    background: var(--surface-2);
+  }
+  .tbl tbody td {
+    padding: 14px 20px;
+    border-bottom: 1px solid var(--border);
+    vertical-align: middle;
+  }
+  .tbl tbody tr:last-child td { border-bottom: none; }
+  .tbl tbody tr:hover { background: #fafbfc; }
+
+  .car-cell { display: flex; align-items: center; gap: 12px; }
+  .car-thumb {
+    width: 42px;
+    height: 32px;
+    border-radius: 6px;
+    background: linear-gradient(135deg, #eef0f3 0%, #e1e4ea 100%);
+    display: grid;
+    place-items: center;
+    color: #8b95a4;
+    flex-shrink: 0;
+    border: 1px solid #e1e4ea;
+  }
+  .car-name { font-weight: 600; color: var(--text); }
+  .car-meta { color: var(--text-muted); font-size: 11.5px; font-family: "JetBrains Mono", monospace; }
+
+  .badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 3px 9px;
+    border-radius: 999px;
+    font-size: 11.5px;
+    font-weight: 600;
+    letter-spacing: 0.01em;
+  }
+  .badge::before {
+    content: "";
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background: currentColor;
+  }
+  .badge.live    { color: var(--green); background: var(--green-soft); }
+  .badge.sold    { color: var(--blue);  background: var(--blue-soft); }
+  .badge.review  { color: var(--amber); background: var(--amber-soft); }
+  .badge.draft   { color: #5b6776; background: #eef0f3; }
+  .badge.hold    { color: var(--red); background: var(--red-soft); }
+
+  .tbl-foot {
+    padding: 12px 20px;
+    border-top: 1px solid var(--border);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    color: var(--text-muted);
+    font-size: 12.5px;
+    background: var(--surface-2);
+  }
+  .link {
+    color: var(--blue);
+    font-weight: 600;
+    text-decoration: none;
+    font-size: 12.5px;
+  }
+  .link:hover { text-decoration: underline; }
+
+  .seller { display: flex; flex-direction: column; line-height: 1.25; }
+  .seller-name { font-weight: 500; color: var(--text); }
+  .seller-loc { color: var(--text-muted); font-size: 11.5px; }
+
+  .num { font-variant-numeric: tabular-nums; }
+
+  .btn-ghost {
+    border: 1px solid var(--border);
+    background: var(--surface);
+    color: var(--text);
+    font: 600 12px "Inter Tight", sans-serif;
+    padding: 6px 11px;
+    border-radius: 7px;
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    white-space: nowrap;
+  }
+  .btn-ghost:hover { border-color: var(--border-strong); background: var(--surface-2); }
+  .btn-ghost.primary {
+    background: #1a1f29;
+    color: #fff;
+    border-color: #1a1f29;
+  }
+  .btn-ghost.primary:hover { background: #2a3441; }
+
+  .row-actions { display: inline-flex; gap: 6px; }
+
+  /* Tooltip override */
+  .recharts-tooltip-wrapper { outline: none; }
+  .rc-tip {
+    background: #1a1f29;
+    color: #fff;
+    border-radius: 8px;
+    padding: 8px 11px;
+    font-size: 12px;
+    border: 1px solid #2a3441;
+    box-shadow: 0 6px 24px rgba(15,20,25,0.18);
+  }
+  .rc-tip .k { color: #97a0ad; margin-right: 8px; }
+  .rc-tip .v { font-weight: 600; font-variant-numeric: tabular-nums; }
+
+  /* Empty-state placeholder for non-dashboard pages */
+  .placeholder {
+    border: 1px dashed var(--border-strong);
+    border-radius: var(--radius);
+    background:
+      repeating-linear-gradient(
+        135deg,
+        #fbfbfc 0 12px,
+        #f4f5f7 12px 24px
+      );
+    padding: 80px 40px;
+    text-align: center;
+    color: var(--text-muted);
+  }
+  .placeholder h3 { margin: 0 0 6px; color: var(--text); font-size: 18px; }
+
+  /* Scrollbar polish */
+  .nav::-webkit-scrollbar { width: 6px; }
+  .nav::-webkit-scrollbar-thumb { background: #1f2730; border-radius: 3px; }
+
+  /* ---------------- Sub-tabs ---------------- */
+  .subtabs {
+    display: inline-flex;
+    gap: 4px;
+    border-bottom: 1px solid var(--border);
+    width: 100%;
+    padding: 0;
+  }
+  .subtab {
+    border: none;
+    background: transparent;
+    color: var(--text-muted);
+    font: 600 13.5px "Inter Tight", sans-serif;
+    padding: 12px 4px;
+    margin-right: 22px;
+    cursor: pointer;
+    position: relative;
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    letter-spacing: -0.005em;
+  }
+  .subtab:hover { color: var(--text); }
+  .subtab.on { color: var(--text); }
+  .subtab.on::after {
+    content: "";
+    position: absolute;
+    left: 0; right: 0; bottom: -1px;
+    height: 2px;
+    background: #1a1f29;
+    border-radius: 2px 2px 0 0;
+  }
+  .subtab .tab-count {
+    background: #eef0f3;
+    color: var(--text-muted);
+    font-size: 11px;
+    font-weight: 700;
+    padding: 1px 7px;
+    border-radius: 999px;
+    font-variant-numeric: tabular-nums;
+  }
+  .subtab.on .tab-count { background: #1a1f29; color: #fff; }
+  .subtab.warn .tab-count { background: var(--amber-soft); color: var(--amber); }
+  .subtab.on.warn .tab-count { background: var(--amber); color: #fff; }
+
+  /* ---------------- Filter bar ---------------- */
+  .filterbar {
+    display: grid;
+    grid-template-columns: 1fr auto auto auto auto;
+    gap: 10px;
+    align-items: center;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 10px;
+  }
+  .filterbar .search-wrap {
+    position: relative;
+  }
+  .filterbar .search-wrap svg {
+    position: absolute; left: 11px; top: 50%; transform: translateY(-50%);
+    color: var(--text-faint);
+  }
+  .filterbar input.search-i {
+    width: 100%; height: 38px; border-radius: 8px;
+    border: 1px solid var(--border);
+    background: var(--surface-2);
+    padding: 0 12px 0 36px; font: inherit; color: var(--text); outline: none;
+  }
+  .filterbar input.search-i:focus { background: #fff; border-color: var(--border-strong); }
+  .select {
+    height: 38px;
+    border-radius: 8px;
+    border: 1px solid var(--border);
+    background: var(--surface-2);
+    padding: 0 32px 0 12px;
+    font: 500 13px "Inter Tight", sans-serif;
+    color: var(--text);
+    appearance: none;
+    -webkit-appearance: none;
+    background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%236b7280' stroke-width='2.2' stroke-linecap='round' stroke-linejoin='round'><path d='M6 9l6 6 6-6'/></svg>");
+    background-repeat: no-repeat;
+    background-position: right 10px center;
+    cursor: pointer;
+    min-width: 140px;
+  }
+  .select:hover { border-color: var(--border-strong); }
+
+  /* ---------------- Inventory cards ---------------- */
+  .inv-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 16px;
+  }
+  .inv-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+    box-shadow: var(--shadow-sm);
+    transition: border-color 0.12s ease, box-shadow 0.12s ease, transform 0.12s ease;
+  }
+  .inv-card:hover {
+    border-color: var(--border-strong);
+    box-shadow: 0 4px 14px rgba(15,20,25,0.06);
+  }
+  .inv-img {
+    aspect-ratio: 16 / 10;
+    background:
+      linear-gradient(135deg, #eef0f3 0%, #dde1e7 100%);
+    position: relative;
+    display: grid;
+    place-items: center;
+    color: #8b95a4;
+    border-bottom: 1px solid var(--border);
+  }
+  .inv-img::before {
+    content: "";
+    position: absolute; inset: 0;
+    background-image:
+      repeating-linear-gradient(45deg, rgba(255,255,255,0.5) 0 12px, transparent 12px 24px);
+    opacity: 0.45;
+  }
+  .inv-img > svg { position: relative; z-index: 1; opacity: 0.6; }
+  .inv-status {
+    position: absolute;
+    top: 10px; left: 10px;
+    z-index: 2;
+  }
+  .inv-seller-tag {
+    position: absolute;
+    top: 10px; right: 10px;
+    z-index: 2;
+    background: rgba(15,20,25,0.78);
+    color: #fff;
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: 0.02em;
+    padding: 4px 9px;
+    border-radius: 999px;
+    backdrop-filter: blur(4px);
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+  }
+  .inv-seller-tag.direct {
+    background: rgba(255,255,255,0.92);
+    color: #1a1f29;
+    border: 1px solid var(--border);
+  }
+  .inv-body {
+    padding: 14px 16px 16px;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    flex: 1;
+  }
+  .inv-title {
+    font-weight: 600;
+    font-size: 15px;
+    letter-spacing: -0.01em;
+    color: var(--text);
+  }
+  .inv-price {
+    font-size: 20px;
+    font-weight: 700;
+    letter-spacing: -0.015em;
+    font-variant-numeric: tabular-nums;
+    color: var(--text);
+  }
+  .inv-tags {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+  }
+  .inv-tag {
+    font-size: 11.5px;
+    color: var(--text-muted);
+    background: var(--surface-2);
+    border: 1px solid var(--border);
+    padding: 3px 8px;
+    border-radius: 6px;
+    font-weight: 500;
+  }
+  .inv-foot {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding-top: 10px;
+    border-top: 1px solid var(--border);
+    margin-top: auto;
+  }
+  .inv-meta {
+    font-size: 11.5px;
+    color: var(--text-faint);
+    font-family: "JetBrains Mono", monospace;
+  }
+  .inv-foot .btn-ghost { margin-left: auto; }
+
+  .badge.live { color: var(--green); background: var(--green-soft); }
+  .badge.sold-r { color: var(--red); background: var(--red-soft); }
+
+  /* ---------------- Requests table ---------------- */
+  .req-card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); box-shadow: var(--shadow-sm); }
+  .btn-approve {
+    background: var(--green); color: #fff; border: 1px solid var(--green);
+    font: 600 12.5px "Inter Tight", sans-serif;
+    padding: 7px 12px; border-radius: 7px; cursor: pointer;
+    display: inline-flex; align-items: center; gap: 6px;
+    white-space: nowrap;
+  }
+  .btn-approve:hover { background: #0c8a4d; }
+  .btn-reject {
+    background: #fff; color: var(--red); border: 1px solid #f1c8c2;
+    font: 600 12.5px "Inter Tight", sans-serif;
+    padding: 7px 12px; border-radius: 7px; cursor: pointer;
+    display: inline-flex; align-items: center; gap: 6px;
+    white-space: nowrap;
+  }
+  .btn-reject:hover { background: var(--red-soft); border-color: var(--red); }
+
+  .reason-cell {
+    color: var(--text-muted);
+    font-size: 12.5px;
+    max-width: 260px;
+  }
+  .reason-cell .why {
+    color: var(--text);
+    font-weight: 500;
+  }
+  .stamp {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 12.5px;
+    color: var(--text-muted);
+    font-variant-numeric: tabular-nums;
+  }
+  .stamp .dot-g { width: 7px; height: 7px; border-radius: 50%; background: var(--green); }
+  .stamp .dot-r { width: 7px; height: 7px; border-radius: 50%; background: var(--red); }
+
+  /* ---------------- Toast & Modal ---------------- */
+  .toast-wrap {
+    position: fixed;
+    bottom: 24px; right: 28px;
+    z-index: 100;
+    display: flex; flex-direction: column; gap: 8px;
+    pointer-events: none;
+  }
+  .toast {
+    background: #0f1419;
+    color: #fff;
+    border: 1px solid #2a3441;
+    padding: 12px 16px;
+    border-radius: 10px;
+    font-size: 13px;
+    font-weight: 500;
+    display: inline-flex;
+    align-items: center;
+    gap: 10px;
+    box-shadow: 0 10px 30px rgba(15,20,25,0.18);
+    min-width: 280px;
+    animation: toastIn 0.18s ease;
+  }
+  .toast .ic {
+    width: 22px; height: 22px; border-radius: 50%;
+    background: var(--green); color: #fff;
+    display: grid; place-items: center;
+  }
+  @keyframes toastIn { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
+
+  .modal-back {
+    position: fixed; inset: 0;
+    background: rgba(15,20,25,0.42);
+    backdrop-filter: blur(2px);
+    display: grid; place-items: center;
+    z-index: 200;
+    animation: fadeIn 0.12s ease;
+  }
+  @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+  .modal {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    width: 440px;
+    box-shadow: 0 20px 60px rgba(15,20,25,0.25);
+    overflow: hidden;
+  }
+  .modal-head {
+    padding: 18px 22px 6px;
+  }
+  .modal-head h3 {
+    margin: 0;
+    font-size: 16px;
+    font-weight: 700;
+    letter-spacing: -0.01em;
+  }
+  .modal-head .ms {
+    color: var(--text-muted);
+    font-size: 13px;
+    margin-top: 4px;
+  }
+  .modal-body { padding: 12px 22px 4px; }
+  .modal-body label {
+    display: block;
+    font-size: 12px;
+    font-weight: 600;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+    color: var(--text-faint);
+    margin-bottom: 6px;
+  }
+  .modal-body textarea {
+    width: 100%;
+    min-height: 90px;
+    resize: vertical;
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 10px 12px;
+    font: inherit;
+    color: var(--text);
+    background: var(--surface-2);
+    outline: none;
+  }
+  .modal-body textarea:focus { background: #fff; border-color: var(--border-strong); }
+  .modal-presets {
+    display: flex; flex-wrap: wrap; gap: 6px; margin-top: 10px;
+  }
+  .modal-presets button {
+    border: 1px solid var(--border);
+    background: var(--surface);
+    color: var(--text-muted);
+    font: 500 12px "Inter Tight", sans-serif;
+    padding: 5px 10px;
+    border-radius: 999px;
+    cursor: pointer;
+  }
+  .modal-presets button:hover { color: var(--text); border-color: var(--border-strong); }
+  .modal-foot {
+    padding: 14px 22px 18px;
+    display: flex; justify-content: flex-end; gap: 8px;
+    border-top: 1px solid var(--border);
+    margin-top: 14px;
+    background: var(--surface-2);
+  }
+  .btn-danger {
+    background: var(--red); color: #fff; border: 1px solid var(--red);
+    font: 600 13px "Inter Tight", sans-serif;
+    padding: 8px 14px; border-radius: 8px; cursor: pointer;
+    white-space: nowrap;
+  }
+  .btn-danger:hover { background: #a82e22; }
+  .btn-danger:disabled { opacity: 0.5; cursor: not-allowed; }
+
+  /* result row count footer */
+  .result-count {
+    color: var(--text-muted);
+    font-size: 12.5px;
+    margin-top: 4px;
+  }
+
+  /* ---------------- Vehicle Master (3-column explorer) ---------------- */
+  .vm-grid {
+    display: grid;
+    grid-template-columns: 30fr 35fr 35fr;
+    gap: 16px;
+    min-height: 620px;
+  }
+  .vm-col {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    display: flex;
+    flex-direction: column;
+    box-shadow: var(--shadow-sm);
+    overflow: hidden;
+  }
+  .vm-col.disabled { opacity: 0.55; pointer-events: none; }
+  .vm-head {
+    padding: 14px 16px;
+    border-bottom: 1px solid var(--border);
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+  .vm-head .crumb {
+    font-size: 10.5px;
+    font-weight: 600;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--text-faint);
+    line-height: 1.1;
+  }
+  .vm-head .title {
+    font-size: 14.5px;
+    font-weight: 600;
+    letter-spacing: -0.005em;
+    line-height: 1.25;
+    color: var(--text);
+    max-width: 100%;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+  .vm-head .add-btn {
+    margin-left: auto;
+    border: 1px dashed var(--border-strong);
+    background: transparent;
+    color: var(--text);
+    font: 600 12px "Inter Tight", sans-serif;
+    padding: 6px 10px;
+    border-radius: 7px;
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    white-space: nowrap;
+  }
+  .vm-head .add-btn:hover { background: var(--surface-2); border-color: #1a1f29; color: #1a1f29; }
+  .vm-search {
+    padding: 10px 12px;
+    border-bottom: 1px solid var(--border);
+    background: var(--surface-2);
+    position: relative;
+  }
+  .vm-search input {
+    width: 100%;
+    height: 32px;
+    border-radius: 7px;
+    border: 1px solid var(--border);
+    background: var(--surface);
+    padding: 0 10px 0 30px;
+    font: 13px "Inter Tight", sans-serif;
+    color: var(--text);
+    outline: none;
+  }
+  .vm-search input:focus { border-color: var(--border-strong); }
+  .vm-search svg {
+    position: absolute;
+    left: 22px;
+    top: 50%;
+    transform: translateY(-50%);
+    color: var(--text-faint);
+  }
+  .vm-list {
+    flex: 1;
+    overflow-y: auto;
+    padding: 6px;
+  }
+  .vm-empty {
+    padding: 40px 24px;
+    text-align: center;
+    color: var(--text-faint);
+    font-size: 13px;
+    line-height: 1.5;
+  }
+  .vm-empty .ic {
+    width: 44px; height: 44px; border-radius: 10px;
+    background: var(--surface-2);
+    border: 1px dashed var(--border-strong);
+    display: grid; place-items: center;
+    margin: 0 auto 10px; color: var(--text-faint);
+  }
+  .vm-row {
+    display: grid;
+    grid-template-columns: 1fr auto auto;
+    gap: 10px;
+    align-items: center;
+    padding: 10px 12px;
+    border-radius: 8px;
+    cursor: pointer;
+    user-select: none;
+    border: 1px solid transparent;
+  }
+  .vm-row:hover {
+    background: var(--surface-2);
+  }
+  .vm-row:hover .vm-acts { opacity: 1; }
+  .vm-row.active {
+    background: #eef3fb;
+    border-color: #d6e2f5;
+  }
+  .vm-row.active .vm-name { color: #1a4ed1; }
+  .vm-name-wrap {
+    display: flex;
+    flex-direction: column;
+    gap: 3px;
+    min-width: 0;
+  }
+  .vm-name {
+    font-weight: 600;
+    font-size: 13.5px;
+    color: var(--text);
+    letter-spacing: -0.005em;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+  .vm-sub {
+    display: flex;
+    gap: 6px;
+    flex-wrap: wrap;
+  }
+  .vm-tag {
+    font-size: 10.5px;
+    font-weight: 600;
+    color: var(--text-muted);
+    background: var(--surface-2);
+    border: 1px solid var(--border);
+    padding: 1px 7px;
+    border-radius: 4px;
+    letter-spacing: 0.02em;
+  }
+  .vm-tag.fuel { color: #0b6f3f; background: #e6f4ec; border-color: #cfe6da; }
+  .vm-tag.fuel.diesel { color: #6b4a1a; background: #f5ecdc; border-color: #ead9b8; }
+  .vm-tag.fuel.cng { color: #185f8a; background: #e1eff7; border-color: #c2ddef; }
+  .vm-tag.fuel.electric { color: #4c2eb8; background: #ebe6fb; border-color: #d6cdf2; }
+  .vm-tag.trans { color: #475063; background: #eef0f3; border-color: #e1e4ea; }
+  .vm-count {
+    background: #eef0f3;
+    color: var(--text-muted);
+    font-size: 11px;
+    font-weight: 700;
+    padding: 1px 8px;
+    border-radius: 999px;
+    font-variant-numeric: tabular-nums;
+  }
+  .vm-row.active .vm-count { background: #1a4ed1; color: #fff; }
+  .vm-acts {
+    display: inline-flex;
+    gap: 2px;
+    opacity: 0;
+    transition: opacity 0.12s ease;
+  }
+  .vm-row.active .vm-acts { opacity: 1; }
+  .vm-icon-btn {
+    width: 28px; height: 28px;
+    border-radius: 6px;
+    border: none;
+    background: transparent;
+    color: var(--text-faint);
+    cursor: pointer;
+    display: grid; place-items: center;
+  }
+  .vm-icon-btn:hover { background: #fff; color: var(--text); box-shadow: var(--shadow-sm); }
+  .vm-icon-btn.danger:hover { color: var(--red); }
+
+  /* Modal form fields */
+  .field {
+    margin-top: 14px;
+  }
+  .field label {
+    display: block;
+    font-size: 12px;
+    font-weight: 600;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+    color: var(--text-faint);
+    margin-bottom: 6px;
+  }
+  .field input[type=text], .field select {
+    width: 100%;
+    height: 38px;
+    border-radius: 8px;
+    border: 1px solid var(--border);
+    padding: 0 12px;
+    font: inherit;
+    color: var(--text);
+    background: var(--surface-2);
+    outline: none;
+  }
+  .field input[type=text]:focus, .field select:focus { background: #fff; border-color: var(--border-strong); }
+  .checkrow {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 8px;
+    margin-top: 4px;
+  }
+  .check {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 10px 12px;
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    background: var(--surface-2);
+    cursor: pointer;
+    font-size: 13px;
+    font-weight: 500;
+    user-select: none;
+  }
+  .check input { accent-color: #1a4ed1; width: 15px; height: 15px; cursor: pointer; }
+  .check.on { border-color: #1a4ed1; background: #eef3fb; color: #1a4ed1; }
+  .btn-confirm {
+    background: #1a1f29; color: #fff; border: 1px solid #1a1f29;
+    font: 600 13px "Inter Tight", sans-serif;
+    padding: 8px 14px; border-radius: 8px; cursor: pointer;
+    white-space: nowrap;
+  }
+  .btn-confirm:hover { background: #2a3441; }
+  .btn-confirm:disabled { opacity: 0.5; cursor: not-allowed; }
+
+  .vm-summary {
+    display: flex;
+    align-items: center;
+    gap: 18px;
+    color: var(--text-muted);
+    font-size: 12.5px;
+    margin-top: 4px;
+  }
+  .vm-summary .pill {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 3px 9px;
+    border-radius: 999px;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    font-weight: 600;
+    color: var(--text);
+    font-variant-numeric: tabular-nums;
+  }
+
+  /* ---------------- Drawer (Add Vehicle) ---------------- */
+  .drawer-back {
+    position: fixed; inset: 0;
+    background: rgba(15,20,25,0.42);
+    backdrop-filter: blur(2px);
+    z-index: 150;
+    animation: fadeIn 0.16s ease;
+  }
+  .drawer {
+    position: fixed;
+    top: 0; right: 0; bottom: 0;
+    width: 60%;
+    max-width: 880px;
+    min-width: 640px;
+    background: var(--surface);
+    border-left: 1px solid var(--border);
+    box-shadow: -20px 0 60px rgba(15,20,25,0.18);
+    z-index: 160;
+    display: flex;
+    flex-direction: column;
+    animation: drawerIn 0.22s cubic-bezier(.2,.7,.2,1);
+  }
+  @keyframes drawerIn {
+    from { transform: translateX(40px); opacity: 0; }
+    to   { transform: translateX(0); opacity: 1; }
+  }
+  .drawer-head {
+    padding: 18px 24px 16px;
+    border-bottom: 1px solid var(--border);
+    display: flex; align-items: flex-start; gap: 16px;
+  }
+  .drawer-head .title h2 { margin: 0; font-size: 18px; font-weight: 700; letter-spacing: -0.015em; }
+  .drawer-head .title .ms { color: var(--text-muted); font-size: 13px; margin-top: 4px; }
+  .drawer-close {
+    margin-left: auto;
+    width: 34px; height: 34px;
+    border-radius: 8px;
+    border: 1px solid var(--border);
+    background: var(--surface);
+    color: var(--text-muted);
+    cursor: pointer;
+    display: grid; place-items: center;
+  }
+  .drawer-close:hover { color: var(--text); border-color: var(--border-strong); }
+
+  .stepper {
+    padding: 18px 24px 8px;
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    background: var(--surface-2);
+    border-bottom: 1px solid var(--border);
+    position: relative;
+  }
+  .step { display: flex; flex-direction: column; align-items: center; gap: 7px; padding: 4px 12px 16px; position: relative; }
+  .step-circle {
+    width: 30px; height: 30px; border-radius: 50%;
+    background: #fff;
+    border: 2px solid var(--border-strong);
+    color: var(--text-faint);
+    font: 700 13px "Inter Tight", sans-serif;
+    display: grid; place-items: center;
+    font-variant-numeric: tabular-nums;
+    z-index: 2;
+  }
+  .step.done .step-circle  { background: #1a1f29; border-color: #1a1f29; color: #fff; }
+  .step.active .step-circle { background: #fff; border-color: #1a1f29; color: #1a1f29; box-shadow: 0 0 0 4px rgba(26,31,41,0.08); }
+  .step-label { font-size: 12px; font-weight: 600; color: var(--text-faint); letter-spacing: 0.02em; text-transform: uppercase; }
+  .step.active .step-label { color: var(--text); }
+  .step.done .step-label   { color: var(--text-muted); }
+  .step-sub { font-size: 12px; color: var(--text-muted); font-weight: 500; margin-top: -2px; text-align: center; }
+  .step-line { position: absolute; top: 23px; height: 2px; background: var(--border); z-index: 1; }
+  .step-line.l-mid  { left: calc(16.67% + 22px); right: calc(50%   + 22px); }
+  .step-line.l-rt   { left: calc(50%   + 22px); right: calc(16.67% + 22px); }
+  .step-line.on { background: #1a1f29; }
+
+  .drawer-body { flex: 1; overflow-y: auto; padding: 22px 24px 18px; }
+  .drawer-foot {
+    padding: 14px 24px;
+    border-top: 1px solid var(--border);
+    background: var(--surface-2);
+    display: flex; align-items: center; gap: 10px;
+  }
+  .drawer-foot .spacer { flex: 1; }
+  .drawer-foot .step-meta { color: var(--text-muted); font-size: 12.5px; font-variant-numeric: tabular-nums; }
+
+  .form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 14px 16px; }
+  .form-grid .full { grid-column: 1 / -1; }
+  .form-section-title {
+    font-size: 11.5px; font-weight: 700; letter-spacing: 0.1em;
+    text-transform: uppercase; color: var(--text-faint); margin: 6px 0 8px;
+  }
+  .ff label { display: block; font-size: 12px; font-weight: 600; color: var(--text); margin-bottom: 5px; }
+  .ff .req { color: var(--red); margin-left: 2px; }
+  .ff input[type=text], .ff input[type=number], .ff input[type=date], .ff select {
+    width: 100%; height: 38px; border-radius: 8px;
+    border: 1px solid var(--border);
+    padding: 0 12px;
+    font: 13.5px "Inter Tight", sans-serif;
+    color: var(--text); background: var(--surface-2);
+    outline: none; appearance: none; -webkit-appearance: none;
+  }
+  .ff select {
+    padding-right: 32px;
+    background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%236b7280' stroke-width='2.2' stroke-linecap='round' stroke-linejoin='round'><path d='M6 9l6 6 6-6'/></svg>");
+    background-repeat: no-repeat; background-position: right 10px center;
+  }
+  .ff input:focus, .ff select:focus { background: #fff; border-color: var(--border-strong); }
+  .ff input:disabled, .ff select:disabled { background: #f1f2f5; color: var(--text-faint); cursor: not-allowed; }
+  .ff.invalid input, .ff.invalid select { border-color: var(--red); background: #fff7f6; }
+  .ff .err { color: var(--red); font-size: 12px; font-weight: 500; margin-top: 5px; }
+  .ff .hint { color: var(--text-faint); font-size: 11.5px; margin-top: 4px; }
+  .ff .prefix-wrap { position: relative; }
+  .ff .prefix { position: absolute; left: 12px; top: 50%; transform: translateY(-50%); color: var(--text-muted); font-weight: 600; pointer-events: none; }
+  .ff .prefix-wrap input { padding-left: 26px; }
+
+  .dropzone {
+    border: 1.5px dashed var(--border-strong);
+    border-radius: 10px;
+    background: repeating-linear-gradient(135deg, #fbfbfc 0 12px, #f4f5f7 12px 24px);
+    padding: 28px 20px; text-align: center; color: var(--text-muted); cursor: pointer;
+    transition: border-color 0.12s ease, background 0.12s ease;
+  }
+  .dropzone:hover, .dropzone.dragging { border-color: #1a1f29; background: #f9fbff; }
+  .dropzone .dz-ic { width: 38px; height: 38px; border-radius: 10px; background: var(--surface); border: 1px solid var(--border); display: grid; place-items: center; margin: 0 auto 10px; color: var(--text); }
+  .dropzone .dz-title { color: var(--text); font-weight: 600; font-size: 13.5px; }
+  .dropzone .dz-sub { font-size: 12px; margin-top: 4px; }
+  .photo-strip { display: grid; grid-template-columns: repeat(5, 1fr); gap: 8px; margin-top: 10px; }
+  .photo-thumb { aspect-ratio: 4 / 3; border-radius: 7px; background: linear-gradient(135deg, #eef0f3, #dde1e7); border: 1px solid var(--border); position: relative; overflow: hidden; display: grid; place-items: center; color: #8b95a4; }
+  .photo-thumb img { width: 100%; height: 100%; object-fit: cover; display: block; }
+  .photo-thumb .x { position: absolute; top: 4px; right: 4px; width: 20px; height: 20px; background: rgba(15,20,25,0.7); color: #fff; border: none; border-radius: 50%; cursor: pointer; font-size: 12px; font-weight: 700; display: grid; place-items: center; line-height: 1; }
+  .photo-thumb .x:hover { background: var(--red); }
+  .photo-counter { font-size: 11.5px; color: var(--text-muted); margin-top: 8px; }
+
+  .review-section { border: 1px solid var(--border); border-radius: 10px; background: var(--surface-2); margin-bottom: 14px; overflow: hidden; }
+  .review-head { padding: 12px 16px; border-bottom: 1px solid var(--border); display: flex; align-items: center; background: var(--surface); }
+  .review-head .num { width: 22px; height: 22px; border-radius: 50%; background: #1a1f29; color: #fff; display: grid; place-items: center; font: 700 11px "Inter Tight", sans-serif; margin-right: 10px; font-variant-numeric: tabular-nums; }
+  .review-head .h { font-size: 13.5px; font-weight: 700; letter-spacing: -0.005em; }
+  .review-head .edit-link { margin-left: auto; color: var(--blue); font-size: 12.5px; font-weight: 600; cursor: pointer; }
+  .review-head .edit-link:hover { text-decoration: underline; }
+  .kv-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 1px; background: var(--border); }
+  .kv { background: var(--surface-2); padding: 10px 16px; }
+  .kv .k { font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.06em; color: var(--text-faint); margin-bottom: 2px; }
+  .kv .v { font-size: 13.5px; color: var(--text); font-weight: 500; font-variant-numeric: tabular-nums; }
+  .kv .v.muted { color: var(--text-faint); font-weight: 400; font-style: italic; }
+  .auto-tags { display: flex; gap: 8px; padding: 14px 16px; background: var(--surface); border-top: 1px solid var(--border); align-items: center; }
+  .auto-tags .lbl { font-size: 11.5px; color: var(--text-faint); font-weight: 600; text-transform: uppercase; letter-spacing: 0.06em; margin-right: 4px; }
+
+  @keyframes newCardPulse {
+    0%   { box-shadow: 0 0 0 4px rgba(15,157,88,0.45); border-color: var(--green); }
+    100% { box-shadow: 0 0 0 0 rgba(15,157,88,0); border-color: var(--border); }
+  }
+  .inv-card.is-new { animation: newCardPulse 1.6s ease-out; }
+</style>
+</head>
+<body>
+<div id="root"></div>
+
+<script>
+  // Silence Recharts 2.x defaultProps deprecation warnings (library-internal, not actionable)
+  (function(){
+    const _err = console.error;
+    console.error = function(){
+      const a = arguments[0];
+      if (typeof a === "string" && a.indexOf("Support for defaultProps will be removed") !== -1) return;
+      return _err.apply(console, arguments);
+    };
+  })();
+</script>
+<script src="https://unpkg.com/react@18.3.1/umd/react.development.js" integrity="sha384-hD6/rw4ppMLGNu3tX5cjIb+uRZ7UkRJ6BPkLpg4hAu/6onKUg4lLsHAs9EBPT82L" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.development.js" integrity="sha384-u6aeetuaXnQ38mYT8rp6sbXaQe3NL9t+IBXmnYxwkUI2Hw4bsp2Wvmx4yRQF1uAm" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/prop-types@15.8.1/prop-types.min.js"></script>
+<script src="https://unpkg.com/recharts@2.12.7/umd/Recharts.js"></script>
+<script src="https://unpkg.com/@babel/standalone@7.29.0/babel.min.js" integrity="sha384-m08KidiNqLdpJqLq95G/LEi8Qvjl/xUYll3QILypMoQ65QorJ9Lvtp2RXYGBFj1y" crossorigin="anonymous"></script>
+
+<script type="text/babel" data-presets="env,react">
+const { useState } = React;
+const {
+  BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer,
+  PieChart, Pie, Cell, LabelList, Cell: RCell,
+} = Recharts;
+
+/* ------------ Icons (inline, stroke-based) ------------ */
+const I = ({ d, size = 18, fill = "none", sw = 1.75 }) => (
+  <svg width={size} height={size} viewBox="0 0 24 24" fill={fill} stroke="currentColor" strokeWidth={sw} strokeLinecap="round" strokeLinejoin="round">
+    {d}
+  </svg>
+);
+const IcCar = (p) => <I {...p} d={<>
+  <path d="M5 13l1.6-4.2A2 2 0 0 1 8.5 7.5h7a2 2 0 0 1 1.9 1.3L19 13" />
+  <path d="M3.5 17h17a0 0 0 0 1 0 0v-2.5a1.5 1.5 0 0 0-1.5-1.5h-14A1.5 1.5 0 0 0 3.5 14.5V17z" />
+  <circle cx="7.5" cy="17.5" r="1.5" /><circle cx="16.5" cy="17.5" r="1.5" />
+</>} />;
+const IcGrid = (p) => <I {...p} d={<>
+  <rect x="3.5" y="3.5" width="7" height="7" rx="1.2" />
+  <rect x="13.5" y="3.5" width="7" height="7" rx="1.2" />
+  <rect x="3.5" y="13.5" width="7" height="7" rx="1.2" />
+  <rect x="13.5" y="13.5" width="7" height="7" rx="1.2" />
+</>} />;
+const IcInbox = (p) => <I {...p} d={<>
+  <path d="M3.5 13h4l1.5 2.5h6L16.5 13h4" />
+  <path d="M3.5 13l2.5-7h12l2.5 7v6a1.5 1.5 0 0 1-1.5 1.5h-14A1.5 1.5 0 0 1 3.5 19v-6z" />
+</>} />;
+const IcDb = (p) => <I {...p} d={<>
+  <ellipse cx="12" cy="5.5" rx="7.5" ry="2.5" />
+  <path d="M4.5 5.5v6c0 1.4 3.4 2.5 7.5 2.5s7.5-1.1 7.5-2.5v-6" />
+  <path d="M4.5 11.5v6c0 1.4 3.4 2.5 7.5 2.5s7.5-1.1 7.5-2.5v-6" />
+</>} />;
+const IcSearch = (p) => <I {...p} size={16} d={<><circle cx="11" cy="11" r="6.5" /><path d="M20 20l-3.5-3.5" /></>} />;
+const IcBell = (p) => <I {...p} d={<><path d="M6 16V11a6 6 0 1 1 12 0v5l1.5 2H4.5L6 16z" /><path d="M10 20a2 2 0 0 0 4 0" /></>} />;
+const IcSettings = (p) => <I {...p} d={<>
+  <circle cx="12" cy="12" r="2.5" />
+  <path d="M19.4 12a7.4 7.4 0 0 0-.1-1.3l2-1.6-2-3.5-2.4.9a7.6 7.6 0 0 0-2.2-1.3l-.4-2.6h-4l-.4 2.6a7.6 7.6 0 0 0-2.2 1.3l-2.4-.9-2 3.5 2 1.6a7.4 7.4 0 0 0 0 2.6l-2 1.6 2 3.5 2.4-.9a7.6 7.6 0 0 0 2.2 1.3l.4 2.6h4l.4-2.6a7.6 7.6 0 0 0 2.2-1.3l2.4.9 2-3.5-2-1.6c.1-.4.1-.9.1-1.3z" />
+</>} />;
+const IcLogout = (p) => <I {...p} d={<>
+  <path d="M14 8V5.5A1.5 1.5 0 0 0 12.5 4h-7A1.5 1.5 0 0 0 4 5.5v13A1.5 1.5 0 0 0 5.5 20h7A1.5 1.5 0 0 0 14 18.5V16" />
+  <path d="M9 12h11M17 9l3 3-3 3" />
+</>} />;
+const IcPlus = (p) => <I {...p} size={16} d={<><path d="M12 5v14M5 12h14" /></>} />;
+const IcChevR = (p) => <I {...p} size={14} d={<><path d="M9 6l6 6-6 6" /></>} />;
+const IcArrowUp = (p) => <I {...p} size={12} d={<><path d="M12 19V5M6 11l6-6 6 6" /></>} />;
+const IcArrowDn = (p) => <I {...p} size={12} d={<><path d="M12 5v14M6 13l6 6 6-6" /></>} />;
+const IcEye = (p) => <I {...p} size={14} d={<>
+  <path d="M2.5 12s3.5-7 9.5-7 9.5 7 9.5 7-3.5 7-9.5 7S2.5 12 2.5 12z" />
+  <circle cx="12" cy="12" r="2.8" />
+</>} />;
+const IcDownload = (p) => <I {...p} size={14} d={<><path d="M12 4v11M7 11l5 5 5-5M5 20h14" /></>} />;
+
+/* ------------ Data ------------ */
+const NAV = [
+  { id: "dashboard", label: "Dashboard", icon: IcGrid },
+  { id: "inventory", label: "Inventory", icon: IcCar, count: 248 },
+  { id: "requests", label: "Listing Requests", icon: IcInbox, count: 12 },
+  { id: "master", label: "Vehicle Master", icon: IcDb },
+];
+
+const SALES = [
+  { m: "Dec", sold: 22, target: 28 },
+  { m: "Jan", sold: 26, target: 28 },
+  { m: "Feb", sold: 19, target: 28 },
+  { m: "Mar", sold: 31, target: 30 },
+  { m: "Apr", sold: 28, target: 30 },
+  { m: "May", sold: 34, target: 32 },
+];
+
+const MAKES = [
+  { name: "Maruti Suzuki", value: 64, color: "#2563eb" },
+  { name: "Hyundai",       value: 42, color: "#0f9d58" },
+  { name: "Tata",          value: 31, color: "#c8881a" },
+  { name: "Honda",         value: 24, color: "#6d4aff" },
+  { name: "Toyota",        value: 21, color: "#0ea5e9" },
+];
+const MAKES_TOTAL = MAKES.reduce((s, x) => s + x.value, 0);
+
+const RECENT = [
+  { name: "Maruti Swift VXi",     trim: "2021 · Petrol · 32,400 km", seller: "Rohan Mehta",  loc: "Pune, MH",      date: "10 May 2026", status: "live",   price: "₹6.45 L" },
+  { name: "Hyundai Creta SX",     trim: "2022 · Diesel · 41,820 km", seller: "Priya Iyer",   loc: "Bengaluru, KA", date: "09 May 2026", status: "sold",   price: "₹14.10 L" },
+  { name: "Tata Nexon XZ+",       trim: "2023 · Petrol · 18,600 km", seller: "Arjun Verma",  loc: "Delhi, DL",     date: "08 May 2026", status: "live",   price: "₹10.25 L" },
+  { name: "Honda City ZX",        trim: "2020 · Petrol · 56,100 km", seller: "Kavita Rao",   loc: "Hyderabad, TS", date: "07 May 2026", status: "review", price: "₹9.80 L" },
+  { name: "Toyota Innova Crysta", trim: "2019 · Diesel · 78,930 km", seller: "Sandeep Joshi",loc: "Ahmedabad, GJ", date: "06 May 2026", status: "hold",   price: "₹15.50 L" },
+];
+
+const REQUESTS = [
+  { name: "Mahindra XUV700 AX7", trim: "2023 · Diesel",  seller: "Vikram Singh",  loc: "Jaipur, RJ",   date: "11 May, 09:42" },
+  { name: "Kia Seltos HTX",      trim: "2022 · Petrol",  seller: "Neha Kapoor",   loc: "Mumbai, MH",   date: "11 May, 08:15" },
+  { name: "Maruti Baleno Zeta",  trim: "2021 · Petrol",  seller: "Rahul Sharma",  loc: "Lucknow, UP",  date: "10 May, 17:28" },
+  { name: "Renault Kiger RXZ",   trim: "2023 · Petrol",  seller: "Anita Desai",   loc: "Kolkata, WB",  date: "10 May, 14:03" },
+  { name: "Skoda Slavia Style",  trim: "2024 · Petrol",  seller: "Manish Patel",  loc: "Surat, GJ",    date: "10 May, 11:50" },
+];
+
+const STATUS_LABEL = {
+  live:   "Live",
+  sold:   "Sold",
+  review: "Review",
+  draft:  "Draft",
+  hold:   "On Hold",
+};
+
+/* ------------ Components ------------ */
+function Sidebar({ active, setActive }) {
+  return (
+    <aside className="sidebar">
+      <div className="brand">
+        <div className="brand-mark"><IcCar size={18} sw={1.9} /></div>
+        <div>
+          <div className="brand-name">AutoVault</div>
+          <span className="brand-sub">Admin Console</span>
+        </div>
+      </div>
+
+      <div className="nav-section">Workspace</div>
+      <nav className="nav">
+        {NAV.map((n) => {
+          const Ic = n.icon;
+          return (
+            <div
+              key={n.id}
+              className={"nav-item " + (active === n.id ? "active" : "")}
+              onClick={() => setActive(n.id)}
+            >
+              <span className="icon"><Ic /></span>
+              <span>{n.label}</span>
+              {n.count != null && <span className="count">{n.count}</span>}
+            </div>
+          );
+        })}
+        <div className="nav-section" style={{ paddingLeft: 0, paddingTop: 22 }}>System</div>
+        <div className="nav-item">
+          <span className="icon"><IcSettings /></span>
+          <span>Preferences</span>
+        </div>
+      </nav>
+
+      <div className="sidebar-foot">
+        <div className="avatar">RK</div>
+        <div className="who">
+          <span className="who-name">Rajat Kulkarni</span>
+          <span className="who-role">Admin · AutoVault HQ</span>
+        </div>
+        <div className="logout" title="Sign out"><IcLogout size={17} /></div>
+      </div>
+    </aside>
+  );
+}
+
+function StatCard({ tone, icon: Ic, label, value, delta, deltaDir, hint }) {
+  return (
+    <div className={"stat " + (tone || "")}>
+      <div className="stat-head">
+        <div className="stat-ic"><Ic size={18} /></div>
+        <div className="stat-label">{label}</div>
+      </div>
+      <div className="stat-value num">{value}</div>
+      <div className="stat-foot">
+        <span className={"delta " + deltaDir}>
+          {deltaDir === "up" ? <IcArrowUp /> : deltaDir === "down" ? <IcArrowDn /> : null}
+          {delta}
+        </span>
+        <span>{hint}</span>
+      </div>
+    </div>
+  );
+}
+
+function BarTip({ active, payload, label }) {
+  if (!active || !payload || !payload.length) return null;
+  return (
+    <div className="rc-tip">
+      <div style={{ marginBottom: 4, fontWeight: 600 }}>{label} 2026</div>
+      {payload.map((p) => (
+        <div key={p.dataKey}>
+          <span className="k">{p.dataKey === "sold" ? "Cars sold" : "Target"}</span>
+          <span className="v">{p.value}</span>
+        </div>
+      ))}
+    </div>
+  );
+}
+
+function MonthlySales() {
+  return (
+    <div className="card">
+      <div className="card-head">
+        <div>
+          <div className="card-title">Monthly Sales</div>
+          <div className="card-sub">Units sold vs target · last 6 months</div>
+        </div>
+        <div className="pill-toggle">
+          <button className="on">Units</button>
+          <button>Revenue</button>
+        </div>
+      </div>
+      <div className="card-body" style={{ height: 280 }}>
+        <ResponsiveContainer width="100%" height="100%">
+          <BarChart data={SALES} margin={{ top: 12, right: 8, left: -16, bottom: 0 }} barCategoryGap={26}>
+            <CartesianGrid stroke="#eef0f3" vertical={false} />
+            <XAxis dataKey="m" tickLine={false} axisLine={false} tick={{ fill: "#6b7280", fontSize: 12 }} />
+            <YAxis tickLine={false} axisLine={false} tick={{ fill: "#97a0ad", fontSize: 11 }} width={36} />
+            <Tooltip cursor={{ fill: "rgba(37,99,235,0.06)" }} content={<BarTip />} />
+            <Bar dataKey="target" fill="#e6e8ec" radius={[4,4,0,0]} barSize={14} />
+            <Bar dataKey="sold"   fill="#2563eb" radius={[4,4,0,0]} barSize={14} />
+          </BarChart>
+        </ResponsiveContainer>
+        <div style={{ display: "flex", gap: 18, paddingLeft: 28, paddingTop: 6, fontSize: 12, color: "#6b7280" }}>
+          <span style={{ display: "inline-flex", alignItems: "center", gap: 6 }}>
+            <span style={{ width: 10, height: 10, borderRadius: 2, background: "#2563eb" }} /> Cars sold
+          </span>
+          <span style={{ display: "inline-flex", alignItems: "center", gap: 6 }}>
+            <span style={{ width: 10, height: 10, borderRadius: 2, background: "#e6e8ec" }} /> Monthly target
+          </span>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function InventoryDonut() {
+  return (
+    <div className="card">
+      <div className="card-head">
+        <div>
+          <div className="card-title">Inventory by Make</div>
+          <div className="card-sub">Top 5 manufacturers · in-stock units</div>
+        </div>
+        <div className="pill-toggle">
+          <button className="on">In stock</button>
+          <button>All time</button>
+        </div>
+      </div>
+      <div className="card-body">
+        <div className="donut-wrap">
+          <div style={{ position: "relative", height: 220 }}>
+            <ResponsiveContainer width="100%" height="100%">
+              <PieChart>
+                <Pie
+                  data={MAKES}
+                  dataKey="value"
+                  nameKey="name"
+                  cx="50%"
+                  cy="50%"
+                  innerRadius={62}
+                  outerRadius={92}
+                  paddingAngle={2}
+                  stroke="none"
+                >
+                  {MAKES.map((m) => <Cell key={m.name} fill={m.color} />)}
+                </Pie>
+              </PieChart>
+            </ResponsiveContainer>
+            <div style={{
+              position: "absolute", inset: 0, display: "grid", placeItems: "center",
+              pointerEvents: "none"
+            }}>
+              <div style={{ textAlign: "center" }}>
+                <div style={{ fontSize: 11, letterSpacing: "0.08em", textTransform: "uppercase", color: "#97a0ad" }}>In stock</div>
+                <div className="num" style={{ fontSize: 28, fontWeight: 700, letterSpacing: "-0.02em" }}>{MAKES_TOTAL}</div>
+                <div style={{ fontSize: 11.5, color: "#6b7280" }}>across 5 makes</div>
+              </div>
+            </div>
+          </div>
+          <div className="donut-legend">
+            {MAKES.map((m) => {
+              const pct = ((m.value / MAKES_TOTAL) * 100).toFixed(1);
+              return (
+                <div className="legend-row" key={m.name}>
+                  <span className="legend-sw" style={{ background: m.color }} />
+                  <span className="legend-name">{m.name}</span>
+                  <span className="legend-val num">{m.value} units</span>
+                  <span className="legend-pct num">{pct}%</span>
+                </div>
+              );
+            })}
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function CarCell({ name, meta }) {
+  return (
+    <div className="car-cell">
+      <div className="car-thumb"><IcCar size={18} /></div>
+      <div>
+        <div className="car-name">{name}</div>
+        <div className="car-meta">{meta}</div>
+      </div>
+    </div>
+  );
+}
+
+function RecentListings() {
+  return (
+    <div className="card">
+      <div className="card-head">
+        <div>
+          <div className="card-title">Recent Listings</div>
+          <div className="card-sub">Latest 5 vehicles added to the catalogue</div>
+        </div>
+        <a className="link" href="#">View all listings →</a>
+      </div>
+      <table className="tbl">
+        <thead>
+          <tr>
+            <th>Vehicle</th>
+            <th>Seller</th>
+            <th>Listed</th>
+            <th>Price</th>
+            <th>Status</th>
+          </tr>
+        </thead>
+        <tbody>
+          {RECENT.map((r, i) => (
+            <tr key={i}>
+              <td><CarCell name={r.name} meta={r.trim} /></td>
+              <td>
+                <div className="seller">
+                  <span className="seller-name">{r.seller}</span>
+                  <span className="seller-loc">{r.loc}</span>
+                </div>
+              </td>
+              <td className="num" style={{ color: "var(--text-muted)" }}>{r.date}</td>
+              <td className="num" style={{ fontWeight: 600 }}>{r.price}</td>
+              <td><span className={"badge " + r.status}>{STATUS_LABEL[r.status]}</span></td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
+      <div className="tbl-foot">
+        <span>Showing 5 of 248 listings</span>
+        <span className="num">Updated 11 May, 09:51</span>
+      </div>
+    </div>
+  );
+}
+
+function PendingRequests() {
+  return (
+    <div className="card">
+      <div className="card-head">
+        <div>
+          <div className="card-title">Pending Requests</div>
+          <div className="card-sub">Awaiting your review · 12 total</div>
+        </div>
+        <a className="link" href="#">Inbox →</a>
+      </div>
+      <table className="tbl">
+        <thead>
+          <tr>
+            <th>Vehicle</th>
+            <th>Submitted</th>
+            <th style={{ textAlign: "right" }}>Action</th>
+          </tr>
+        </thead>
+        <tbody>
+          {REQUESTS.map((r, i) => (
+            <tr key={i}>
+              <td>
+                <div className="car-cell">
+                  <div className="car-thumb"><IcCar size={18} /></div>
+                  <div>
+                    <div className="car-name">{r.name}</div>
+                    <div className="seller-loc">{r.seller} · {r.loc}</div>
+                  </div>
+                </div>
+              </td>
+              <td className="num" style={{ color: "var(--text-muted)" }}>{r.date}</td>
+              <td style={{ textAlign: "right" }}>
+                <div className="row-actions" style={{ justifyContent: "flex-end" }}>
+                  <button className="btn-ghost primary"><IcEye /> View</button>
+                </div>
+              </td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
+      <div className="tbl-foot">
+        <span>5 of 12 pending</span>
+        <a className="link" href="#">Review queue →</a>
+      </div>
+    </div>
+  );
+}
+
+function Dashboard() {
+  return (
+    <>
+      <div className="page-head">
+        <div>
+          <h1>Dashboard</h1>
+          <div className="sub">Inventory health and seller activity · 11 May 2026</div>
+        </div>
+        <div className="range-toggle">
+          <button>7d</button>
+          <button className="on">30d</button>
+          <button>QTD</button>
+          <button>YTD</button>
+        </div>
+      </div>
+
+      <div className="stats">
+        <StatCard
+          icon={IcDb}
+          label="Total Inventory"
+          value="248"
+          delta="+12"
+          deltaDir="up"
+          hint="vs last 30 days"
+        />
+        <StatCard
+          tone="green"
+          icon={IcCar}
+          label="In Stock"
+          value="182"
+          delta="73.4%"
+          deltaDir="flat"
+          hint="of total inventory"
+        />
+        <StatCard
+          tone="blue"
+          icon={IcArrowUp}
+          label="Sold This Month"
+          value="34"
+          delta="+21%"
+          deltaDir="up"
+          hint="vs April 2026"
+        />
+        <StatCard
+          tone="amber"
+          icon={IcInbox}
+          label="Pending Requests"
+          value="12"
+          delta="+3"
+          deltaDir="up"
+          hint="new in last 24h"
+        />
+      </div>
+
+      <div className="grid-2">
+        <MonthlySales />
+        <InventoryDonut />
+      </div>
+
+      <div className="grid-tables">
+        <RecentListings />
+        <PendingRequests />
+      </div>
+    </>
+  );
+}
+
+function Placeholder({ title }) {
+  return (
+    <>
+      <div className="page-head">
+        <div>
+          <h1>{title}</h1>
+          <div className="sub">This section is coming soon.</div>
+        </div>
+      </div>
+      <div className="placeholder">
+        <h3>{title} view</h3>
+        <div>Only the Dashboard is built out in this prototype.</div>
+      </div>
+    </>
+  );
+}
+
+/* ============================================================
+   INVENTORY PAGE
+   ============================================================ */
+
+let INV_STOCK_INIT = [
+  { id: "SW-9120", title: "2022 Maruti Suzuki Swift VXi", price: "₹5,85,000", fuel: "Petrol", trans: "Manual", km: "24,000 km", seller: "Rohan Mehta", year: 2022, make: "Maruti Suzuki" },
+  { id: "CR-4421", title: "2023 Hyundai Creta SX (O)",    price: "₹14,25,000", fuel: "Diesel", trans: "Automatic", km: "18,400 km", seller: null,           year: 2023, make: "Hyundai" },
+  { id: "NX-1188", title: "2023 Tata Nexon XZ+ Lux",      price: "₹10,40,000", fuel: "Petrol", trans: "Manual", km: "22,100 km", seller: "Arjun Verma",   year: 2023, make: "Tata" },
+  { id: "CT-7765", title: "2021 Honda City ZX CVT",       price: "₹9,90,000",  fuel: "Petrol", trans: "Automatic", km: "38,600 km", seller: "Kavita Rao",    year: 2021, make: "Honda" },
+  { id: "IN-2034", title: "2020 Toyota Innova Crysta ZX", price: "₹16,75,000", fuel: "Diesel", trans: "Manual", km: "62,300 km", seller: null,            year: 2020, make: "Toyota" },
+  { id: "XU-5512", title: "2024 Mahindra XUV700 AX7L",    price: "₹22,10,000", fuel: "Diesel", trans: "Automatic", km: "9,800 km",  seller: "Vikram Singh", year: 2024, make: "Mahindra" },
+];
+const INV_STOCK = INV_STOCK_INIT;
+
+const INV_SOLD = [
+  { id: "BL-3301", title: "2021 Maruti Baleno Zeta",   price: "₹6,90,000",  fuel: "Petrol", trans: "Manual", km: "31,500 km", seller: "Rahul Sharma", year: 2021, make: "Maruti Suzuki" },
+  { id: "SE-1199", title: "2022 Kia Seltos HTX Plus",  price: "₹15,20,000", fuel: "Petrol", trans: "Automatic", km: "27,200 km", seller: null,           year: 2022, make: "Kia" },
+  { id: "VR-8821", title: "2020 Hyundai Verna SX",     price: "₹8,40,000",  fuel: "Diesel", trans: "Manual", km: "54,100 km", seller: "Neha Kapoor",  year: 2020, make: "Hyundai" },
+];
+
+function CarTile({ car, sold, isNew }) {
+  return (
+    <div className={"inv-card " + (isNew ? "is-new" : "")}>
+      <div className="inv-img">
+        <span className="inv-status">
+          <span className={"badge " + (sold ? "sold-r" : "live")}>{sold ? "Sold" : "In Stock"}</span>
+        </span>
+        <span className={"inv-seller-tag " + (car.seller ? "" : "direct")}>
+          {car.seller ? "Seller-Listed" : "Direct Purchase"}
+        </span>
+        <IcCar size={56} sw={1.2} />
+      </div>
+      <div className="inv-body">
+        <div className="inv-title">{car.title}</div>
+        <div className="inv-price">{car.price}</div>
+        <div className="inv-tags">
+          <span className="inv-tag">{car.fuel}</span>
+          <span className="inv-tag">{car.trans}</span>
+          <span className="inv-tag">{car.km}</span>
+        </div>
+        <div className="inv-foot">
+          <span className="inv-meta">{car.id} · {car.seller ? car.seller : "AutoVault"}</span>
+          <button className="btn-ghost primary">View Details <IcChevR /></button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function Inventory({ stock, sold, onOpenAdd, newId }) {
+  const [tab, setTab] = useState("stock");
+  const [q, setQ] = useState("");
+  const [make, setMake] = useState("all");
+  const [year, setYear] = useState("all");
+  const [sort, setSort] = useState("date-desc");
+
+  const source = tab === "stock" ? stock : sold;
+  let cars = source.filter((c) => {
+    if (q && !c.title.toLowerCase().includes(q.toLowerCase())) return false;
+    if (make !== "all" && c.make !== make) return false;
+    if (year !== "all" && String(c.year) !== year) return false;
+    return true;
+  });
+  const parsePrice = (s) => parseInt(s.replace(/[^0-9]/g, ""), 10);
+  if (sort === "price-asc")  cars = [...cars].sort((a,b) => parsePrice(a.price) - parsePrice(b.price));
+  if (sort === "price-desc") cars = [...cars].sort((a,b) => parsePrice(b.price) - parsePrice(a.price));
+  if (sort === "date-desc")  cars = [...cars];
+
+  return (
+    <>
+      <div className="page-head">
+        <div>
+          <h1>Inventory</h1>
+          <div className="sub">Manage your live catalogue and past sales</div>
+        </div>
+        <button className="btn-primary" onClick={onOpenAdd}><IcPlus /> Add Vehicle</button>
+      </div>
+
+      <div className="subtabs">
+        <button className={"subtab " + (tab === "stock" ? "on" : "")} onClick={() => setTab("stock")}>
+          In Stock <span className="tab-count">{stock.length}</span>
+        </button>
+        <button className={"subtab " + (tab === "sold" ? "on" : "")} onClick={() => setTab("sold")}>
+          Sold <span className="tab-count">{sold.length}</span>
+        </button>
+      </div>
+
+      <div className="filterbar">
+        <div className="search-wrap">
+          <IcSearch />
+          <input className="search-i" placeholder="Search by model name…" value={q} onChange={(e) => setQ(e.target.value)} />
+        </div>
+        <select className="select" value={make} onChange={(e) => setMake(e.target.value)}>
+          <option value="all">All Makes</option>
+          <option>Maruti Suzuki</option><option>Hyundai</option><option>Tata</option>
+          <option>Honda</option><option>Toyota</option><option>Mahindra</option><option>Kia</option>
+        </select>
+        <select className="select" value={year} onChange={(e) => setYear(e.target.value)}>
+          <option value="all">All Years</option>
+          <option>2024</option><option>2023</option><option>2022</option>
+          <option>2021</option><option>2020</option>
+        </select>
+        <select className="select" value={sort} onChange={(e) => setSort(e.target.value)}>
+          <option value="date-desc">Sort: Newest First</option>
+          <option value="price-desc">Sort: Price (High → Low)</option>
+          <option value="price-asc">Sort: Price (Low → High)</option>
+        </select>
+        <button className="btn-ghost">Reset</button>
+      </div>
+
+      <div className="result-count">Showing {cars.length} of {source.length} vehicles</div>
+
+      <div className="inv-grid">
+        {cars.map((c) => <CarTile key={c.id} car={c} sold={tab === "sold"} isNew={c.id === newId} />)}
+      </div>
+    </>
+  );
+}
+
+/* ============================================================
+   LISTING REQUESTS PAGE
+   ============================================================ */
+
+const REQ_PENDING_INIT = [
+  { id: "REQ-2041", make: "Mahindra", model: "XUV700 AX7",   year: 2023, seller: "Vikram Singh",   phone: "+91 98214 33102", date: "11 May 2026", price: "₹19,80,000" },
+  { id: "REQ-2040", make: "Kia",      model: "Seltos HTX",    year: 2022, seller: "Neha Kapoor",    phone: "+91 99876 41021", date: "11 May 2026", price: "₹14,40,000" },
+  { id: "REQ-2039", make: "Maruti",   model: "Baleno Zeta",   year: 2021, seller: "Rahul Sharma",   phone: "+91 98115 89320", date: "10 May 2026", price: "₹6,75,000"  },
+  { id: "REQ-2038", make: "Renault",  model: "Kiger RXZ",     year: 2023, seller: "Anita Desai",    phone: "+91 90041 67822", date: "10 May 2026", price: "₹9,20,000"  },
+  { id: "REQ-2037", make: "Skoda",    model: "Slavia Style",  year: 2024, seller: "Manish Patel",   phone: "+91 98253 11748", date: "10 May 2026", price: "₹17,10,000" },
+];
+
+const REQ_APPROVED = [
+  { id: "REQ-2036", make: "Hyundai",  model: "Creta SX",     year: 2022, seller: "Priya Iyer",     phone: "+91 98456 22110", date: "09 May 2026", price: "₹13,90,000", approvedOn: "09 May 2026" },
+  { id: "REQ-2035", make: "Honda",    model: "City ZX",      year: 2020, seller: "Suresh Nair",    phone: "+91 96332 18920", date: "08 May 2026", price: "₹9,40,000",  approvedOn: "08 May 2026" },
+  { id: "REQ-2034", make: "Toyota",   model: "Glanza V",     year: 2023, seller: "Aditi Bhatt",    phone: "+91 90013 88102", date: "08 May 2026", price: "₹8,60,000",  approvedOn: "08 May 2026" },
+  { id: "REQ-2033", make: "Tata",     model: "Punch Accomplished", year: 2023, seller: "Karan Malhotra", phone: "+91 99100 22841", date: "07 May 2026", price: "₹7,80,000", approvedOn: "07 May 2026" },
+  { id: "REQ-2032", make: "Maruti",   model: "Brezza ZXi",   year: 2022, seller: "Deepa Krishnan", phone: "+91 94422 09918", date: "07 May 2026", price: "₹10,20,000", approvedOn: "07 May 2026" },
+];
+
+const REQ_REJECTED = [
+  { id: "REQ-2031", make: "Ford",     model: "EcoSport Titanium", year: 2018, seller: "Manoj Pillai",   phone: "+91 90080 77321", date: "06 May 2026", price: "₹6,90,000", rejectedOn: "06 May 2026", reason: "Vehicle older than 5 years — outside our standard buyback window." },
+  { id: "REQ-2030", make: "Datsun",   model: "Go Plus",          year: 2019, seller: "Reena Kulkarni", phone: "+91 98345 02218", date: "06 May 2026", price: "₹4,20,000", rejectedOn: "06 May 2026", reason: "Manufacturer no longer operates in India; resale demand too low." },
+  { id: "REQ-2029", make: "Maruti",   model: "Alto K10",         year: 2017, seller: "Imran Shaikh",   phone: "+91 97011 84520", date: "05 May 2026", price: "₹3,10,000", rejectedOn: "05 May 2026", reason: "Asking price 38% above market estimate for trim & odometer." },
+  { id: "REQ-2028", make: "Renault",  model: "Duster RXS",       year: 2019, seller: "Ananya Sen",     phone: "+91 99887 33210", date: "05 May 2026", price: "₹7,50,000", rejectedOn: "05 May 2026", reason: "RC documents incomplete — insurance lapsed for 14+ months." },
+  { id: "REQ-2027", make: "Nissan",   model: "Sunny XV",         year: 2018, seller: "Bharat Mishra",  phone: "+91 90112 47755", date: "04 May 2026", price: "₹5,40,000", rejectedOn: "04 May 2026", reason: "Accident history flagged in damage report." },
+];
+
+const REJECT_PRESETS = [
+  "Vehicle older than 5 years",
+  "Asking price above market estimate",
+  "Incomplete documents",
+  "Accident history flagged",
+];
+
+function CarDetailsCell({ row }) {
+  return (
+    <div className="car-cell">
+      <div className="car-thumb"><IcCar size={18} /></div>
+      <div>
+        <div className="car-name">{row.make} {row.model}</div>
+        <div className="car-meta">{row.year} · {row.id}</div>
+      </div>
+    </div>
+  );
+}
+
+function RejectModal({ row, onClose, onConfirm }) {
+  const [reason, setReason] = useState("");
+  return (
+    <div className="modal-back" onMouseDown={(e) => { if (e.target === e.currentTarget) onClose(); }}>
+      <div className="modal">
+        <div className="modal-head">
+          <h3>Reject listing request</h3>
+          <div className="ms">{row.make} {row.model} ({row.year}) · {row.seller}</div>
+        </div>
+        <div className="modal-body">
+          <label>Reason for rejection</label>
+          <textarea
+            placeholder="Share why this listing is being rejected. The seller will see this message."
+            value={reason}
+            onChange={(e) => setReason(e.target.value)}
+            autoFocus
+          />
+          <div className="modal-presets">
+            {REJECT_PRESETS.map((p) => (
+              <button key={p} onClick={() => setReason(p)}>{p}</button>
+            ))}
+          </div>
+        </div>
+        <div className="modal-foot">
+          <button className="btn-ghost" onClick={onClose}>Cancel</button>
+          <button className="btn-danger" disabled={!reason.trim()} onClick={() => onConfirm(reason.trim())}>
+            Confirm rejection
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function Requests({ pushToast }) {
+  const [tab, setTab] = useState("pending");
+  const [pending, setPending] = useState(REQ_PENDING_INIT);
+  const [rejecting, setRejecting] = useState(null);
+
+  const approve = (row) => {
+    setPending((cur) => cur.filter((r) => r.id !== row.id));
+    pushToast(`Listing approved & added to inventory · ${row.make} ${row.model}`);
+  };
+  const confirmReject = (reason) => {
+    setPending((cur) => cur.filter((r) => r.id !== rejecting.id));
+    pushToast(`Listing rejected · ${rejecting.make} ${rejecting.model}`, "warn");
+    setRejecting(null);
+  };
+
+  return (
+    <>
+      <div className="page-head">
+        <div>
+          <h1>Listing Requests</h1>
+          <div className="sub">Review seller-submitted vehicles before they go live</div>
+        </div>
+      </div>
+
+      <div className="subtabs">
+        <button className={"subtab warn " + (tab === "pending" ? "on" : "")} onClick={() => setTab("pending")}>
+          Pending <span className="tab-count">{pending.length}</span>
+        </button>
+        <button className={"subtab " + (tab === "approved" ? "on" : "")} onClick={() => setTab("approved")}>
+          Approved <span className="tab-count">{REQ_APPROVED.length}</span>
+        </button>
+        <button className={"subtab " + (tab === "rejected" ? "on" : "")} onClick={() => setTab("rejected")}>
+          Rejected <span className="tab-count">{REQ_REJECTED.length}</span>
+        </button>
+      </div>
+
+      <div className="req-card">
+        {tab === "pending" && (
+          <table className="tbl">
+            <thead>
+              <tr>
+                <th>Car Details</th>
+                <th>Seller</th>
+                <th>Phone</th>
+                <th>Submitted</th>
+                <th>Expected Price</th>
+                <th style={{ textAlign: "right" }}>Actions</th>
+              </tr>
+            </thead>
+            <tbody>
+              {pending.length === 0 && (
+                <tr><td colSpan={6} style={{ padding: 40, textAlign: "center", color: "var(--text-muted)" }}>
+                  Inbox zero. No pending requests.
+                </td></tr>
+              )}
+              {pending.map((r) => (
+                <tr key={r.id}>
+                  <td><CarDetailsCell row={r} /></td>
+                  <td><span className="seller-name">{r.seller}</span></td>
+                  <td className="num" style={{ color: "var(--text-muted)" }}>{r.phone}</td>
+                  <td className="num" style={{ color: "var(--text-muted)" }}>{r.date}</td>
+                  <td className="num" style={{ fontWeight: 600 }}>{r.price}</td>
+                  <td style={{ textAlign: "right" }}>
+                    <div className="row-actions" style={{ justifyContent: "flex-end" }}>
+                      <button className="btn-approve" onClick={() => approve(r)}>Approve</button>
+                      <button className="btn-reject"  onClick={() => setRejecting(r)}>Reject</button>
+                    </div>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        )}
+
+        {tab === "approved" && (
+          <table className="tbl">
+            <thead>
+              <tr>
+                <th>Car Details</th>
+                <th>Seller</th>
+                <th>Phone</th>
+                <th>Submitted</th>
+                <th>Expected Price</th>
+                <th>Status</th>
+              </tr>
+            </thead>
+            <tbody>
+              {REQ_APPROVED.map((r) => (
+                <tr key={r.id}>
+                  <td><CarDetailsCell row={r} /></td>
+                  <td><span className="seller-name">{r.seller}</span></td>
+                  <td className="num" style={{ color: "var(--text-muted)" }}>{r.phone}</td>
+                  <td className="num" style={{ color: "var(--text-muted)" }}>{r.date}</td>
+                  <td className="num" style={{ fontWeight: 600 }}>{r.price}</td>
+                  <td>
+                    <span className="stamp"><span className="dot-g" />Approved on {r.approvedOn}</span>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        )}
+
+        {tab === "rejected" && (
+          <table className="tbl">
+            <thead>
+              <tr>
+                <th>Car Details</th>
+                <th>Seller</th>
+                <th>Submitted</th>
+                <th>Expected Price</th>
+                <th>Rejection Reason</th>
+                <th>Status</th>
+              </tr>
+            </thead>
+            <tbody>
+              {REQ_REJECTED.map((r) => (
+                <tr key={r.id}>
+                  <td><CarDetailsCell row={r} /></td>
+                  <td><span className="seller-name">{r.seller}</span></td>
+                  <td className="num" style={{ color: "var(--text-muted)" }}>{r.date}</td>
+                  <td className="num" style={{ fontWeight: 600 }}>{r.price}</td>
+                  <td><div className="reason-cell"><span className="why">{r.reason}</span></div></td>
+                  <td>
+                    <span className="stamp"><span className="dot-r" />Rejected on {r.rejectedOn}</span>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        )}
+      </div>
+
+      {rejecting && (
+        <RejectModal row={rejecting} onClose={() => setRejecting(null)} onConfirm={confirmReject} />
+      )}
+    </>
+  );
+}
+
+/* ============================================================
+   VEHICLE MASTER PAGE
+   ============================================================ */
+
+const uid = () => Math.random().toString(36).slice(2, 9);
+
+const INITIAL_MASTER = (() => {
+  const mk = (name, models) => ({ id: uid(), name, models });
+  const md = (name, fuels, variants) => ({ id: uid(), name, fuels, variants });
+  const vr = (name, fuel, trans) => ({ id: uid(), name, fuel, trans });
+
+  return [
+    mk("Maruti Suzuki", [
+      md("Swift",   ["Petrol", "CNG"], [
+        vr("LXi", "Petrol", "Manual"), vr("VXi", "Petrol", "Manual"),
+        vr("ZXi", "Petrol", "Manual"), vr("ZXi+", "Petrol", "Automatic"),
+      ]),
+      md("Baleno",  ["Petrol", "CNG"], [
+        vr("Sigma", "Petrol", "Manual"), vr("Delta", "Petrol", "Manual"),
+        vr("Zeta",  "Petrol", "Automatic"), vr("Alpha", "Petrol", "Automatic"),
+      ]),
+      md("Alto K10",["Petrol", "CNG"], [
+        vr("STD", "Petrol", "Manual"), vr("LXi", "Petrol", "Manual"), vr("VXi", "Petrol", "Automatic"),
+      ]),
+      md("Brezza", ["Petrol", "CNG"], [
+        vr("LXi", "Petrol", "Manual"), vr("VXi", "Petrol", "Manual"),
+        vr("ZXi", "Petrol", "Automatic"), vr("ZXi+", "Petrol", "Automatic"),
+      ]),
+      md("Ertiga", ["Petrol", "CNG"], [
+        vr("LXi", "Petrol", "Manual"), vr("VXi", "Petrol", "Manual"), vr("ZXi", "Petrol", "Automatic"),
+      ]),
+      md("Grand Vitara", ["Petrol"], [
+        vr("Sigma", "Petrol", "Manual"), vr("Delta", "Petrol", "Automatic"), vr("Alpha", "Petrol", "Automatic"),
+      ]),
+    ]),
+    mk("Hyundai", [
+      md("Creta", ["Petrol", "Diesel"], [
+        vr("E", "Petrol", "Manual"), vr("EX", "Petrol", "Manual"),
+        vr("S", "Diesel", "Manual"), vr("SX", "Diesel", "Automatic"), vr("SX (O)", "Diesel", "Automatic"),
+      ]),
+      md("Venue", ["Petrol", "Diesel"], [
+        vr("E", "Petrol", "Manual"), vr("S", "Petrol", "Manual"), vr("SX", "Diesel", "Automatic"),
+      ]),
+      md("i20",   ["Petrol"], [
+        vr("Magna", "Petrol", "Manual"), vr("Sportz", "Petrol", "Manual"), vr("Asta", "Petrol", "Automatic"),
+      ]),
+      md("Verna", ["Petrol", "Diesel"], [
+        vr("EX", "Petrol", "Manual"), vr("S", "Petrol", "Manual"),
+        vr("SX", "Diesel", "Manual"), vr("SX (O)", "Diesel", "Automatic"),
+      ]),
+      md("Alcazar", ["Petrol", "Diesel"], [
+        vr("Prestige", "Petrol", "Manual"), vr("Platinum", "Diesel", "Automatic"), vr("Signature", "Diesel", "Automatic"),
+      ]),
+    ]),
+    mk("Tata", [
+      md("Nexon", ["Petrol", "Diesel", "Electric"], [
+        vr("Smart", "Petrol", "Manual"), vr("Pure", "Petrol", "Manual"),
+        vr("Creative", "Diesel", "Manual"), vr("Fearless", "Diesel", "Automatic"),
+      ]),
+      md("Punch", ["Petrol", "CNG", "Electric"], [
+        vr("Pure", "Petrol", "Manual"), vr("Adventure", "Petrol", "Manual"), vr("Accomplished", "Petrol", "Automatic"),
+      ]),
+      md("Harrier", ["Diesel"], [
+        vr("XM", "Diesel", "Manual"), vr("XT", "Diesel", "Manual"), vr("XZ+", "Diesel", "Automatic"),
+      ]),
+      md("Tiago", ["Petrol", "CNG"], [
+        vr("XE", "Petrol", "Manual"), vr("XM", "Petrol", "Manual"), vr("XZ", "Petrol", "Automatic"),
+      ]),
+      md("Safari", ["Diesel"], [
+        vr("XM", "Diesel", "Manual"), vr("XT", "Diesel", "Automatic"), vr("XZ+", "Diesel", "Automatic"),
+      ]),
+    ]),
+    mk("Honda", [
+      md("City",  ["Petrol"], [
+        vr("V", "Petrol", "Manual"), vr("VX", "Petrol", "Manual"), vr("ZX", "Petrol", "Automatic"),
+      ]),
+      md("Amaze", ["Petrol"], [
+        vr("E", "Petrol", "Manual"), vr("S", "Petrol", "Manual"), vr("VX", "Petrol", "Automatic"),
+      ]),
+      md("Elevate", ["Petrol"], [
+        vr("SV", "Petrol", "Manual"), vr("V", "Petrol", "Automatic"), vr("VX", "Petrol", "Automatic"), vr("ZX", "Petrol", "Automatic"),
+      ]),
+    ]),
+    mk("Toyota", [
+      md("Innova Crysta", ["Diesel"], [
+        vr("GX", "Diesel", "Manual"), vr("VX", "Diesel", "Automatic"), vr("ZX", "Diesel", "Automatic"),
+      ]),
+      md("Innova Hycross", ["Petrol"], [
+        vr("G", "Petrol", "Automatic"), vr("VX", "Petrol", "Automatic"), vr("ZX (O)", "Petrol", "Automatic"),
+      ]),
+      md("Glanza", ["Petrol", "CNG"], [
+        vr("E", "Petrol", "Manual"), vr("S", "Petrol", "Manual"), vr("V", "Petrol", "Automatic"),
+      ]),
+      md("Fortuner", ["Diesel"], [
+        vr("4x2", "Diesel", "Manual"), vr("4x4", "Diesel", "Automatic"), vr("Legender", "Diesel", "Automatic"),
+      ]),
+    ]),
+    mk("Mahindra", [
+      md("XUV700", ["Petrol", "Diesel"], [
+        vr("MX", "Petrol", "Manual"), vr("AX3", "Diesel", "Manual"),
+        vr("AX5", "Diesel", "Automatic"), vr("AX7", "Diesel", "Automatic"),
+      ]),
+      md("Scorpio-N", ["Diesel"], [
+        vr("Z2", "Diesel", "Manual"), vr("Z6", "Diesel", "Manual"), vr("Z8", "Diesel", "Automatic"),
+      ]),
+      md("Thar", ["Petrol", "Diesel"], [
+        vr("AX (O)", "Diesel", "Manual"), vr("LX", "Diesel", "Automatic"),
+      ]),
+      md("XUV300", ["Petrol", "Diesel"], [
+        vr("W4", "Petrol", "Manual"), vr("W6", "Diesel", "Manual"), vr("W8 (O)", "Diesel", "Automatic"),
+      ]),
+    ]),
+    mk("Kia", [
+      md("Seltos", ["Petrol", "Diesel"], [
+        vr("HTE", "Petrol", "Manual"), vr("HTK", "Petrol", "Manual"),
+        vr("HTX", "Diesel", "Automatic"), vr("GTX+", "Diesel", "Automatic"),
+      ]),
+      md("Sonet",  ["Petrol", "Diesel"], [
+        vr("HTE", "Petrol", "Manual"), vr("HTK+", "Petrol", "Automatic"), vr("GTX+", "Diesel", "Automatic"),
+      ]),
+      md("Carens", ["Petrol", "Diesel"], [
+        vr("Premium", "Petrol", "Manual"), vr("Prestige", "Diesel", "Automatic"), vr("Luxury", "Diesel", "Automatic"),
+      ]),
+    ]),
+  ];
+})();
+
+/* Reusable icons for the master page */
+const IcEdit = (p) => <I {...p} size={14} d={<>
+  <path d="M4 20h4l11-11-4-4L4 16v4z" />
+  <path d="M14 6l4 4" />
+</>} />;
+const IcTrash = (p) => <I {...p} size={14} d={<>
+  <path d="M4 7h16" />
+  <path d="M9 7V4.5A1 1 0 0 1 10 3.5h4a1 1 0 0 1 1 1V7" />
+  <path d="M6 7l1 12.5A1.5 1.5 0 0 0 8.5 21h7a1.5 1.5 0 0 0 1.5-1.5L18 7" />
+</>} />;
+const IcFolder = (p) => <I {...p} d={<>
+  <path d="M3.5 7.5A1.5 1.5 0 0 1 5 6h4l2 2h8a1.5 1.5 0 0 1 1.5 1.5v8A1.5 1.5 0 0 1 19 19H5a1.5 1.5 0 0 1-1.5-1.5v-10z" />
+</>} />;
+
+const FUEL_OPTIONS = ["Petrol", "Diesel", "CNG", "Electric"];
+const TRANS_OPTIONS = ["Manual", "Automatic"];
+
+function fuelClass(f) {
+  const k = (f || "").toLowerCase();
+  if (k === "diesel") return "fuel diesel";
+  if (k === "cng") return "fuel cng";
+  if (k === "electric") return "fuel electric";
+  return "fuel";
+}
+
+/* ---- Modals ---- */
+function MakeModal({ initial, onClose, onSave }) {
+  const [name, setName] = useState(initial ? initial.name : "");
+  const editing = !!initial;
+  return (
+    <div className="modal-back" onMouseDown={(e) => { if (e.target === e.currentTarget) onClose(); }}>
+      <div className="modal">
+        <div className="modal-head">
+          <h3>{editing ? "Rename make" : "Add new make"}</h3>
+          <div className="ms">Manufacturers appear in the first column of Vehicle Master.</div>
+        </div>
+        <div className="modal-body">
+          <div className="field">
+            <label>Make name</label>
+            <input type="text" autoFocus value={name} onChange={(e) => setName(e.target.value)} placeholder="e.g. Mahindra" />
+          </div>
+        </div>
+        <div className="modal-foot">
+          <button className="btn-ghost" onClick={onClose}>Cancel</button>
+          <button className="btn-confirm" disabled={!name.trim()} onClick={() => onSave({ name: name.trim() })}>
+            {editing ? "Save changes" : "Add make"}
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function ModelModal({ initial, makeName, onClose, onSave }) {
+  const [name, setName] = useState(initial ? initial.name : "");
+  const [fuels, setFuels] = useState(initial ? [...initial.fuels] : ["Petrol"]);
+  const editing = !!initial;
+  const toggle = (f) => setFuels((cur) => cur.includes(f) ? cur.filter((x) => x !== f) : [...cur, f]);
+  return (
+    <div className="modal-back" onMouseDown={(e) => { if (e.target === e.currentTarget) onClose(); }}>
+      <div className="modal">
+        <div className="modal-head">
+          <h3>{editing ? "Edit model" : "Add new model"}</h3>
+          <div className="ms">Under <strong>{makeName}</strong></div>
+        </div>
+        <div className="modal-body">
+          <div className="field">
+            <label>Model name</label>
+            <input type="text" autoFocus value={name} onChange={(e) => setName(e.target.value)} placeholder="e.g. Creta" />
+          </div>
+          <div className="field">
+            <label>Supported fuel types</label>
+            <div className="checkrow">
+              {FUEL_OPTIONS.map((f) => {
+                const on = fuels.includes(f);
+                return (
+                  <label key={f} className={"check " + (on ? "on" : "")}>
+                    <input type="checkbox" checked={on} onChange={() => toggle(f)} />
+                    {f}
+                  </label>
+                );
+              })}
+            </div>
+          </div>
+        </div>
+        <div className="modal-foot">
+          <button className="btn-ghost" onClick={onClose}>Cancel</button>
+          <button className="btn-confirm" disabled={!name.trim() || fuels.length === 0} onClick={() => onSave({ name: name.trim(), fuels })}>
+            {editing ? "Save changes" : "Add model"}
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function VariantModal({ initial, modelName, allowedFuels, onClose, onSave }) {
+  const fuelChoices = allowedFuels && allowedFuels.length ? allowedFuels : FUEL_OPTIONS;
+  const [name, setName] = useState(initial ? initial.name : "");
+  const [fuel, setFuel] = useState(initial ? initial.fuel : fuelChoices[0]);
+  const [trans, setTrans] = useState(initial ? initial.trans : "Manual");
+  const editing = !!initial;
+  return (
+    <div className="modal-back" onMouseDown={(e) => { if (e.target === e.currentTarget) onClose(); }}>
+      <div className="modal">
+        <div className="modal-head">
+          <h3>{editing ? "Edit variant" : "Add new variant"}</h3>
+          <div className="ms">Under <strong>{modelName}</strong></div>
+        </div>
+        <div className="modal-body">
+          <div className="field">
+            <label>Variant name</label>
+            <input type="text" autoFocus value={name} onChange={(e) => setName(e.target.value)} placeholder="e.g. ZXi+" />
+          </div>
+          <div className="field">
+            <label>Fuel type</label>
+            <select value={fuel} onChange={(e) => setFuel(e.target.value)}>
+              {fuelChoices.map((f) => <option key={f}>{f}</option>)}
+            </select>
+          </div>
+          <div className="field">
+            <label>Transmission</label>
+            <select value={trans} onChange={(e) => setTrans(e.target.value)}>
+              {TRANS_OPTIONS.map((t) => <option key={t}>{t}</option>)}
+            </select>
+          </div>
+        </div>
+        <div className="modal-foot">
+          <button className="btn-ghost" onClick={onClose}>Cancel</button>
+          <button className="btn-confirm" disabled={!name.trim()} onClick={() => onSave({ name: name.trim(), fuel, trans })}>
+            {editing ? "Save changes" : "Add variant"}
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function VehicleMaster({ pushToast }) {
+  const [data, setData] = useState(INITIAL_MASTER);
+  const [makeId, setMakeId] = useState(INITIAL_MASTER[0].id);
+  const [modelId, setModelId] = useState(INITIAL_MASTER[0].models[0].id);
+  const [qMake, setQMake] = useState("");
+  const [qModel, setQModel] = useState("");
+  const [qVariant, setQVariant] = useState("");
+
+  /* Modal state: { kind: 'make'|'model'|'variant', edit?: object } */
+  const [modal, setModal] = useState(null);
+
+  const make  = data.find((m) => m.id === makeId);
+  const model = make ? make.models.find((m) => m.id === modelId) : null;
+
+  const makes   = data.filter((m) => m.name.toLowerCase().includes(qMake.toLowerCase()));
+  const models  = make  ? make.models.filter((m)  => m.name.toLowerCase().includes(qModel.toLowerCase())) : [];
+  const variants = model ? model.variants.filter((v) => v.name.toLowerCase().includes(qVariant.toLowerCase())) : [];
+
+  const totalMakes    = data.length;
+  const totalModels   = data.reduce((s, m) => s + m.models.length, 0);
+  const totalVariants = data.reduce((s, m) => s + m.models.reduce((s2, md) => s2 + md.variants.length, 0), 0);
+
+  /* CRUD helpers */
+  const addMake = ({ name }) => {
+    const m = { id: uid(), name, models: [] };
+    setData((cur) => [...cur, m]);
+    setMakeId(m.id); setModelId(null);
+    pushToast(`Added make · ${name}`);
+  };
+  const editMake = (id, { name }) => {
+    setData((cur) => cur.map((m) => m.id === id ? { ...m, name } : m));
+    pushToast(`Renamed make · ${name}`);
+  };
+  const deleteMake = (id) => {
+    const m = data.find((x) => x.id === id);
+    if (!m) return;
+    if (!confirm(`Delete “${m.name}” and all ${m.models.length} models under it?`)) return;
+    setData((cur) => cur.filter((x) => x.id !== id));
+    if (makeId === id) {
+      const next = data.find((x) => x.id !== id);
+      setMakeId(next ? next.id : null);
+      setModelId(next && next.models[0] ? next.models[0].id : null);
+    }
+    pushToast(`Deleted make · ${m.name}`);
+  };
+
+  const addModel = ({ name, fuels }) => {
+    if (!make) return;
+    const md = { id: uid(), name, fuels, variants: [] };
+    setData((cur) => cur.map((m) => m.id === make.id ? { ...m, models: [...m.models, md] } : m));
+    setModelId(md.id);
+    pushToast(`Added model · ${name}`);
+  };
+  const editModel = (id, { name, fuels }) => {
+    setData((cur) => cur.map((m) => m.id !== make.id ? m : ({
+      ...m, models: m.models.map((md) => md.id === id ? { ...md, name, fuels } : md),
+    })));
+    pushToast(`Saved model · ${name}`);
+  };
+  const deleteModel = (id) => {
+    const md = make.models.find((x) => x.id === id);
+    if (!md) return;
+    if (!confirm(`Delete “${md.name}” and all ${md.variants.length} variants under it?`)) return;
+    setData((cur) => cur.map((m) => m.id !== make.id ? m : ({
+      ...m, models: m.models.filter((x) => x.id !== id),
+    })));
+    if (modelId === id) {
+      const next = make.models.find((x) => x.id !== id);
+      setModelId(next ? next.id : null);
+    }
+    pushToast(`Deleted model · ${md.name}`);
+  };
+
+  const addVariant = ({ name, fuel, trans }) => {
+    if (!model) return;
+    const v = { id: uid(), name, fuel, trans };
+    setData((cur) => cur.map((m) => m.id !== make.id ? m : ({
+      ...m, models: m.models.map((md) => md.id !== model.id ? md : ({
+        ...md, variants: [...md.variants, v],
+      })),
+    })));
+    pushToast(`Added variant · ${name}`);
+  };
+  const editVariant = (id, fields) => {
+    setData((cur) => cur.map((m) => m.id !== make.id ? m : ({
+      ...m, models: m.models.map((md) => md.id !== model.id ? md : ({
+        ...md, variants: md.variants.map((v) => v.id === id ? { ...v, ...fields } : v),
+      })),
+    })));
+    pushToast(`Saved variant · ${fields.name}`);
+  };
+  const deleteVariant = (id) => {
+    const v = model.variants.find((x) => x.id === id);
+    if (!v) return;
+    if (!confirm(`Delete variant “${v.name}”?`)) return;
+    setData((cur) => cur.map((m) => m.id !== make.id ? m : ({
+      ...m, models: m.models.map((md) => md.id !== model.id ? md : ({
+        ...md, variants: md.variants.filter((x) => x.id !== id),
+      })),
+    })));
+    pushToast(`Deleted variant · ${v.name}`);
+  };
+
+  const handleSelectMake = (m) => {
+    setMakeId(m.id);
+    setModelId(m.models[0] ? m.models[0].id : null);
+  };
+
+  return (
+    <>
+      <div className="page-head">
+        <div>
+          <h1>Vehicle Master</h1>
+          <div className="vm-summary">
+            <span className="pill">{totalMakes} makes</span>
+            <span className="pill">{totalModels} models</span>
+            <span className="pill">{totalVariants} variants</span>
+          </div>
+        </div>
+        <button className="btn-primary" onClick={() => setModal({ kind: "make" })}><IcPlus /> Add Make</button>
+      </div>
+
+      <div className="vm-grid">
+        {/* ---------- MAKES ---------- */}
+        <div className="vm-col">
+          <div className="vm-head">
+            <div>
+              <div className="crumb">Level 1</div>
+              <div className="title">Makes</div>
+            </div>
+            <button className="add-btn" onClick={() => setModal({ kind: "make" })}><IcPlus size={12} /> Add Make</button>
+          </div>
+          <div className="vm-search">
+            <IcSearch />
+            <input placeholder="Search makes…" value={qMake} onChange={(e) => setQMake(e.target.value)} />
+          </div>
+          <div className="vm-list">
+            {makes.map((m) => {
+              const total = m.models.reduce((s, md) => s + md.variants.length, 0);
+              return (
+                <div
+                  key={m.id}
+                  className={"vm-row " + (m.id === makeId ? "active" : "")}
+                  onClick={() => handleSelectMake(m)}
+                >
+                  <div className="vm-name-wrap">
+                    <span className="vm-name">{m.name}</span>
+                    <span style={{ fontSize: 11.5, color: "var(--text-faint)" }}>
+                      {m.models.length} models · {total} variants
+                    </span>
+                  </div>
+                  <span className="vm-count">{total}</span>
+                  <div className="vm-acts" onClick={(e) => e.stopPropagation()}>
+                    <button className="vm-icon-btn"        title="Edit"   onClick={() => setModal({ kind: "make", edit: m })}><IcEdit /></button>
+                    <button className="vm-icon-btn danger" title="Delete" onClick={() => deleteMake(m.id)}><IcTrash /></button>
+                  </div>
+                </div>
+              );
+            })}
+            {makes.length === 0 && (
+              <div className="vm-empty">
+                <div className="ic"><IcSearch /></div>
+                No makes match “{qMake}”
+              </div>
+            )}
+          </div>
+        </div>
+
+        {/* ---------- MODELS ---------- */}
+        <div className={"vm-col " + (make ? "" : "disabled")}>
+          <div className="vm-head">
+            <div style={{ minWidth: 0 }}>
+              <div className="crumb">Level 2 · {make ? make.name : "—"}</div>
+              <div className="title">Models</div>
+            </div>
+            <button className="add-btn" disabled={!make} onClick={() => setModal({ kind: "model" })}>
+              <IcPlus size={12} /> Add Model
+            </button>
+          </div>
+          <div className="vm-search">
+            <IcSearch />
+            <input placeholder="Search models…" value={qModel} onChange={(e) => setQModel(e.target.value)} />
+          </div>
+          <div className="vm-list">
+            {models.map((md) => (
+              <div
+                key={md.id}
+                className={"vm-row " + (md.id === modelId ? "active" : "")}
+                onClick={() => setModelId(md.id)}
+              >
+                <div className="vm-name-wrap">
+                  <span className="vm-name">{md.name}</span>
+                  <div className="vm-sub">
+                    {md.fuels.map((f) => <span key={f} className={"vm-tag " + fuelClass(f)}>{f}</span>)}
+                  </div>
+                </div>
+                <span className="vm-count">{md.variants.length}</span>
+                <div className="vm-acts" onClick={(e) => e.stopPropagation()}>
+                  <button className="vm-icon-btn"        title="Edit"   onClick={() => setModal({ kind: "model", edit: md })}><IcEdit /></button>
+                  <button className="vm-icon-btn danger" title="Delete" onClick={() => deleteModel(md.id)}><IcTrash /></button>
+                </div>
+              </div>
+            ))}
+            {make && models.length === 0 && (
+              <div className="vm-empty">
+                <div className="ic"><IcFolder /></div>
+                No models under {make.name}
+                <div style={{ marginTop: 4 }}>Click “Add Model” to create one.</div>
+              </div>
+            )}
+            {!make && (
+              <div className="vm-empty">
+                <div className="ic"><IcFolder /></div>
+                Select a make to view its models.
+              </div>
+            )}
+          </div>
+        </div>
+
+        {/* ---------- VARIANTS ---------- */}
+        <div className={"vm-col " + (model ? "" : "disabled")}>
+          <div className="vm-head">
+            <div style={{ minWidth: 0 }}>
+              <div className="crumb">Level 3 · {model ? model.name : "—"}</div>
+              <div className="title">Variants</div>
+            </div>
+            <button className="add-btn" disabled={!model} onClick={() => setModal({ kind: "variant" })}>
+              <IcPlus size={12} /> Add Variant
+            </button>
+          </div>
+          <div className="vm-search">
+            <IcSearch />
+            <input placeholder="Search variants…" value={qVariant} onChange={(e) => setQVariant(e.target.value)} />
+          </div>
+          <div className="vm-list">
+            {variants.map((v) => (
+              <div key={v.id} className="vm-row">
+                <div className="vm-name-wrap">
+                  <span className="vm-name">{v.name}</span>
+                  <div className="vm-sub">
+                    <span className={"vm-tag " + fuelClass(v.fuel)}>{v.fuel}</span>
+                    <span className="vm-tag trans">{v.trans}</span>
+                  </div>
+                </div>
+                <span />
+                <div className="vm-acts" onClick={(e) => e.stopPropagation()} style={{ opacity: 1 }}>
+                  <button className="vm-icon-btn"        title="Edit"   onClick={() => setModal({ kind: "variant", edit: v })}><IcEdit /></button>
+                  <button className="vm-icon-btn danger" title="Delete" onClick={() => deleteVariant(v.id)}><IcTrash /></button>
+                </div>
+              </div>
+            ))}
+            {model && variants.length === 0 && (
+              <div className="vm-empty">
+                <div className="ic"><IcFolder /></div>
+                No variants under {model.name}
+                <div style={{ marginTop: 4 }}>Click “Add Variant” to create one.</div>
+              </div>
+            )}
+            {!model && (
+              <div className="vm-empty">
+                <div className="ic"><IcFolder /></div>
+                Select a model to view its variants.
+              </div>
+            )}
+          </div>
+        </div>
+      </div>
+
+      {modal && modal.kind === "make" && (
+        <MakeModal
+          initial={modal.edit}
+          onClose={() => setModal(null)}
+          onSave={(v) => { modal.edit ? editMake(modal.edit.id, v) : addMake(v); setModal(null); }}
+        />
+      )}
+      {modal && modal.kind === "model" && (
+        <ModelModal
+          initial={modal.edit}
+          makeName={make ? make.name : ""}
+          onClose={() => setModal(null)}
+          onSave={(v) => { modal.edit ? editModel(modal.edit.id, v) : addModel(v); setModal(null); }}
+        />
+      )}
+      {modal && modal.kind === "variant" && (
+        <VariantModal
+          initial={modal.edit}
+          modelName={model ? model.name : ""}
+          allowedFuels={model ? model.fuels : null}
+          onClose={() => setModal(null)}
+          onSave={(v) => { modal.edit ? editVariant(modal.edit.id, v) : addVariant(v); setModal(null); }}
+        />
+      )}
+    </>
+  );
+}
+
+/* ============================================================
+   ADD VEHICLE DRAWER
+   ============================================================ */
+const YEARS = (() => { const a = []; for (let y = 2026; y >= 2005; y--) a.push(y); return a; })();
+const OWNERS = ["1st Owner", "2nd Owner", "3rd Owner", "4+ Owners"];
+const COLORS_HINT = "e.g. Pearl Arctic White, Fiery Red, Galaxy Blue";
+
+function Stepper({ step }) {
+  const steps = [
+    { n: 1, label: "Identity",  sub: "Make, model, year" },
+    { n: 2, label: "Details",   sub: "Specs, price, photos" },
+    { n: 3, label: "Review",    sub: "Confirm & publish" },
+  ];
+  return (
+    <div className="stepper">
+      <div className={"step-line l-mid " + (step >= 2 ? "on" : "")} />
+      <div className={"step-line l-rt "  + (step >= 3 ? "on" : "")} />
+      {steps.map((s) => {
+        const state = step === s.n ? "active" : (step > s.n ? "done" : "");
+        return (
+          <div key={s.n} className={"step " + state}>
+            <div className="step-circle">
+              {step > s.n
+                ? <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><path d="M5 12l5 5L20 7"/></svg>
+                : s.n}
+            </div>
+            <div className="step-label">{s.label}</div>
+            <div className="step-sub">{s.sub}</div>
+          </div>
+        );
+      })}
+    </div>
+  );
+}
+
+function Field({ label, required, error, hint, children }) {
+  return (
+    <div className={"ff " + (error ? "invalid" : "")}>
+      <label>{label}{required && <span className="req">*</span>}</label>
+      {children}
+      {error && <div className="err">{error}</div>}
+      {!error && hint && <div className="hint">{hint}</div>}
+    </div>
+  );
+}
+
+function fmtINR(n) {
+  if (n == null || n === "") return "—";
+  const v = parseInt(String(n).replace(/[^0-9]/g, ""), 10);
+  if (isNaN(v)) return "—";
+  return "₹" + v.toLocaleString("en-IN");
+}
+
+function AddVehicleDrawer({ master, onClose, onSubmit }) {
+  const [step, setStep] = useState(1);
+  const [form, setForm] = useState({
+    makeId: "", modelId: "", variantId: "",
+    year: "", regNo: "", vin: "",
+    fuel: "", trans: "", km: "", owners: "1st Owner",
+    color: "", purchase: "", listing: "",
+    insurance: "",
+    photos: [],
+  });
+  const [errors, setErrors] = useState({});
+  const [dragging, setDragging] = useState(false);
+
+  const update = (patch) => setForm((f) => ({ ...f, ...patch }));
+
+  const make    = master.find((m) => m.id === form.makeId);
+  const model   = make    ? make.models.find((m) => m.id === form.modelId)        : null;
+  const variant = model   ? model.variants.find((v) => v.id === form.variantId)   : null;
+
+  const fuelOptions = model ? model.fuels : ["Petrol", "Diesel", "CNG", "Electric"];
+
+  const onMakeChange = (id) => update({ makeId: id, modelId: "", variantId: "", fuel: "", trans: "" });
+  const onModelChange = (id) => {
+    const md = make ? make.models.find((m) => m.id === id) : null;
+    update({ modelId: id, variantId: "", fuel: md && md.fuels[0] || "", trans: "" });
+  };
+  const onVariantChange = (id) => {
+    const v = model ? model.variants.find((x) => x.id === id) : null;
+    update({ variantId: id, fuel: v ? v.fuel : form.fuel, trans: v ? v.trans : form.trans });
+  };
+
+  const validateStep1 = () => {
+    const e = {};
+    if (!form.makeId)    e.makeId    = "Select a make.";
+    if (!form.modelId)   e.modelId   = "Select a model.";
+    if (!form.variantId) e.variantId = "Select a variant.";
+    if (!form.year)      e.year      = "Year is required.";
+    if (!form.regNo || form.regNo.trim().length < 6) e.regNo = "Enter a valid registration number.";
+    return e;
+  };
+  const validateStep2 = () => {
+    const e = {};
+    if (!form.fuel)      e.fuel = "Fuel type is required.";
+    if (!form.trans)     e.trans = "Transmission is required.";
+    if (!form.km || isNaN(+form.km) || +form.km < 0) e.km = "Enter kilometres driven.";
+    if (!form.color.trim()) e.color = "Color is required.";
+    if (!form.purchase || isNaN(+form.purchase)) e.purchase = "Purchase price required.";
+    if (!form.listing  || isNaN(+form.listing))  e.listing  = "Listing price required.";
+    if (!form.insurance) e.insurance = "Insurance date required.";
+    return e;
+  };
+
+  const next = () => {
+    const e = step === 1 ? validateStep1() : validateStep2();
+    setErrors(e);
+    if (Object.keys(e).length === 0) setStep((s) => Math.min(3, s + 1));
+  };
+  const back = () => { setErrors({}); setStep((s) => Math.max(1, s - 1)); };
+
+  const addPhotos = (files) => {
+    const fileArr = Array.from(files || []).slice(0, 10 - form.photos.length);
+    if (!fileArr.length) return;
+    const previews = fileArr.map((f) => ({
+      id: Math.random().toString(36).slice(2),
+      name: f.name,
+      url: URL.createObjectURL(f),
+    }));
+    update({ photos: [...form.photos, ...previews] });
+  };
+  const removePhoto = (id) => update({ photos: form.photos.filter((p) => p.id !== id) });
+
+  const handleSubmit = () => {
+    const trim = form.regNo.trim().toUpperCase().slice(0, 4);
+    const id = (trim || "VHL") + "-" + Math.floor(1000 + Math.random() * 8999);
+    const title = `${form.year} ${make.name} ${model.name} ${variant.name}`;
+    const car = {
+      id, title,
+      price: fmtINR(form.listing),
+      fuel: form.fuel,
+      trans: form.trans,
+      km: parseInt(form.km, 10).toLocaleString("en-IN") + " km",
+      seller: null,
+      year: parseInt(form.year, 10),
+      make: make.name,
+    };
+    onSubmit(car);
+  };
+
+  /* ---- Step bodies ---- */
+  const StepIdentity = (
+    <>
+      <div className="form-section-title">Vehicle identity</div>
+      <div className="form-grid">
+        <Field label="Make" required error={errors.makeId}>
+          <select value={form.makeId} onChange={(e) => onMakeChange(e.target.value)}>
+            <option value="">Select make…</option>
+            {master.map((m) => <option key={m.id} value={m.id}>{m.name}</option>)}
+          </select>
+        </Field>
+        <Field label="Model" required error={errors.modelId} hint={!make ? "Choose a make first" : null}>
+          <select value={form.modelId} disabled={!make} onChange={(e) => onModelChange(e.target.value)}>
+            <option value="">Select model…</option>
+            {make && make.models.map((m) => <option key={m.id} value={m.id}>{m.name}</option>)}
+          </select>
+        </Field>
+        <Field label="Variant" required error={errors.variantId} hint={!model ? "Choose a model first" : null}>
+          <select value={form.variantId} disabled={!model} onChange={(e) => onVariantChange(e.target.value)}>
+            <option value="">Select variant…</option>
+            {model && model.variants.map((v) => <option key={v.id} value={v.id}>{v.name}</option>)}
+          </select>
+        </Field>
+        <Field label="Year" required error={errors.year}>
+          <select value={form.year} onChange={(e) => update({ year: e.target.value })}>
+            <option value="">Year…</option>
+            {YEARS.map((y) => <option key={y} value={y}>{y}</option>)}
+          </select>
+        </Field>
+        <Field label="Registration No." required error={errors.regNo} hint="State + RTO format, e.g. MH-12-AB-1234">
+          <input type="text" value={form.regNo} placeholder="MH-12-AB-1234" onChange={(e) => update({ regNo: e.target.value })} />
+        </Field>
+        <Field label="VIN / Chassis No." hint="Optional · 17-character identifier">
+          <input type="text" value={form.vin} placeholder="MA3ETDE1S00123456" onChange={(e) => update({ vin: e.target.value })} />
+        </Field>
+      </div>
+    </>
+  );
+
+  const StepDetails = (
+    <>
+      <div className="form-section-title">Specifications</div>
+      <div className="form-grid">
+        <Field label="Fuel Type" required error={errors.fuel} hint="Auto-filled from variant · editable">
+          <select value={form.fuel} onChange={(e) => update({ fuel: e.target.value })}>
+            <option value="">Select fuel…</option>
+            {fuelOptions.map((f) => <option key={f}>{f}</option>)}
+          </select>
+        </Field>
+        <Field label="Transmission" required error={errors.trans} hint="Auto-filled from variant · editable">
+          <select value={form.trans} onChange={(e) => update({ trans: e.target.value })}>
+            <option value="">Select transmission…</option>
+            <option>Manual</option><option>Automatic</option>
+          </select>
+        </Field>
+        <Field label="KMs Driven" required error={errors.km}>
+          <input type="number" min="0" value={form.km} placeholder="32000" onChange={(e) => update({ km: e.target.value })} />
+        </Field>
+        <Field label="Owners" required>
+          <select value={form.owners} onChange={(e) => update({ owners: e.target.value })}>
+            {OWNERS.map((o) => <option key={o}>{o}</option>)}
+          </select>
+        </Field>
+        <Field label="Color" required error={errors.color} hint={COLORS_HINT}>
+          <input type="text" value={form.color} placeholder="Pearl Arctic White" onChange={(e) => update({ color: e.target.value })} />
+        </Field>
+        <Field label="Insurance Valid Till" required error={errors.insurance}>
+          <input type="date" value={form.insurance} onChange={(e) => update({ insurance: e.target.value })} />
+        </Field>
+      </div>
+
+      <div className="form-section-title" style={{ marginTop: 18 }}>Pricing</div>
+      <div className="form-grid">
+        <Field label="Purchase Price" required error={errors.purchase}>
+          <div className="prefix-wrap">
+            <span className="prefix">₹</span>
+            <input type="number" min="0" value={form.purchase} placeholder="450000" onChange={(e) => update({ purchase: e.target.value })} />
+          </div>
+        </Field>
+        <Field label="Listing Price" required error={errors.listing}>
+          <div className="prefix-wrap">
+            <span className="prefix">₹</span>
+            <input type="number" min="0" value={form.listing} placeholder="585000" onChange={(e) => update({ listing: e.target.value })} />
+          </div>
+        </Field>
+      </div>
+
+      <div className="form-section-title" style={{ marginTop: 18 }}>Photos</div>
+      <div
+        className={"dropzone " + (dragging ? "dragging" : "")}
+        onDragOver={(e) => { e.preventDefault(); setDragging(true); }}
+        onDragLeave={() => setDragging(false)}
+        onDrop={(e) => { e.preventDefault(); setDragging(false); addPhotos(e.dataTransfer.files); }}
+        onClick={() => document.getElementById("av-file-input").click()}
+      >
+        <div className="dz-ic">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+            <path d="M12 16V4M7 9l5-5 5 5" /><path d="M4 20h16" />
+          </svg>
+        </div>
+        <div className="dz-title">Drop photos here or click to upload</div>
+        <div className="dz-sub">PNG or JPG · up to 10 images · first photo becomes the cover</div>
+        <input id="av-file-input" type="file" accept="image/*" multiple style={{ display: "none" }} onChange={(e) => addPhotos(e.target.files)} />
+      </div>
+      {form.photos.length > 0 && (
+        <>
+          <div className="photo-strip">
+            {form.photos.map((p) => (
+              <div key={p.id} className="photo-thumb">
+                <img src={p.url} alt={p.name} />
+                <button className="x" onClick={(e) => { e.stopPropagation(); removePhoto(p.id); }}>×</button>
+              </div>
+            ))}
+          </div>
+          <div className="photo-counter">{form.photos.length} of 10 photos uploaded</div>
+        </>
+      )}
+    </>
+  );
+
+  const StepReview = (
+    <>
+      <div className="review-section">
+        <div className="review-head">
+          <span className="num">1</span>
+          <span className="h">Vehicle Identity</span>
+          <span className="edit-link" onClick={() => setStep(1)}>Edit</span>
+        </div>
+        <div className="kv-grid">
+          <div className="kv"><div className="k">Make</div><div className="v">{make ? make.name : "—"}</div></div>
+          <div className="kv"><div className="k">Model</div><div className="v">{model ? model.name : "—"}</div></div>
+          <div className="kv"><div className="k">Variant</div><div className="v">{variant ? variant.name : "—"}</div></div>
+          <div className="kv"><div className="k">Year</div><div className="v">{form.year || "—"}</div></div>
+          <div className="kv"><div className="k">Registration No.</div><div className="v">{form.regNo.toUpperCase() || "—"}</div></div>
+          <div className="kv"><div className="k">VIN</div><div className={"v " + (form.vin ? "" : "muted")}>{form.vin || "not provided"}</div></div>
+        </div>
+      </div>
+
+      <div className="review-section">
+        <div className="review-head">
+          <span className="num">2</span>
+          <span className="h">Vehicle Details</span>
+          <span className="edit-link" onClick={() => setStep(2)}>Edit</span>
+        </div>
+        <div className="kv-grid">
+          <div className="kv"><div className="k">Fuel</div><div className="v">{form.fuel || "—"}</div></div>
+          <div className="kv"><div className="k">Transmission</div><div className="v">{form.trans || "—"}</div></div>
+          <div className="kv"><div className="k">KMs Driven</div><div className="v">{form.km ? parseInt(form.km,10).toLocaleString("en-IN") + " km" : "—"}</div></div>
+          <div className="kv"><div className="k">Owners</div><div className="v">{form.owners}</div></div>
+          <div className="kv"><div className="k">Color</div><div className="v">{form.color || "—"}</div></div>
+          <div className="kv"><div className="k">Insurance Valid Till</div><div className="v">{form.insurance || "—"}</div></div>
+          <div className="kv"><div className="k">Purchase Price</div><div className="v">{fmtINR(form.purchase)}</div></div>
+          <div className="kv"><div className="k">Listing Price</div><div className="v" style={{ fontWeight: 700 }}>{fmtINR(form.listing)}</div></div>
+          <div className="kv full"><div className="k">Photos</div><div className="v">{form.photos.length} uploaded</div></div>
+        </div>
+        <div className="auto-tags">
+          <span className="lbl">Auto-tags</span>
+          <span className="inv-seller-tag direct" style={{ position: "static" }}>Direct Purchase</span>
+          <span className="badge live">In Stock</span>
+        </div>
+      </div>
+    </>
+  );
+
+  return (
+    <>
+      <div className="drawer-back" onMouseDown={onClose} />
+      <aside className="drawer" role="dialog" aria-label="Add Vehicle">
+        <div className="drawer-head">
+          <div className="title">
+            <h2>Add Vehicle to Inventory</h2>
+            <div className="ms">Capture identity, specs and photos — then publish to the catalogue.</div>
+          </div>
+          <button className="drawer-close" onClick={onClose} title="Close">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M6 6l12 12M18 6l-6 12"/><path d="M6 6l12 12"/><path d="M18 6L6 18"/></svg>
+          </button>
+        </div>
+
+        <Stepper step={step} />
+
+        <div className="drawer-body">
+          {step === 1 && StepIdentity}
+          {step === 2 && StepDetails}
+          {step === 3 && StepReview}
+        </div>
+
+        <div className="drawer-foot">
+          <span className="step-meta">Step {step} of 3</span>
+          <span className="spacer" />
+          {step > 1 && <button className="btn-ghost" onClick={back}>← Back</button>}
+          {step < 3 && <button className="btn-confirm" onClick={next}>Next →</button>}
+          {step === 3 && <button className="btn-confirm" onClick={handleSubmit}>Add to Inventory</button>}
+        </div>
+      </aside>
+    </>
+  );
+}
+
+/* ============================================================
+   Toasts
+   ============================================================ */
+function ToastHost({ toasts }) {
+  return (
+    <div className="toast-wrap">
+      {toasts.map((t) => (
+        <div key={t.id} className="toast">
+          <span className="ic">
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><path d="M5 12l5 5L20 7"/></svg>
+          </span>
+          <span>{t.msg}</span>
+        </div>
+      ))}
+    </div>
+  );
+}
+
+function App() {
+  const [active, setActive] = useState("dashboard");
+  const [toasts, setToasts] = useState([]);
+  const [stock, setStock] = useState(INV_STOCK_INIT);
+  const [drawerOpen, setDrawerOpen] = useState(false);
+  const [newId, setNewId] = useState(null);
+  const pushToast = (msg) => {
+    const id = Math.random().toString(36).slice(2);
+    setToasts((cur) => [...cur, { id, msg }]);
+    setTimeout(() => setToasts((cur) => cur.filter((t) => t.id !== id)), 2800);
+  };
+  const openAdd = () => { setActive("inventory"); setDrawerOpen(true); };
+  const handleAddVehicle = (car) => {
+    setStock((cur) => [car, ...cur]);
+    setNewId(car.id);
+    setDrawerOpen(false);
+    pushToast(`Added to inventory · ${car.title}`);
+    setTimeout(() => setNewId(null), 1700);
+  };
+  const titleMap = {
+    dashboard: "Dashboard",
+    inventory: "Inventory",
+    requests:  "Listing Requests",
+    master:    "Vehicle Master",
+  };
+  return (
+    <div className="app">
+      <Sidebar active={active} setActive={setActive} />
+      <div className="main">
+        <header className="topbar">
+          <div className="crumbs">
+            <span>AutoVault</span>
+            <span className="sep"><IcChevR /></span>
+            <span className="cur">{titleMap[active]}</span>
+          </div>
+          <div className="search">
+            <IcSearch />
+            <input placeholder="Search VIN, make, model, seller…" />
+          </div>
+          <div className="top-actions">
+            <div className="icon-btn" title="Export"><IcDownload size={16} /></div>
+            <div className="icon-btn" title="Notifications">
+              <IcBell size={17} />
+              <span className="dot" />
+            </div>
+            <button className="btn-primary" onClick={openAdd}><IcPlus /> Add Vehicle</button>
+          </div>
+        </header>
+        <main className="page">
+          {active === "dashboard" && <Dashboard />}
+          {active === "inventory" && <Inventory stock={stock} sold={INV_SOLD} onOpenAdd={() => setDrawerOpen(true)} newId={newId} />}
+          {active === "requests"  && <Requests pushToast={pushToast} />}
+          {active === "master"    && <VehicleMaster pushToast={pushToast} />}
+        </main>
+        <ToastHost toasts={toasts} />
+        {drawerOpen && (
+          <AddVehicleDrawer
+            master={INITIAL_MASTER}
+            onClose={() => setDrawerOpen(false)}
+            onSubmit={handleAddVehicle}
+          />
+        )}
+      </div>
+    </div>
+  );
+}
+
+ReactDOM.createRoot(document.getElementById("root")).render(<App />);
+</script>
+</body>
+</html>

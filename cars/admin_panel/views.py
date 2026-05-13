@@ -283,6 +283,10 @@ class SafePagePaginationMixin:
 class DashboardView(StaffRequiredMixin, AdminPanelContextMixin, TemplateView):
     template_name = 'admin_panel/dashboard.html'
 
+
+class ShellPreviewView(StaffRequiredMixin, AdminPanelContextMixin, TemplateView):
+    template_name = 'admin_panel/shell_preview.html'
+
     def get_context_data(self, **kwargs):
         ctx = super().get_context_data(**kwargs)
         User = get_user_model()
