@@ -9,6 +9,7 @@ urlpatterns = [
     path('logout/', views.StaffLogoutView.as_view(), name='logout'),
     path('', views.DashboardView.as_view(), name='dashboard'),
     path('ui-preview/', views.ShellPreviewView.as_view(), name='shell_preview'),
+    path('dashboard-preview/', views.DashboardPreviewView.as_view(), name='dashboard_preview'),
     path('customers/', views.CustomerListView.as_view(), name='customer_list'),
     path('wishlists/', views.WishlistActivityListView.as_view(), name='wishlist_list'),
     path(

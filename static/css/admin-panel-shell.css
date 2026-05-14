@@ -452,6 +452,16 @@ body.overflow-hidden { overflow: hidden; }
   font-size: 14px;
 }
 
+.shell-placeholder a {
+  color: var(--blue);
+  font-weight: 600;
+  text-decoration: none;
+}
+
+.shell-placeholder a:hover {
+  text-decoration: underline;
+}
+
 .ap-messages {
   padding: 12px 28px 0;
   display: flex;
