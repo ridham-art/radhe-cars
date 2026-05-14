@@ -1,0 +1,121 @@
+{% extends "admin_panel/base_new.html" %}
+{% load static %}
+{% block title %}Inventory{% endblock %}
+{% block heading %}Inventory{% endblock %}
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'css/admin-panel-inventory.css' %}">
+{% endblock %}
+{% block content %}
+<div class="page-head-inv">
+    <div>
+        <h1>Inventory</h1>
+        <div class="sub">Manage your live catalogue and past sales</div>
+    </div>
+    <a href="{% url 'admin_panel:car_add' %}" class="btn-primary">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg>
+        Add Vehicle
+    </a>
+</div>
+
+<nav class="subtabs" aria-label="Inventory tabs">
+    <a href="?tab=stock{% if filter_querystring %}&{{ filter_querystring }}{% endif %}" class="subtab{% if active_tab == 'stock' %} on{% endif %}">
+        In Stock <span class="tab-count">{{ stock_count }}</span>
+    </a>
+    <a href="?tab=sold{% if filter_querystring %}&{{ filter_querystring }}{% endif %}" class="subtab{% if active_tab == 'sold' %} on{% endif %}">
+        Sold <span class="tab-count">{{ sold_count }}</span>
+    </a>
+</nav>
+
+<form method="get" class="filterbar">
+    <input type="hidden" name="tab" value="{{ active_tab }}">
+    <div class="search-wrap">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><circle cx="11" cy="11" r="6.5"/><path d="M20 20l-3.5-3.5"/></svg>
+        <input class="search-i" type="search" name="q" value="{{ search_q }}" placeholder="Search by model name…" aria-label="Search inventory">
+    </div>
+    <select class="select" name="brand" aria-label="Filter by make">
+        <option value="">All Makes</option>
+        {% for b in brands %}
+        <option value="{{ b.pk }}"{% if filter_brand == b.pk %} selected{% endif %}>{{ b.name }}</option>
+        {% endfor %}
+    </select>
+    <select class="select" name="year" aria-label="Filter by year">
+        <option value="">All Years</option>
+        {% for y in years %}
+        <option value="{{ y }}"{% if filter_year == y|stringformat:"s" %} selected{% endif %}>{{ y }}</option>
+        {% endfor %}
+    </select>
+    <select class="select" name="sort" aria-label="Sort order">
+        <option value="date-desc"{% if filter_sort == 'date-desc' %} selected{% endif %}>Sort: Newest First</option>
+        <option value="price-desc"{% if filter_sort == 'price-desc' %} selected{% endif %}>Sort: Price (High → Low)</option>
+        <option value="price-asc"{% if filter_sort == 'price-asc' %} selected{% endif %}>Sort: Price (Low → High)</option>
+    </select>
+    <button type="submit" class="btn-ghost">Apply</button>
+    <a href="{% url 'admin_panel:car_list_preview' %}?tab={{ active_tab }}" class="btn-ghost">Reset</a>
+</form>
+
+<div class="result-count">Showing {% if page_obj.paginator.count %}{{ page_obj.start_index }}–{{ page_obj.end_index }} of {{ page_obj.paginator.count }}{% else %}0{% endif %} vehicles</div>
+
+<div class="inv-grid">
+    {% for car in cars %}
+    <article class="inv-card">
+        <div class="inv-img">
+            <span class="inv-status">
+                {% if active_tab == 'sold' %}
+                <span class="badge sold-r">Sold</span>
+                {% else %}
+                <span class="badge live">In Stock</span>
+                {% endif %}
+            </span>
+            {% if car.contact_name or car.seller_id %}
+            <span class="inv-seller-tag">Seller-Listed</span>
+            {% else %}
+            <span class="inv-seller-tag direct">Direct Purchase</span>
+            {% endif %}
+            {% with img=car.primary_image %}
+            {% if img and img.display_url %}
+            <img src="{{ img.display_url }}" alt="">
+            {% else %}
+            <svg width="56" height="56" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.2" aria-hidden="true"><path d="M5 13l1.6-4.2A2 2 0 0 1 8.5 7.5h7a2 2 0 0 1 1.9 1.3L19 13"/><path d="M3.5 17h17v-2.5a1.5 1.5 0 0 0-1.5-1.5h-14A1.5 1.5 0 0 0 3.5 14.5V17z"/></svg>
+            {% endif %}
+            {% endwith %}
+        </div>
+        <div class="inv-body">
+            <div class="inv-title">{{ car.title }}</div>
+            <div class="inv-price">{{ car.price_display }}</div>
+            <div class="inv-tags">
+                <span class="inv-tag">{{ car.fuel_type }}</span>
+                <span class="inv-tag">{{ car.get_transmission_display }}</span>
+                <span class="inv-tag">{{ car.mileage|floatformat:0 }} km</span>
+            </div>
+            <div class="inv-foot">
+                <span class="inv-meta">#{{ car.pk }} · {% if car.contact_name %}{{ car.contact_name }}{% elif car.seller_id %}{{ car.seller.get_full_name|default:car.seller.username }}{% else %}Radhe Auto{% endif %}</span>
+                <a class="btn-ghost primary" href="{% url 'admin_panel:car_edit' car.pk %}">
+                    View Details
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M9 6l6 6-6 6"/></svg>
+                </a>
+            </div>
+        </div>
+    </article>
+    {% empty %}
+    <div class="inv-empty">No vehicles match your filters.</div>
+    {% endfor %}
+</div>
+
+{% if page_obj.has_other_pages %}
+<nav class="inv-pagination" aria-label="Inventory pagination">
+    {% if page_obj.has_previous %}
+    <a href="?page={{ page_obj.previous_page_number }}{% if car_list_querystring %}&{{ car_list_querystring }}{% endif %}">Prev</a>
+    {% endif %}
+    {% for num in page_obj.paginator.page_range %}
+        {% if num == page_obj.number %}
+        <span class="on">{{ num }}</span>
+        {% elif num > page_obj.number|add:'-3' and num < page_obj.number|add:'3' %}
+        <a href="?page={{ num }}{% if car_list_querystring %}&{{ car_list_querystring }}{% endif %}">{{ num }}</a>
+        {% endif %}
+    {% endfor %}
+    {% if page_obj.has_next %}
+    <a href="?page={{ page_obj.next_page_number }}{% if car_list_querystring %}&{{ car_list_querystring }}{% endif %}">Next</a>
+    {% endif %}
+</nav>
+{% endif %}
+{% endblock %}

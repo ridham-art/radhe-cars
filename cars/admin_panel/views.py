@@ -76,8 +76,21 @@ def filter_car_list_queryset(request):
     status = request.GET.get('status')
     if status:
         qs = qs.filter(status=status)
-    elif request.GET.get('not_sold') == '1':
-        qs = qs.exclude(status='SOLD')
+    else:
+        tab = request.GET.get('tab', '').strip()
+        url_name = getattr(getattr(request, 'resolver_match', None), 'url_name', None)
+        if url_name == 'car_list_preview' and not tab:
+            tab = 'stock'
+        if tab == 'sold':
+            qs = qs.filter(status='SOLD')
+        elif tab == 'stock':
+            qs = qs.exclude(status='SOLD')
+        elif request.GET.get('not_sold') == '1':
+            qs = qs.exclude(status='SOLD')
+
+    year = request.GET.get('year', '').strip()
+    if year and year.isdigit():
+        qs = qs.filter(year=int(year))
 
     tz = timezone.get_current_timezone()
     date_from = request.GET.get('date_from', '').strip()
@@ -97,6 +110,11 @@ def filter_car_list_queryset(request):
         except ValueError:
             pass
 
+    sort = request.GET.get('sort', 'date-desc').strip()
+    if sort == 'price-asc':
+        return qs.order_by('price')
+    if sort == 'price-desc':
+        return qs.order_by('-price')
     return qs.order_by('-created_at')
 
 
@@ -613,6 +631,48 @@ class CarListView(
         ctx['filter_date_from'] = self.request.GET.get('date_from', '')
         ctx['filter_date_to'] = self.request.GET.get('date_to', '')
         ctx['car_list_querystring'] = car_list_querystring_except_page(self.request)
+        return ctx
+
+
+class CarListPreviewView(
+    StaffRequiredMixin,
+    AdminPanelContextMixin,
+    SafePagePaginationMixin,
+    ListView,
+):
+    model = Car
+    template_name = 'admin_panel/car_list_new.html'
+    context_object_name = 'cars'
+    paginate_by = 24
+
+    def get_queryset(self):
+        return filter_car_list_queryset(self.request)
+
+    def get_context_data(self, **kwargs):
+        ctx = super().get_context_data(**kwargs)
+        base = Car.objects.exclude(submit_via_sell_form=True)
+        tab = self.request.GET.get('tab', 'stock').strip()
+        if tab not in ('stock', 'sold'):
+            tab = 'stock'
+
+        ctx['brands'] = Brand.objects.order_by('name')
+        ctx['years'] = (
+            base.values_list('year', flat=True).distinct().order_by('-year')
+        )
+        ctx['search_q'] = self.request.GET.get('q', '')
+        _b = self.request.GET.get('brand')
+        ctx['filter_brand'] = int(_b) if _b and str(_b).isdigit() else None
+        ctx['filter_year'] = self.request.GET.get('year', '')
+        ctx['filter_sort'] = self.request.GET.get('sort', 'date-desc')
+        ctx['active_tab'] = tab
+        ctx['stock_count'] = base.exclude(status='SOLD').count()
+        ctx['sold_count'] = base.filter(status='SOLD').count()
+        ctx['tab_total'] = ctx['sold_count'] if tab == 'sold' else ctx['stock_count']
+        ctx['car_list_querystring'] = car_list_querystring_except_page(self.request)
+        filt = self.request.GET.copy()
+        filt.pop('page', None)
+        filt.pop('tab', None)
+        ctx['filter_querystring'] = urlencode(filt)
         return ctx
 
 
