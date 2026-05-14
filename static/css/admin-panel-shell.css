@@ -411,3 +411,132 @@ body.overflow-hidden { overflow: hidden; }
     padding: 12px 16px 0;
   }
 }
+
+/* Dashboard stat cards */
+.page-head {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 16px;
+  flex-wrap: wrap;
+}
+
+.page-head h1 {
+  margin: 0;
+  font-size: 22px;
+  font-weight: 700;
+  letter-spacing: -0.015em;
+  color: var(--text);
+}
+
+.page-head .sub {
+  color: var(--text-muted);
+  font-size: 13px;
+  margin-top: 4px;
+}
+
+.stats {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 16px;
+}
+
+.stat-link {
+  text-decoration: none;
+  color: inherit;
+  display: block;
+  transition: border-color 0.12s ease, box-shadow 0.12s ease;
+}
+
+.stat-link:hover {
+  border-color: var(--border-strong);
+  box-shadow: var(--shadow);
+}
+
+.stat {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 18px 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  box-shadow: var(--shadow-sm);
+  height: 100%;
+}
+
+.stat-head {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.stat-ic {
+  width: 36px;
+  height: 36px;
+  border-radius: 9px;
+  display: grid;
+  place-items: center;
+  background: #f1f2f5;
+  color: #475063;
+  flex-shrink: 0;
+}
+
+.stat.green .stat-ic { background: var(--green-soft); color: var(--green); }
+.stat.blue .stat-ic { background: var(--blue-soft); color: var(--blue); }
+.stat.amber .stat-ic { background: var(--amber-soft); color: var(--amber); }
+.stat.red .stat-ic { background: var(--red-soft); color: var(--red); }
+.stat.violet .stat-ic { background: #ede9fe; color: var(--violet); }
+
+.stat-label {
+  color: var(--text-muted);
+  font-size: 12.5px;
+  font-weight: 500;
+}
+
+.stat-value {
+  font-size: 30px;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  line-height: 1.05;
+  font-variant-numeric: tabular-nums;
+  color: var(--text);
+}
+
+.stat.green .stat-value { color: var(--green); }
+.stat.red .stat-value { color: var(--red); }
+.stat.blue .stat-value { color: var(--blue); }
+.stat.violet .stat-value { color: var(--violet); }
+
+.stat-hint {
+  font-size: 12px;
+  color: var(--text-faint);
+  line-height: 1.4;
+}
+
+.dashboard-foot {
+  font-size: 13px;
+  color: var(--text-muted);
+  margin: 0;
+}
+
+.dashboard-foot a {
+  color: var(--blue);
+  text-decoration: none;
+}
+
+.dashboard-foot a:hover {
+  text-decoration: underline;
+}
+
+@media (max-width: 1100px) {
+  .stats {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+@media (max-width: 520px) {
+  .stats {
+    grid-template-columns: 1fr;
+  }
+}

@@ -280,13 +280,7 @@ class SafePagePaginationMixin:
         return (paginator, page, page.object_list, page.has_other_pages())
 
 
-class DashboardView(StaffRequiredMixin, AdminPanelContextMixin, TemplateView):
-    template_name = 'admin_panel/dashboard.html'
-
-
-class ShellPreviewView(StaffRequiredMixin, AdminPanelContextMixin, TemplateView):
-    template_name = 'admin_panel/shell_preview.html'
-
+class DashboardStatsMixin:
     def get_context_data(self, **kwargs):
         ctx = super().get_context_data(**kwargs)
         User = get_user_model()
@@ -312,6 +306,18 @@ class ShellPreviewView(StaffRequiredMixin, AdminPanelContextMixin, TemplateView)
             }
         )
         return ctx
+
+
+class DashboardView(StaffRequiredMixin, AdminPanelContextMixin, DashboardStatsMixin, TemplateView):
+    template_name = 'admin_panel/dashboard.html'
+
+
+class DashboardPreviewView(StaffRequiredMixin, AdminPanelContextMixin, DashboardStatsMixin, TemplateView):
+    template_name = 'admin_panel/dashboard_new.html'
+
+
+class ShellPreviewView(StaffRequiredMixin, AdminPanelContextMixin, TemplateView):
+    template_name = 'admin_panel/shell_preview.html'
 
 
 class CustomerListView(
