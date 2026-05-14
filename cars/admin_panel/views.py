@@ -312,10 +312,6 @@ class DashboardView(StaffRequiredMixin, AdminPanelContextMixin, DashboardStatsMi
     template_name = 'admin_panel/dashboard.html'
 
 
-class DashboardPreviewView(StaffRequiredMixin, AdminPanelContextMixin, DashboardStatsMixin, TemplateView):
-    template_name = 'admin_panel/dashboard_new.html'
-
-
 class ShellPreviewView(StaffRequiredMixin, AdminPanelContextMixin, TemplateView):
     template_name = 'admin_panel/shell_preview.html'
 
@@ -417,10 +413,6 @@ class CarListView(
         ctx['filter_date_to'] = self.request.GET.get('date_to', '')
         ctx['car_list_querystring'] = car_list_querystring_except_page(self.request)
         return ctx
-
-
-class CarListPreviewView(CarListView):
-    template_name = 'admin_panel/car_list_new.html'
 
 
 class CarCreateView(StaffRequiredMixin, AdminPanelContextMixin, CreateView):
