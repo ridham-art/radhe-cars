@@ -90,6 +90,11 @@ urlpatterns = [
         name='vehicle_master_variant_bulk_add',
     ),
     path(
+        'vehicle-master/variants/bulk-delete/',
+        views.VehicleMasterVariantBulkDeleteView.as_view(),
+        name='vehicle_master_variant_bulk_delete',
+    ),
+    path(
         'vehicle-master/variants/<int:pk>/edit/',
         views.VehicleMasterVariantEditView.as_view(),
         name='vehicle_master_variant_edit',

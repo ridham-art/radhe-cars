@@ -145,6 +145,20 @@ class VehicleMasterVariantBulkForm(forms.Form):
     )
 
 
+class VehicleMasterVariantBulkDeleteForm(forms.Form):
+    variants = forms.CharField(
+        label='Variant names to delete',
+        widget=forms.Textarea(
+            attrs={
+                'class': 'vm-textarea',
+                'rows': 12,
+                'placeholder': 'LXi\nVXi\nZXi+',
+            }
+        ),
+        help_text='One variant name per line or comma-separated. Only variants under the selected model are removed.',
+    )
+
+
 class CarModelVariantForm(forms.ModelForm):
     class Meta:
         model = CarModelVariant

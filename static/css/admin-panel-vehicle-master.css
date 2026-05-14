@@ -73,6 +73,17 @@
     color: #1a1f29;
 }
 
+.vm-head .add-btn.add-btn-danger {
+    border-color: #e8b4b0;
+    color: #b42318;
+}
+
+.vm-head .add-btn.add-btn-danger:hover {
+    background: #fdf2f1;
+    border-color: #b42318;
+    color: #912018;
+}
+
 .vm-head .add-btn:disabled {
     opacity: 0.45;
     cursor: not-allowed;
@@ -270,6 +281,60 @@
 .vm-row.active .vm-acts,
 .vm-row.vm-row-variant .vm-acts {
     opacity: 1;
+}
+
+.vm-row.vm-row-variant {
+    grid-template-columns: 1fr auto auto;
+}
+
+.vm-row.vm-row-selectable {
+    grid-template-columns: auto 1fr auto auto;
+}
+
+.vm-variant-cb {
+    width: 15px;
+    height: 15px;
+    accent-color: #1a4ed1;
+    cursor: pointer;
+}
+
+.vm-variant-toolbar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 10px;
+    padding: 8px 12px;
+    border-bottom: 1px solid var(--border);
+    background: var(--surface-2);
+    font-size: 12.5px;
+}
+
+.vm-select-all {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    cursor: pointer;
+    color: var(--text-muted);
+    font-weight: 500;
+    user-select: none;
+}
+
+.vm-variant-toolbar .add-btn.add-btn-danger {
+    border-color: #e8b4b0;
+    color: #b42318;
+    margin-left: 0;
+}
+
+.vm-variant-toolbar .add-btn.add-btn-danger:hover:not(:disabled) {
+    background: #fdf2f1;
+    border-color: #b42318;
+    color: #912018;
+}
+
+.vm-variant-toolbar .add-btn.add-btn-danger:disabled {
+    opacity: 0.45;
+    cursor: not-allowed;
+    pointer-events: none;
 }
 
 .vm-icon-btn {
@@ -485,6 +550,15 @@
 .btn-confirm:disabled {
     opacity: 0.5;
     cursor: not-allowed;
+}
+
+.btn-confirm-danger {
+    background: #b42318;
+    border-color: #b42318;
+}
+
+.btn-confirm-danger:hover {
+    background: #912018;
 }
 
 @media (max-width: 1100px) {

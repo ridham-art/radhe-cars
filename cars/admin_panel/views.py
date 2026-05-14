@@ -44,6 +44,7 @@ from cars.admin_panel.forms import (
     VehicleMasterMakeForm,
     VehicleMasterModelForm,
     VehicleMasterVariantBulkForm,
+    VehicleMasterVariantBulkDeleteForm,
     VM_FUEL_OPTIONS,
 )
 from cars.admin_panel import csv_io
@@ -1589,6 +1590,96 @@ class VehicleMasterVariantBulkAddView(StaffRequiredMixin, View):
             messages.info(
                 request,
                 f'Skipped {skipped_dup} name(s) that already exist for this model.',
+            )
+        return _vehicle_master_redirect(
+            request, make_id=car_model.brand_id, model_id=car_model.pk
+        )
+
+
+def _parse_bulk_delete_names(text):
+    """Variant names only (first segment before | if present)."""
+    names = []
+    for line in text.replace('\r', '').split('\n'):
+        line = line.strip()
+        if not line:
+            continue
+        if '|' in line:
+            line = line.split('|', 1)[0].strip()
+        for n in _parse_bulk_list(line):
+            names.append(n)
+    seen = set()
+    out = []
+    for n in names:
+        key = n.casefold()
+        if key in seen:
+            continue
+        seen.add(key)
+        out.append(n)
+    return out
+
+
+class VehicleMasterVariantBulkDeleteView(StaffRequiredMixin, View):
+    def post(self, request):
+        model_id = (
+            request.POST.get('car_model_id') or request.POST.get('model') or ''
+        ).strip()
+        if not model_id.isdigit():
+            messages.error(request, 'Select a model first.')
+            return _vehicle_master_redirect(request)
+        car_model = get_object_or_404(CarModel, pk=int(model_id))
+
+        ids = request.POST.getlist('ids')
+        if ids:
+            qs = CarModelVariant.objects.filter(
+                car_model=car_model, pk__in=ids
+            )
+            count = qs.count()
+            if not count:
+                messages.warning(request, 'No matching variants to delete.')
+            else:
+                qs.delete()
+                messages.success(request, f'Deleted {count} variant(s).')
+            return _vehicle_master_redirect(
+                request, make_id=car_model.brand_id, model_id=car_model.pk
+            )
+
+        form = VehicleMasterVariantBulkDeleteForm(request.POST)
+        if not form.is_valid():
+            messages.error(request, 'Could not read variant names to delete.')
+            return _vehicle_master_redirect(
+                request, make_id=car_model.brand_id, model_id=car_model.pk
+            )
+
+        names = _parse_bulk_delete_names(form.cleaned_data['variants'])
+        if not names:
+            messages.warning(request, 'No variant names were found in your list.')
+            return _vehicle_master_redirect(
+                request, make_id=car_model.brand_id, model_id=car_model.pk
+            )
+
+        deleted = 0
+        not_found = 0
+        for name in names:
+            qs = CarModelVariant.objects.filter(
+                car_model=car_model, name__iexact=name
+            )
+            count = qs.count()
+            if count:
+                qs.delete()
+                deleted += count
+            else:
+                not_found += 1
+
+        if deleted:
+            messages.success(
+                request, f'Deleted {deleted} variant(s) from {car_model.name}.'
+            )
+        else:
+            messages.warning(request, 'No matching variants were deleted.')
+        if not_found:
+            messages.info(
+                request,
+                f'{not_found} name(s) did not match any variant for this model.',
             )
         return _vehicle_master_redirect(
             request, make_id=car_model.brand_id, model_id=car_model.pk

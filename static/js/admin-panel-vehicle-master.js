@@ -161,4 +161,96 @@
             bulkText.addEventListener('input', syncBulkSubmit);
         }
     }
+
+    var bulkDeleteBackdrop = document.getElementById('vm-variant-bulk-delete-modal');
+    var bulkDeleteText = document.getElementById('vm-variant-bulk-delete-text');
+    var bulkDeleteSubmit = document.getElementById('vm-variant-bulk-delete-submit');
+
+    function syncBulkDeleteSubmit() {
+        if (bulkDeleteSubmit && bulkDeleteText) {
+            bulkDeleteSubmit.disabled = !bulkDeleteText.value.trim();
+        }
+    }
+
+    if (bulkDeleteBackdrop) {
+        bulkDeleteBackdrop.addEventListener('click', function (e) {
+            if (e.target === bulkDeleteBackdrop) closeModal('vm-variant-bulk-delete-modal');
+        });
+        qsa('[data-close="vm-variant-bulk-delete-modal"]').forEach(function (btn) {
+            btn.addEventListener('click', function () {
+                closeModal('vm-variant-bulk-delete-modal');
+            });
+        });
+        qsa('[data-open-variant-bulk-delete-modal]').forEach(function (btn) {
+            btn.addEventListener('click', function (e) {
+                e.preventDefault();
+                e.stopPropagation();
+                if (bulkDeleteText) bulkDeleteText.value = '';
+                syncBulkDeleteSubmit();
+                openModal('vm-variant-bulk-delete-modal');
+                if (bulkDeleteText) bulkDeleteText.focus();
+            });
+        });
+        if (bulkDeleteText) {
+            bulkDeleteText.addEventListener('input', syncBulkDeleteSubmit);
+        }
+        var bulkDeleteNamesForm = document.getElementById('vm-variant-bulk-delete-names-form');
+        if (bulkDeleteNamesForm) {
+            bulkDeleteNamesForm.addEventListener('submit', function (e) {
+                if (!window.confirm('Delete the listed variants for this model?')) {
+                    e.preventDefault();
+                }
+            });
+        }
+    }
+
+    var selectAll = document.getElementById('vm-variant-select-all');
+    var deleteSelected = document.getElementById('vm-variant-delete-selected');
+    var bulkDeleteForm = document.getElementById('vm-variant-bulk-delete-form');
+
+    function variantCheckboxes() {
+        return qsa('.vm-variant-cb');
+    }
+
+    function syncVariantSelection() {
+        var boxes = variantCheckboxes();
+        var checked = boxes.filter(function (cb) { return cb.checked; });
+        if (deleteSelected) {
+            deleteSelected.disabled = checked.length === 0;
+            deleteSelected.textContent = checked.length
+                ? 'Delete selected (' + checked.length + ')'
+                : 'Delete selected';
+        }
+        if (selectAll && boxes.length) {
+            selectAll.checked = checked.length === boxes.length;
+            selectAll.indeterminate = checked.length > 0 && checked.length < boxes.length;
+        }
+    }
+
+    if (selectAll) {
+        selectAll.addEventListener('change', function () {
+            variantCheckboxes().forEach(function (cb) {
+                cb.checked = selectAll.checked;
+            });
+            syncVariantSelection();
+        });
+    }
+
+    variantCheckboxes().forEach(function (cb) {
+        cb.addEventListener('change', syncVariantSelection);
+        cb.addEventListener('click', function (e) {
+            e.stopPropagation();
+        });
+    });
+
+    if (bulkDeleteForm) {
+        bulkDeleteForm.addEventListener('submit', function (e) {
+            var msg = deleteSelected && deleteSelected.getAttribute('data-confirm');
+            if (msg && !window.confirm(msg)) {
+                e.preventDefault();
+            }
+        });
+    }
+
+    syncVariantSelection();
 })();
