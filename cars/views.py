@@ -432,13 +432,13 @@ def get_models(request):
 
 
 def get_variants(request):
-    from .variant_data import get_variants_for_model
+    from .variant_data import get_merged_variant_names
     model_id = request.GET.get('model_id')
     if not model_id:
         return JsonResponse([], safe=False)
     try:
         car_model = CarModel.objects.select_related('brand').get(pk=model_id)
-        variants = get_variants_for_model(car_model.brand.name, car_model.name)
+        variants = get_merged_variant_names(car_model)
         return JsonResponse(variants, safe=False)
     except CarModel.DoesNotExist:
         return JsonResponse([], safe=False)

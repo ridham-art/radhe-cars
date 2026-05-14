@@ -6,7 +6,7 @@ from django.contrib.admin import DateFieldListFilter
 from django.http import JsonResponse
 from django.urls import path, reverse
 
-from .models import Brand, CarModel, Car, CarImage, Inquiry, Testimonial, Wishlist
+from .models import Brand, CarModel, CarModelVariant, Car, CarImage, Inquiry, Testimonial, Wishlist
 
 
 @admin.register(Brand)
@@ -20,6 +20,13 @@ class CarModelAdmin(admin.ModelAdmin):
     list_display = ['name', 'brand']
     list_filter = ['brand']
     search_fields = ['name', 'brand__name']
+
+
+@admin.register(CarModelVariant)
+class CarModelVariantAdmin(admin.ModelAdmin):
+    list_display = ['name', 'car_model', 'fuel_type', 'transmission']
+    list_filter = ['fuel_type', 'transmission', 'car_model__brand']
+    search_fields = ['name', 'car_model__name', 'car_model__brand__name']
 
 
 class CarImageInline(admin.TabularInline):

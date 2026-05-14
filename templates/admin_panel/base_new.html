@@ -41,7 +41,7 @@
                     <span>Listing Requests</span>
                     <span id="nav-sell-badge" class="count count-sell{% if not sell_inquiry_unread_count %} is-hidden{% endif %}">{{ sell_inquiry_unread_count|default:0 }}</span>
                 </a>
-                <a href="{% url 'admin_panel:brand_list' %}" class="nav-item{% if 'brand' in n %} active{% endif %}">
+                <a href="{% url 'admin_panel:vehicle_master_preview' %}" class="nav-item{% if n == 'vehicle_master_preview' or 'vehicle_master' in n %} active{% endif %}">
                     <span class="icon" aria-hidden="true"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75"><ellipse cx="12" cy="5.5" rx="7.5" ry="2.5"/><path d="M4.5 5.5v6c0 1.4 3.4 2.5 7.5 2.5s7.5-1.1 7.5-2.5v-6"/><path d="M4.5 11.5v6c0 1.4 3.4 2.5 7.5 2.5s7.5-1.1 7.5-2.5v-6"/></svg></span>
                     <span>Vehicle Master</span>
                 </a>

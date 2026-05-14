@@ -114,12 +114,44 @@ class Brand(models.Model):
 class CarModel(models.Model):
     brand = models.ForeignKey(Brand, on_delete=models.CASCADE, related_name='models')
     name = models.CharField(max_length=100)
+    supported_fuels = models.JSONField(default=list, blank=True)
 
     def __str__(self):
         return f"{self.brand.name} {self.name}"
 
     class Meta:
         ordering = ['brand__name', 'name']
+
+
+class CarModelVariant(models.Model):
+    FUEL_CHOICES = [
+        ('Petrol', 'Petrol'),
+        ('Diesel', 'Diesel'),
+        ('CNG', 'CNG'),
+        ('Electric', 'Electric'),
+    ]
+    TRANS_CHOICES = [
+        ('Manual', 'Manual'),
+        ('Automatic', 'Automatic'),
+    ]
+    car_model = models.ForeignKey(
+        CarModel, on_delete=models.CASCADE, related_name='variants'
+    )
+    name = models.CharField(max_length=120)
+    fuel_type = models.CharField(max_length=20, choices=FUEL_CHOICES)
+    transmission = models.CharField(max_length=20, choices=TRANS_CHOICES)
+
+    def __str__(self):
+        return f"{self.car_model} {self.name}"
+
+    class Meta:
+        ordering = ['name']
+        constraints = [
+            models.UniqueConstraint(
+                fields=['car_model', 'name'],
+                name='uniq_variant_per_model',
+            ),
+        ]
 
 
 class Car(models.Model):

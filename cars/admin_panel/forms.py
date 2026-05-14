@@ -6,7 +6,7 @@ from django.contrib.auth.forms import AuthenticationForm
 from django.core.exceptions import ValidationError
 from django.utils.text import capfirst
 
-from cars.models import Brand, Car, CarModel
+from cars.models import Brand, Car, CarModel, CarModelVariant
 
 
 class StaffAuthenticationForm(AuthenticationForm):
@@ -89,6 +89,73 @@ class CarModelForm(forms.ModelForm):
             'brand': forms.Select(attrs={'class': 'ap-input'}),
             'name': forms.TextInput(attrs={'class': 'ap-input'}),
         }
+
+
+VM_FUEL_OPTIONS = [
+    ('Petrol', 'Petrol'),
+    ('Diesel', 'Diesel'),
+    ('CNG', 'CNG'),
+    ('Electric', 'Electric'),
+]
+
+
+class VehicleMasterMakeForm(forms.ModelForm):
+    class Meta:
+        model = Brand
+        fields = ['name']
+        widgets = {
+            'name': forms.TextInput(attrs={'class': 'vm-input', 'placeholder': 'e.g. Mahindra'}),
+        }
+
+
+class VehicleMasterModelForm(forms.Form):
+    name = forms.CharField(
+        max_length=100,
+        widget=forms.TextInput(attrs={'class': 'vm-input', 'placeholder': 'e.g. Creta'}),
+    )
+    supported_fuels = forms.MultipleChoiceField(
+        choices=VM_FUEL_OPTIONS,
+        widget=forms.CheckboxSelectMultiple,
+        initial=['Petrol'],
+    )
+
+    def clean_supported_fuels(self):
+        fuels = self.cleaned_data.get('supported_fuels') or []
+        if not fuels:
+            raise ValidationError('Select at least one fuel type.')
+        return fuels
+
+
+class CarModelVariantForm(forms.ModelForm):
+    class Meta:
+        model = CarModelVariant
+        fields = ['name', 'fuel_type', 'transmission']
+        widgets = {
+            'name': forms.TextInput(attrs={'class': 'vm-input', 'placeholder': 'e.g. ZXi+'}),
+            'fuel_type': forms.Select(attrs={'class': 'vm-input'}),
+            'transmission': forms.Select(attrs={'class': 'vm-input'}),
+        }
+
+    def __init__(self, *args, car_model=None, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.car_model = car_model
+        allowed = ['Petrol']
+        if car_model is not None:
+            allowed = list(car_model.supported_fuels or [])
+            if not allowed:
+                allowed = list(
+                    car_model.variants.values_list('fuel_type', flat=True).distinct()
+                ) or ['Petrol']
+        self.fields['fuel_type'].choices = [
+            (v, v) for v, _ in CarModelVariant.FUEL_CHOICES if v in allowed
+        ] or CarModelVariant.FUEL_CHOICES
+
+    def clean_fuel_type(self):
+        fuel = self.cleaned_data['fuel_type']
+        if self.car_model and self.car_model.supported_fuels:
+            if fuel not in self.car_model.supported_fuels:
+                raise ValidationError('Fuel type is not supported for this model.')
+        return fuel
 
 
 class CarStaffForm(forms.ModelForm):

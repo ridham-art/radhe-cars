@@ -44,6 +44,56 @@ urlpatterns = [
     ),
     path('cars/', views.CarListView.as_view(), name='car_list'),
     path('cars-preview/', views.CarListPreviewView.as_view(), name='car_list_preview'),
+    path(
+        'vehicle-master-preview/',
+        views.VehicleMasterPreviewView.as_view(),
+        name='vehicle_master_preview',
+    ),
+    path(
+        'vehicle-master/makes/add/',
+        views.VehicleMasterMakeAddView.as_view(),
+        name='vehicle_master_make_add',
+    ),
+    path(
+        'vehicle-master/makes/<int:pk>/edit/',
+        views.VehicleMasterMakeEditView.as_view(),
+        name='vehicle_master_make_edit',
+    ),
+    path(
+        'vehicle-master/makes/<int:pk>/delete/',
+        views.VehicleMasterMakeDeleteView.as_view(),
+        name='vehicle_master_make_delete',
+    ),
+    path(
+        'vehicle-master/models/add/',
+        views.VehicleMasterModelAddView.as_view(),
+        name='vehicle_master_model_add',
+    ),
+    path(
+        'vehicle-master/models/<int:pk>/edit/',
+        views.VehicleMasterModelEditView.as_view(),
+        name='vehicle_master_model_edit',
+    ),
+    path(
+        'vehicle-master/models/<int:pk>/delete/',
+        views.VehicleMasterModelDeleteView.as_view(),
+        name='vehicle_master_model_delete',
+    ),
+    path(
+        'vehicle-master/variants/add/',
+        views.VehicleMasterVariantAddView.as_view(),
+        name='vehicle_master_variant_add',
+    ),
+    path(
+        'vehicle-master/variants/<int:pk>/edit/',
+        views.VehicleMasterVariantEditView.as_view(),
+        name='vehicle_master_variant_edit',
+    ),
+    path(
+        'vehicle-master/variants/<int:pk>/delete/',
+        views.VehicleMasterVariantDeleteView.as_view(),
+        name='vehicle_master_variant_delete',
+    ),
     path('cars/export/csv/', views.CarListCSVExportView.as_view(), name='car_list_csv'),
     path('cars/add/', views.CarCreateView.as_view(), name='car_add'),
     path('cars/<int:pk>/edit/', views.CarUpdateView.as_view(), name='car_edit'),

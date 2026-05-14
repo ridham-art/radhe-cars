@@ -170,3 +170,15 @@ def get_variants_for_model(brand_name: str, model_name: str) -> list:
     if (b_aliased, m) in VARIANTS_BY_MODEL:
         return VARIANTS_BY_MODEL[(b_aliased, m)]
     return DEFAULT_VARIANTS
+
+
+def get_merged_variant_names(car_model) -> list:
+    """DB variant names first, then static presets not already present."""
+    db = list(car_model.variants.values_list('name', flat=True))
+    static = get_variants_for_model(car_model.brand.name, car_model.name)
+    seen = {n.casefold() for n in db}
+    for s in static:
+        if s.casefold() not in seen:
+            db.append(s)
+            seen.add(s.casefold())
+    return db
