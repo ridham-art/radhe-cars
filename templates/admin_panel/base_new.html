@@ -31,7 +31,7 @@
                 <a href="{% url 'admin_panel:dashboard' %}" class="nav-item{% if n == 'shell_preview' or n == 'dashboard' or n == 'dashboard_preview' %} active{% endif %}">
                     <span class="label">Dashboard</span>
                 </a>
-                <a href="{% url 'admin_panel:car_list' %}" class="nav-item{% if n == 'car_list' or n == 'car_add' or n == 'car_edit' or n == 'car_delete' or n == 'car_bulk_delete' %} active{% endif %}">
+                <a href="{% url 'admin_panel:car_list' %}" class="nav-item{% if n == 'cars_preview' or n == 'car_list' or n == 'car_add' or n == 'car_edit' or n == 'car_delete' or n == 'car_bulk_delete' %} active{% endif %}">
                     <span class="label">Cars</span>
                 </a>
                 <a href="{% url 'admin_panel:brand_list' %}" class="nav-item{% if 'brand' in n %} active{% endif %}">

@@ -419,6 +419,10 @@ class CarListView(
         return ctx
 
 
+class CarListPreviewView(CarListView):
+    template_name = 'admin_panel/car_list_new.html'
+
+
 class CarCreateView(StaffRequiredMixin, AdminPanelContextMixin, CreateView):
     model = Car
     form_class = CarStaffForm
