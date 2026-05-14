@@ -166,10 +166,15 @@
                 <div class="crumb">Level 3 · {% if selected_model %}{{ selected_model.name }}{% else %}—{% endif %}</div>
                 <div class="title">Variants</div>
             </div>
+            <div class="vm-head-actions">
+            <button type="button" class="add-btn" data-open-variant-bulk-modal {% if not selected_model %}disabled{% endif %}>
+                Bulk add
+            </button>
             <button type="button" class="add-btn" data-open-variant-modal {% if not selected_model %}disabled{% endif %}>
                 <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg>
                 Add Variant
             </button>
+            </div>
         </div>
         <form class="vm-search" method="get" action="">
             {% if selected_make %}<input type="hidden" name="make" value="{{ selected_make.pk }}">{% endif %}
@@ -348,6 +353,35 @@
             <div class="vm-modal-foot">
                 <button type="button" class="btn-ghost" data-close="vm-variant-modal">Cancel</button>
                 <button type="submit" class="btn-confirm" disabled>Add variant</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<div id="vm-variant-bulk-modal" class="vm-modal-back" aria-hidden="true">
+    <div class="vm-modal vm-modal-wide" role="dialog" aria-labelledby="vm-variant-bulk-title">
+        <form id="vm-variant-bulk-form" method="post" action="{% url 'admin_panel:vehicle_master_variant_bulk_add' %}">
+            {% csrf_token %}
+            <input type="hidden" name="car_model_id" value="{% if selected_model %}{{ selected_model.pk }}{% endif %}">
+            <input type="hidden" name="make" value="{% if selected_make %}{{ selected_make.pk }}{% endif %}">
+            <input type="hidden" name="model" value="{% if selected_model %}{{ selected_model.pk }}{% endif %}">
+            <input type="hidden" name="q_make" value="{{ q_make }}">
+            <input type="hidden" name="q_model" value="{{ q_model }}">
+            <input type="hidden" name="q_variant" value="{{ q_variant }}">
+            <div class="vm-modal-head">
+                <h3 id="vm-variant-bulk-title">Bulk add variants</h3>
+                <div class="ms">Under <strong>{% if selected_model %}{{ selected_model.name }}{% else %}—{% endif %}</strong></div>
+            </div>
+            <div class="vm-modal-body">
+                <div class="vm-field">
+                    <label for="vm-variant-bulk-text">Variant list</label>
+                    <textarea id="vm-variant-bulk-text" class="vm-textarea" name="variants" placeholder="LXi&#10;VXi&#10;ZXi+&#10;&#10;Or: ZXi+ | Petrol | Automatic" required></textarea>
+                    <p class="vm-field-hint">One name per line or comma-separated. Optional per line: Name | Fuel | Transmission. Names only default to Petrol and Manual.</p>
+                </div>
+            </div>
+            <div class="vm-modal-foot">
+                <button type="button" class="btn-ghost" data-close="vm-variant-bulk-modal">Cancel</button>
+                <button type="submit" class="btn-confirm" id="vm-variant-bulk-submit" disabled>Add variants</button>
             </div>
         </form>
     </div>

@@ -43,6 +43,7 @@ from cars.admin_panel.forms import (
     StaffAuthenticationForm,
     VehicleMasterMakeForm,
     VehicleMasterModelForm,
+    VehicleMasterVariantBulkForm,
     VM_FUEL_OPTIONS,
 )
 from cars.admin_panel import csv_io
@@ -144,6 +145,48 @@ def _parse_bulk_list(text):
         seen.add(n)
         out.append(n)
     return out
+
+
+def _parse_bulk_variants(text, default_fuel, default_trans, allowed_fuels=None):
+    """Parse bulk variant lines into (name, fuel, transmission) tuples."""
+    valid_fuels = {c[0] for c in CarModelVariant.FUEL_CHOICES}
+    valid_trans = {c[0] for c in CarModelVariant.TRANS_CHOICES}
+    allowed = list(allowed_fuels or []) or [default_fuel]
+    rows = []
+    for line in text.replace('\r', '').split('\n'):
+        line = line.strip()
+        if not line:
+            continue
+        if '|' in line:
+            parts = [p.strip() for p in line.split('|', 2)]
+            name = parts[0]
+            fuel = parts[1] if len(parts) > 1 else default_fuel
+            trans = parts[2] if len(parts) > 2 else default_trans
+        elif ',' in line:
+            parts = [p.strip() for p in line.split(',')]
+            if (
+                len(parts) == 3
+                and parts[1] in valid_fuels
+                and parts[2] in valid_trans
+            ):
+                name, fuel, trans = parts
+            else:
+                for name in parts:
+                    if name:
+                        rows.append((name, default_fuel, default_trans))
+                continue
+        else:
+            name, fuel, trans = line, default_fuel, default_trans
+        if not name:
+            continue
+        if fuel not in valid_fuels:
+            fuel = default_fuel
+        if allowed and fuel not in allowed:
+            fuel = allowed[0]
+        if trans not in valid_trans:
+            trans = default_trans
+        rows.append((name, fuel, trans))
+    return rows
 
 
 def _resolve_primary_image_id(choice, car, created_images):
@@ -1482,6 +1525,71 @@ class VehicleMasterVariantAddView(StaffRequiredMixin, View):
             messages.success(request, f'Added variant · {variant.name}')
         else:
             messages.error(request, 'Could not add variant.')
+        return _vehicle_master_redirect(
+            request, make_id=car_model.brand_id, model_id=car_model.pk
+        )
+
+
+class VehicleMasterVariantBulkAddView(StaffRequiredMixin, View):
+    def post(self, request):
+        model_id = request.POST.get('car_model_id', '').strip()
+        if not model_id.isdigit():
+            messages.error(request, 'Select a model first.')
+            return _vehicle_master_redirect(request)
+        car_model = get_object_or_404(CarModel, pk=int(model_id))
+        form = VehicleMasterVariantBulkForm(request.POST)
+        if not form.is_valid():
+            messages.error(request, 'Could not parse bulk variants. Check the format.')
+            return _vehicle_master_redirect(
+                request, make_id=car_model.brand_id, model_id=car_model.pk
+            )
+
+        allowed = list(car_model.supported_fuels or [])
+        if not allowed:
+            allowed = list(
+                car_model.variants.values_list('fuel_type', flat=True).distinct()
+            ) or ['Petrol']
+        default_fuel = allowed[0]
+        default_trans = 'Manual'
+        parsed = _parse_bulk_variants(
+            form.cleaned_data['variants'],
+            default_fuel,
+            default_trans,
+            allowed,
+        )
+        if not parsed:
+            messages.warning(request, 'No variant names were found in your list.')
+            return _vehicle_master_redirect(
+                request, make_id=car_model.brand_id, model_id=car_model.pk
+            )
+
+        created = 0
+        skipped_dup = 0
+        for name, fuel, trans in parsed:
+            if CarModelVariant.objects.filter(
+                car_model=car_model, name__iexact=name
+            ).exists():
+                skipped_dup += 1
+                continue
+            CarModelVariant.objects.create(
+                car_model=car_model,
+                name=name,
+                fuel_type=fuel,
+                transmission=trans,
+            )
+            created += 1
+
+        if created:
+            messages.success(
+                request, f'Added {created} variant(s) to {car_model.name}.'
+            )
+        else:
+            messages.warning(request, 'No new variants were added.')
+        if skipped_dup:
+            messages.info(
+                request,
+                f'Skipped {skipped_dup} name(s) that already exist for this model.',
+            )
         return _vehicle_master_redirect(
             request, make_id=car_model.brand_id, model_id=car_model.pk
         )

@@ -126,6 +126,25 @@ class VehicleMasterModelForm(forms.Form):
         return fuels
 
 
+class VehicleMasterVariantBulkForm(forms.Form):
+    variants = forms.CharField(
+        label='Variant names',
+        widget=forms.Textarea(
+            attrs={
+                'class': 'vm-textarea',
+                'rows': 12,
+                'placeholder': 'LXi\nVXi\nZXi+\n\nOr: ZXi+ | Petrol | Automatic',
+            }
+        ),
+        help_text=(
+            'One variant per line, or comma-separated names. '
+            'Optional per line: Name | Fuel | Transmission '
+            '(e.g. ZXi+ | Petrol | Automatic). '
+            'Names only default to the model’s first supported fuel and Manual.'
+        ),
+    )
+
+
 class CarModelVariantForm(forms.ModelForm):
     class Meta:
         model = CarModelVariant
