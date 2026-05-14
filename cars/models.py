@@ -197,6 +197,10 @@ class Car(models.Model):
         default=False,
         help_text='Staff has opened Sell car inquiries; used for sidebar badge.',
     )
+    rejection_reason = models.TextField(
+        blank=True,
+        help_text='Staff reason when a sell-form listing is rejected.',
+    )
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
     listed_at = models.DateTimeField(

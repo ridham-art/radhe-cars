@@ -1,0 +1,263 @@
+/* Listing Requests — from new_dashboard.html prototype */
+
+.page-head-req h1 {
+  margin: 0;
+  font-size: 22px;
+  font-weight: 700;
+  letter-spacing: -0.015em;
+  color: var(--text);
+}
+
+.page-head-req .sub {
+  color: var(--text-muted);
+  font-size: 13px;
+  margin-top: 4px;
+}
+
+.req-card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow-sm);
+  overflow-x: auto;
+}
+
+.btn-approve {
+  background: var(--green);
+  color: #fff;
+  border: 1px solid var(--green);
+  font: 600 12.5px "Inter Tight", sans-serif;
+  padding: 7px 12px;
+  border-radius: 7px;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  white-space: nowrap;
+}
+
+.btn-approve:hover {
+  background: #0c8a4d;
+}
+
+.btn-reject {
+  background: #fff;
+  color: var(--red);
+  border: 1px solid #f1c8c2;
+  font: 600 12.5px "Inter Tight", sans-serif;
+  padding: 7px 12px;
+  border-radius: 7px;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  white-space: nowrap;
+}
+
+.btn-reject:hover {
+  background: var(--red-soft);
+  border-color: var(--red);
+}
+
+.reason-cell {
+  color: var(--text-muted);
+  font-size: 12.5px;
+  max-width: 260px;
+}
+
+.reason-cell .why {
+  color: var(--text);
+  font-weight: 500;
+}
+
+.stamp {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 12.5px;
+  color: var(--text-muted);
+  font-variant-numeric: tabular-nums;
+}
+
+.stamp .dot-g {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: var(--green);
+  flex-shrink: 0;
+}
+
+.stamp .dot-r {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: var(--red);
+  flex-shrink: 0;
+}
+
+.req-empty {
+  padding: 40px 20px;
+  text-align: center;
+  color: var(--text-muted);
+}
+
+.req-pagination {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  flex-wrap: wrap;
+  padding-top: 16px;
+}
+
+.req-pagination a,
+.req-pagination span {
+  min-width: 36px;
+  height: 36px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 8px;
+  border: 1px solid var(--border);
+  background: var(--surface);
+  color: var(--text-muted);
+  font-size: 13px;
+  font-weight: 500;
+  text-decoration: none;
+}
+
+.req-pagination a:hover {
+  border-color: var(--border-strong);
+  color: var(--text);
+}
+
+.req-pagination .on {
+  background: #1a1f29;
+  color: #fff;
+  border-color: #1a1f29;
+}
+
+.modal-back {
+  position: fixed;
+  inset: 0;
+  background: rgba(15, 20, 25, 0.42);
+  backdrop-filter: blur(2px);
+  display: none;
+  place-items: center;
+  z-index: 200;
+}
+
+.modal-back.is-open {
+  display: grid;
+}
+
+.modal {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  width: min(440px, calc(100vw - 2rem));
+  box-shadow: 0 20px 60px rgba(15, 20, 25, 0.25);
+  overflow: hidden;
+}
+
+.modal-head {
+  padding: 18px 22px 6px;
+}
+
+.modal-head h3 {
+  margin: 0;
+  font-size: 16px;
+  font-weight: 700;
+  letter-spacing: -0.01em;
+}
+
+.modal-head .ms {
+  color: var(--text-muted);
+  font-size: 13px;
+  margin-top: 4px;
+}
+
+.modal-body {
+  padding: 12px 22px 4px;
+}
+
+.modal-body label {
+  display: block;
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--text-faint);
+  margin-bottom: 6px;
+}
+
+.modal-body textarea {
+  width: 100%;
+  min-height: 90px;
+  resize: vertical;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 10px 12px;
+  font: inherit;
+  color: var(--text);
+  background: var(--surface-2);
+  outline: none;
+  box-sizing: border-box;
+}
+
+.modal-body textarea:focus {
+  background: #fff;
+  border-color: var(--border-strong);
+}
+
+.modal-presets {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-top: 10px;
+}
+
+.modal-presets button {
+  border: 1px solid var(--border);
+  background: var(--surface-2);
+  color: var(--text-muted);
+  font: 500 12px "Inter Tight", sans-serif;
+  padding: 5px 10px;
+  border-radius: 999px;
+  cursor: pointer;
+}
+
+.modal-presets button:hover {
+  border-color: var(--border-strong);
+  color: var(--text);
+}
+
+.modal-foot {
+  padding: 14px 22px 18px;
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+}
+
+.btn-danger {
+  background: var(--red);
+  color: #fff;
+  border: 1px solid var(--red);
+  font: 600 12.5px "Inter Tight", sans-serif;
+  padding: 7px 14px;
+  border-radius: 7px;
+  cursor: pointer;
+}
+
+.btn-danger:hover {
+  background: #a82e22;
+}
+
+.btn-danger:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.approve-form {
+  display: inline;
+}

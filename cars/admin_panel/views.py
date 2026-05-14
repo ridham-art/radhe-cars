@@ -819,6 +819,21 @@ class CarBulkDeleteView(StaffRequiredMixin, View):
         return redirect('admin_panel:car_list')
 
 
+def _sell_inquiry_redirect(request, fallback_name='admin_panel:sell_car_inquiry_list'):
+    from django.utils.http import url_has_allowed_host_and_scheme
+
+    nxt = request.POST.get('next', '').strip()
+    if nxt and url_has_allowed_host_and_scheme(
+        nxt, allowed_hosts={request.get_host()}, require_https=request.is_secure()
+    ):
+        return redirect(nxt)
+    return redirect(fallback_name)
+
+
+def _sell_inquiry_base_qs():
+    return Car.objects.filter(submit_via_sell_form=True)
+
+
 class SellCarInquiryListView(
     StaffRequiredMixin,
     AdminPanelContextMixin,
@@ -863,6 +878,59 @@ class SellCarInquiryListView(
         return ctx
 
 
+class SellCarInquiryPreviewView(
+    StaffRequiredMixin,
+    AdminPanelContextMixin,
+    SafePagePaginationMixin,
+    ListView,
+):
+    model = Car
+    template_name = 'admin_panel/sell_car_inquiry_list_new.html'
+    context_object_name = 'cars'
+    paginate_by = 25
+
+    def dispatch(self, request, *args, **kwargs):
+        if request.method == 'GET' and not request.GET:
+            n = _sell_inquiry_base_qs().filter(sell_inquiry_seen=False).update(
+                sell_inquiry_seen=True
+            )
+            if n:
+                invalidate_admin_nav_counts_cache()
+        return super().dispatch(request, *args, **kwargs)
+
+    def get_queryset(self):
+        qs = (
+            _sell_inquiry_base_qs()
+            .select_related('brand', 'model', 'seller')
+            .prefetch_related(ADMIN_PRIMARY_IMAGE_PREFETCH)
+        )
+        tab = self.request.GET.get('tab', 'pending').strip()
+        if tab == 'approved':
+            qs = qs.filter(status='APPROVED')
+        elif tab == 'rejected':
+            qs = qs.filter(status='REJECTED')
+        else:
+            qs = qs.filter(status='PENDING')
+        return qs.order_by('-created_at')
+
+    def get_context_data(self, **kwargs):
+        ctx = super().get_context_data(**kwargs)
+        tab = self.request.GET.get('tab', 'pending').strip()
+        if tab not in ('pending', 'approved', 'rejected'):
+            tab = 'pending'
+        base = _sell_inquiry_base_qs()
+        ctx['active_tab'] = tab
+        ctx['pending_count'] = base.filter(status='PENDING').count()
+        ctx['approved_count'] = base.filter(status='APPROVED').count()
+        ctx['rejected_count'] = base.filter(status='REJECTED').count()
+        filt = self.request.GET.copy()
+        filt.pop('page', None)
+        ctx['filter_querystring'] = urlencode(filt)
+        ctx['list_querystring'] = car_list_querystring_except_page(self.request)
+        ctx['preview_return_url'] = reverse('admin_panel:sell_car_inquiry_preview') + '?tab=' + tab
+        return ctx
+
+
 class SellCarInquiryBulkDeleteView(StaffRequiredMixin, View):
     def post(self, request):
         ids = request.POST.getlist('ids')
@@ -882,9 +950,27 @@ class SellCarInquiryApproveView(StaffRequiredMixin, View):
     def post(self, request, pk):
         car = get_object_or_404(Car, pk=pk, submit_via_sell_form=True)
         car.status = 'APPROVED'
+        car.rejection_reason = ''
         car.save()
         messages.success(request, f'Approved: {car.title} is now visible on the site.')
-        return redirect('admin_panel:sell_car_inquiry_list')
+        return _sell_inquiry_redirect(request)
+
+
+class SellCarInquiryRejectView(StaffRequiredMixin, View):
+    def post(self, request, pk):
+        car = get_object_or_404(Car, pk=pk, submit_via_sell_form=True)
+        reason = request.POST.get('reason', '').strip()
+        if not reason:
+            messages.error(request, 'A rejection reason is required.')
+            return _sell_inquiry_redirect(
+                request, fallback_name='admin_panel:sell_car_inquiry_preview'
+            )
+        car.status = 'REJECTED'
+        car.rejection_reason = reason
+        car.save()
+        invalidate_admin_nav_counts_cache()
+        messages.warning(request, f'Rejected: {car.title}')
+        return _sell_inquiry_redirect(request)
 
 
 class SellCarInquiryToggleFeaturedView(StaffRequiredMixin, View):

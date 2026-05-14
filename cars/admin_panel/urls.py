@@ -18,6 +18,11 @@ urlpatterns = [
         name='sell_car_inquiry_list',
     ),
     path(
+        'listing-requests-preview/',
+        views.SellCarInquiryPreviewView.as_view(),
+        name='sell_car_inquiry_preview',
+    ),
+    path(
         'sell-car-inquiries/bulk-delete/',
         views.SellCarInquiryBulkDeleteView.as_view(),
         name='sell_car_inquiry_bulk_delete',
@@ -26,6 +31,11 @@ urlpatterns = [
         'sell-car-inquiries/<int:pk>/approve/',
         views.SellCarInquiryApproveView.as_view(),
         name='sell_car_inquiry_approve',
+    ),
+    path(
+        'sell-car-inquiries/<int:pk>/reject/',
+        views.SellCarInquiryRejectView.as_view(),
+        name='sell_car_inquiry_reject',
     ),
     path(
         'sell-car-inquiries/<int:pk>/toggle-featured/',
