@@ -167,24 +167,82 @@
         return isAdminUrl(a.href);
     }
 
+    function normalizeAssetUrl(href) {
+        try {
+            var u = new URL(href, window.location.origin);
+            return u.origin + u.pathname;
+        } catch (_e) {
+            return href || '';
+        }
+    }
+
+    function forgetAssetUrl(href) {
+        if (!href) return;
+        var norm = normalizeAssetUrl(href);
+        Object.keys(loadedScripts).forEach(function (key) {
+            if (normalizeAssetUrl(key) === norm) {
+                delete loadedScripts[key];
+            }
+        });
+    }
+
+    function resolveStylesheetUrl(href) {
+        if (!href) return href;
+        if (/^https?:\/\//i.test(href) || href.indexOf('//') === 0) {
+            return href;
+        }
+        return staticUrl(href);
+    }
+
+    function isStylesheetInDom(href) {
+        var norm = normalizeAssetUrl(resolveStylesheetUrl(href));
+        var links = document.querySelectorAll('link[rel="stylesheet"][href]');
+        for (var i = 0; i < links.length; i++) {
+            if (normalizeAssetUrl(links[i].href) === norm) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    function isScriptInDom(href) {
+        var norm = normalizeAssetUrl(href);
+        var scripts = document.querySelectorAll('script[src]');
+        for (var i = 0; i < scripts.length; i++) {
+            if (normalizeAssetUrl(scripts[i].src) === norm) {
+                return true;
+            }
+        }
+        return false;
+    }
+
     function markLoadedScripts() {
         document.querySelectorAll('script[src]').forEach(function (s) {
+            loadedScripts[normalizeAssetUrl(s.src)] = true;
             loadedScripts[s.src] = true;
         });
         document.querySelectorAll('link[rel="stylesheet"][href]').forEach(function (link) {
+            loadedScripts[normalizeAssetUrl(link.href)] = true;
             loadedScripts[link.href] = true;
         });
     }
 
     function loadStylesheet(href) {
-        if (loadedScripts[href]) return Promise.resolve();
+        var url = resolveStylesheetUrl(href);
+        if (isStylesheetInDom(url)) {
+            loadedScripts[normalizeAssetUrl(url)] = true;
+            return Promise.resolve();
+        }
+        forgetAssetUrl(url);
         return new Promise(function (resolve, reject) {
             var link = document.createElement('link');
             link.rel = 'stylesheet';
-            link.href = href;
+            link.href = url;
             link.setAttribute('data-ap-dynamic', '1');
             link.onload = function () {
-                loadedScripts[href] = true;
+                var norm = normalizeAssetUrl(url);
+                loadedScripts[norm] = true;
+                loadedScripts[url] = true;
                 resolve();
             };
             link.onerror = reject;
@@ -197,15 +255,19 @@
         if (desc.globalKey && window[desc.globalKey]) {
             return Promise.resolve();
         }
-        if (loadedScripts[href]) {
+        if (isScriptInDom(href)) {
+            loadedScripts[normalizeAssetUrl(href)] = true;
             return Promise.resolve();
         }
+        forgetAssetUrl(href);
         return new Promise(function (resolve, reject) {
             var s = document.createElement('script');
             s.src = href;
             s.async = false;
             s.setAttribute('data-ap-dynamic', '1');
             s.onload = function () {
+                var norm = normalizeAssetUrl(href);
+                loadedScripts[norm] = true;
                 loadedScripts[href] = true;
                 resolve();
             };
@@ -216,11 +278,11 @@
 
     function clearDynamicAssets() {
         document.querySelectorAll('link[data-ap-dynamic]').forEach(function (el) {
-            delete loadedScripts[el.href];
+            forgetAssetUrl(el.href);
             el.parentNode.removeChild(el);
         });
         document.querySelectorAll('script[data-ap-dynamic]').forEach(function (el) {
-            delete loadedScripts[el.src];
+            forgetAssetUrl(el.src);
             el.parentNode.removeChild(el);
         });
         document.querySelectorAll('link[rel="stylesheet"]').forEach(function (link) {
@@ -231,10 +293,37 @@
                 !link.hasAttribute('data-ap-dynamic') &&
                 !link.hasAttribute('data-ap-server')
             ) {
-                delete loadedScripts[href];
+                forgetAssetUrl(href);
                 link.parentNode.removeChild(link);
             }
         });
+    }
+
+    function collectPageStyles(doc) {
+        var seen = {};
+        var out = [];
+        if (!doc) return out;
+        doc.querySelectorAll('link[rel="stylesheet"][href]').forEach(function (link) {
+            var raw = link.getAttribute('href');
+            if (!raw || raw.indexOf('admin-panel-') === -1) return;
+            if (raw.indexOf('admin-panel-shell') !== -1) return;
+            var abs = new URL(raw, window.location.origin).href;
+            var norm = normalizeAssetUrl(abs);
+            if (seen[norm]) return;
+            seen[norm] = true;
+            out.push(abs);
+        });
+        return out;
+    }
+
+    function applyStylesFromDoc(doc) {
+        var hrefs = collectPageStyles(doc);
+        if (!hrefs.length) return Promise.resolve();
+        return Promise.all(
+            hrefs.map(function (href) {
+                return loadStylesheet(href);
+            })
+        );
     }
 
     function applyPageAssets(pageKey) {
@@ -254,8 +343,7 @@
         });
     }
 
-    function parsePage(html) {
-        var doc = new DOMParser().parseFromString(html, 'text/html');
+    function parsePageFromDoc(doc) {
         var main = doc.querySelector('main.page');
         if (!main) return null;
         var headingEl = doc.querySelector('.topbar .crumbs .cur');
@@ -267,6 +355,14 @@
             title: title ? title.textContent.trim() : '',
             messagesHtml: messages ? messages.innerHTML : '',
         };
+    }
+
+    function parsePage(html) {
+        var doc = new DOMParser().parseFromString(html, 'text/html');
+        var parsed = parsePageFromDoc(doc);
+        if (!parsed) return null;
+        parsed.doc = doc;
+        return parsed;
     }
 
     function setHeading(text) {
@@ -364,20 +460,24 @@
                 if (!parsed) throw new Error('no main');
 
                 clearDynamicAssets();
-                return applyPageAssets(pageKey).then(function () {
-                    mainEl.innerHTML = parsed.mainHtml;
-                    if (parsed.title) document.title = parsed.title;
-                    if (parsed.heading) setHeading(parsed.heading);
-                    setMessages(parsed.messagesHtml);
+                return applyStylesFromDoc(parsed.doc)
+                    .then(function () {
+                        return applyPageAssets(pageKey);
+                    })
+                    .then(function () {
+                        mainEl.innerHTML = parsed.mainHtml;
+                        if (parsed.title) document.title = parsed.title;
+                        if (parsed.heading) setHeading(parsed.heading);
+                        setMessages(parsed.messagesHtml);
 
-                    curPageKey = pageKey;
-                    if (!opts.replace) {
-                        history.pushState({ apNav: true, pageKey: pageKey }, '', absolute.href);
-                    }
-                    syncActiveNav(absolute.pathname);
-                    window.AdminPanel.runInit(pageKey);
-                    dispatch('ap:page:load', { pageKey: pageKey, url: absolute.href });
-                });
+                        curPageKey = pageKey;
+                        if (!opts.replace) {
+                            history.pushState({ apNav: true, pageKey: pageKey }, '', absolute.href);
+                        }
+                        syncActiveNav(absolute.pathname);
+                        window.AdminPanel.runInit(pageKey);
+                        dispatch('ap:page:load', { pageKey: pageKey, url: absolute.href });
+                    });
             })
             .catch(function (err) {
                 if (err && err.name === 'AbortError') return;

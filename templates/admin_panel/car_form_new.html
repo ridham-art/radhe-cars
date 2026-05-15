@@ -3,8 +3,8 @@
 {% block title %}{% if object %}Edit{% else %}Add{% endif %} vehicle{% endblock %}
 {% block heading %}{% if object %}Edit vehicle{% else %}Add vehicle{% endif %}{% endblock %}
 {% block extra_css %}
-<link rel="stylesheet" href="{% static 'css/admin-panel-dashboard.css' %}">
-<link rel="stylesheet" href="{% static 'css/admin-panel-car-form.css' %}">
+<link rel="stylesheet" href="{% static 'css/admin-panel-dashboard.css' %}" data-ap-server="1">
+<link rel="stylesheet" href="{% static 'css/admin-panel-car-form.css' %}" data-ap-server="1">
 {% endblock %}
 {% block content %}
 <div class="cf-page">
