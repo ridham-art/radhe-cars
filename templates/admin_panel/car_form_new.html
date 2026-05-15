@@ -258,18 +258,30 @@
         </section>
 
         <section class="cf-section">
-            <div class="cf-section-head"><h2>{% if object %}Add images{% else %}Images{% endif %}</h2></div>
-            <div class="cf-section-body">
-                <p class="cf-hint" style="margin-top:0;margin-bottom:12px">Large phone photos are auto-compressed before upload (targets ~200–300KB where possible).</p>
-                <label id="cf-dropzone" class="cf-dropzone" for="admin-images-input">
-                    <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true"><path d="M12 16V4m0 0 7 7m-7-7-7 7M4 20h16"/></svg>
-                    <div class="dz-title">Click or drag photos here</div>
-                    <div class="dz-sub">JPEG, PNG, WebP — multiple files allowed</div>
-                </label>
-                <input id="admin-images-input" class="cf-file-input" type="file" name="images" multiple accept="image/*">
-                <div id="admin-new-image-preview-wrap" class="hidden" style="margin-top:14px">
-                    <p class="cf-hint">New upload preview — choose one as primary if needed.</p>
-                    <ul id="admin-new-image-preview-grid" class="cf-img-grid" style="margin-top:8px"></ul>
+            <div class="cf-section-head">
+                <h2>{% if object %}Add images{% else %}Images{% endif %}</h2>
+                <p class="cf-section-note">Large phone photos are auto-compressed before upload (targets ~200-300KB where possible).</p>
+            </div>
+            <div class="cf-section-body cf-images-upload">
+                <div
+                    id="cf-dropzone"
+                    class="cf-dropzone"
+                    role="button"
+                    tabindex="0"
+                    aria-label="Upload vehicle photos"
+                >
+                    <div class="dz-ic" aria-hidden="true">
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M12 16V4M7 9l5-5 5 5"/><path d="M4 20h16"/>
+                        </svg>
+                    </div>
+                    <div class="dz-title">Drop photos here or click to upload</div>
+                    <div class="dz-sub">JPEG, PNG, WebP · multiple files · choose primary after upload</div>
+                </div>
+                <input id="admin-images-input" type="file" name="images" multiple accept="image/*" class="cf-file-input-hidden">
+                <div id="admin-new-image-preview-wrap" class="cf-preview-wrap hidden">
+                    <p class="cf-preview-label">New upload preview</p>
+                    <ul id="admin-new-image-preview-grid" class="cf-img-grid"></ul>
                 </div>
             </div>
         </section>

@@ -187,6 +187,9 @@
     display: grid;
     grid-template-columns: repeat(2, 1fr);
     gap: 12px;
+    list-style: none;
+    margin: 0;
+    padding: 0;
 }
 
 @media (min-width: 640px) {
@@ -287,47 +290,90 @@
     background: #fee4e2;
 }
 
-/* Upload zone */
+/* Images section */
+.cf-section-head .cf-section-note {
+    margin: 6px 0 0;
+    font-size: 12px;
+    font-weight: 500;
+    color: var(--text-muted);
+    text-transform: none;
+    letter-spacing: 0;
+}
+
+.cf-images-upload {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+}
+
+/* Upload zone (AutoVault dropzone) */
 .cf-dropzone {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    min-height: 148px;
     border: 1.5px dashed var(--border-strong);
     border-radius: 10px;
     background: repeating-linear-gradient(135deg, #fbfbfc 0 12px, #f4f5f7 12px 24px);
-    padding: 24px 20px;
+    padding: 28px 20px;
     text-align: center;
     color: var(--text-muted);
     cursor: pointer;
     transition: border-color 0.12s ease, background 0.12s ease;
+    outline: none;
 }
 
 .cf-dropzone:hover,
-.cf-dropzone.is-dragging {
+.cf-dropzone.is-dragging,
+.cf-dropzone:focus-visible {
     border-color: #1a1f29;
     background: #f9fbff;
+}
+
+.cf-dropzone .dz-ic {
+    width: 38px;
+    height: 38px;
+    border-radius: 10px;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    display: grid;
+    place-items: center;
+    margin: 0 auto 10px;
+    color: var(--text);
+    flex-shrink: 0;
 }
 
 .cf-dropzone .dz-title {
     color: var(--text);
     font-weight: 600;
     font-size: 13.5px;
-    margin-top: 8px;
+    margin: 0;
 }
 
 .cf-dropzone .dz-sub {
     font-size: 12px;
     margin-top: 4px;
+    color: var(--text-muted);
+}
+
+.cf-file-input-hidden {
+    display: none !important;
+}
+
+.cf-preview-wrap {
+    margin-top: 4px;
+}
+
+.cf-preview-label {
+    margin: 0 0 10px;
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--text-muted);
 }
 
 .hidden {
     display: none !important;
-}
-
-.cf-file-input {
-    position: absolute;
-    width: 1px;
-    height: 1px;
-    opacity: 0;
-    overflow: hidden;
-    clip: rect(0, 0, 0, 0);
 }
 
 .cf-non-field-errors {

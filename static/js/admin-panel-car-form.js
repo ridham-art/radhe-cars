@@ -168,6 +168,12 @@
         dropzone.addEventListener('click', function () {
             imagesInput.click();
         });
+        dropzone.addEventListener('keydown', function (e) {
+            if (e.key === 'Enter' || e.key === ' ') {
+                e.preventDefault();
+                imagesInput.click();
+            }
+        });
         dropzone.addEventListener('dragover', function (e) {
             e.preventDefault();
             dropzone.classList.add('is-dragging');
