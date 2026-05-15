@@ -113,7 +113,7 @@
                     <span class="vm-name">{{ md.name }}</span>
                     <div class="vm-sub">
                         {% for fuel in md.display_fuels %}
-                        <span class="vm-tag {% if fuel == 'Diesel' %}fuel diesel{% elif fuel == 'CNG' %}fuel cng{% elif fuel == 'Electric' %}fuel electric{% else %}fuel{% endif %}">{{ fuel }}</span>
+                        <span class="vm-tag {% if fuel == 'Diesel' %}fuel diesel{% elif fuel == 'Petrol + CNG' %}fuel cng{% elif fuel == 'Electric' %}fuel electric{% else %}fuel{% endif %}">{{ fuel }}</span>
                         {% endfor %}
                     </div>
                 </div>
@@ -217,7 +217,7 @@
                 <div class="vm-name-wrap">
                     <span class="vm-name">{{ v.name }}</span>
                     <div class="vm-sub">
-                        <span class="vm-tag {% if v.fuel_type == 'Diesel' %}fuel diesel{% elif v.fuel_type == 'CNG' %}fuel cng{% elif v.fuel_type == 'Electric' %}fuel electric{% else %}fuel{% endif %}">{{ v.fuel_type }}</span>
+                        <span class="vm-tag {% if v.fuel_type == 'Diesel' %}fuel diesel{% elif v.fuel_type == 'Petrol + CNG' %}fuel cng{% elif v.fuel_type == 'Electric' %}fuel electric{% else %}fuel{% endif %}">{{ v.fuel_type }}</span>
                         <span class="vm-tag trans">{{ v.transmission }}</span>
                     </div>
                 </div>

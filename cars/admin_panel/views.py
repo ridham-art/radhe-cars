@@ -180,6 +180,8 @@ def _parse_bulk_variants(text, default_fuel, default_trans, allowed_fuels=None):
             name, fuel, trans = line, default_fuel, default_trans
         if not name:
             continue
+        if fuel == 'CNG':
+            fuel = 'Petrol + CNG'
         if fuel not in valid_fuels:
             fuel = default_fuel
         if allowed and fuel not in allowed:
@@ -1333,12 +1335,28 @@ def _vehicle_master_redirect(request, make_id=None, model_id=None):
 
 
 def _vm_model_display_fuels(car_model):
-    fuels = list(car_model.supported_fuels or [])
+    def _norm(f):
+        if f is None or f == '':
+            return None
+        s = str(f).strip()
+        if s == 'CNG':
+            return 'Petrol + CNG'
+        return s
+
+    fuels = [_norm(x) for x in (car_model.supported_fuels or [])]
+    fuels = [f for f in fuels if f]
     if not fuels:
-        fuels = list(
-            car_model.variants.values_list('fuel_type', flat=True).distinct()
-        )
-    return fuels
+        fuels = [_norm(x) for x in car_model.variants.values_list('fuel_type', flat=True).distinct()]
+        fuels = [f for f in fuels if f]
+    seen = set()
+    out = []
+    for f in fuels:
+        k = f.casefold()
+        if k in seen:
+            continue
+        seen.add(k)
+        out.append(f)
+    return out
 
 
 class VehicleMasterPreviewView(StaffRequiredMixin, AdminPanelContextMixin, TemplateView):

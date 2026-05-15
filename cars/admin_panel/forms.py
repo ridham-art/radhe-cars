@@ -94,7 +94,7 @@ class CarModelForm(forms.ModelForm):
 VM_FUEL_OPTIONS = [
     ('Petrol', 'Petrol'),
     ('Diesel', 'Diesel'),
-    ('CNG', 'CNG'),
+    ('Petrol + CNG', 'Petrol + CNG'),
     ('Electric', 'Electric'),
 ]
 
