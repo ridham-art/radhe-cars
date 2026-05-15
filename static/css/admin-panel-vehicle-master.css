@@ -591,3 +591,8 @@
         min-height: auto;
     }
 }
+
+/* Half gap between summary pills and Makes/Models/Variants grid */
+main.page:has(#ap-vehicle-master-partial) {
+    gap: 8px;
+}
