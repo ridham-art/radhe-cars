@@ -171,6 +171,9 @@
         document.querySelectorAll('script[src]').forEach(function (s) {
             loadedScripts[s.src] = true;
         });
+        document.querySelectorAll('link[rel="stylesheet"][href]').forEach(function (link) {
+            loadedScripts[link.href] = true;
+        });
     }
 
     function loadStylesheet(href) {
@@ -225,7 +228,8 @@
             if (
                 href.indexOf('admin-panel-') !== -1 &&
                 href.indexOf('admin-panel-shell') === -1 &&
-                !link.hasAttribute('data-ap-dynamic')
+                !link.hasAttribute('data-ap-dynamic') &&
+                !link.hasAttribute('data-ap-server')
             ) {
                 delete loadedScripts[href];
                 link.parentNode.removeChild(link);
@@ -442,12 +446,18 @@
         window.addEventListener('popstate', onPopState);
 
         if (curPageKey) {
-            window.AdminPanel.runInit(curPageKey);
-            dispatch('ap:page:load', {
-                pageKey: curPageKey,
-                url: window.location.href,
-                initial: true,
-            });
+            applyPageAssets(curPageKey)
+                .then(function () {
+                    window.AdminPanel.runInit(curPageKey);
+                    dispatch('ap:page:load', {
+                        pageKey: curPageKey,
+                        url: window.location.href,
+                        initial: true,
+                    });
+                })
+                .catch(function () {
+                    window.AdminPanel.runInit(curPageKey);
+                });
         }
 
         if (!history.state || !history.state.apNav) {

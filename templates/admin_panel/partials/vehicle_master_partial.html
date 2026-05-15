@@ -42,7 +42,7 @@
             <span class="vm-search-ic" aria-hidden="true">
                 <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="7"/><path d="M20 20l-3-3"/></svg>
             </span>
-            <input type="search" name="q_make" value="{{ q_make }}" placeholder="Search makesâ€¦" aria-label="Search makes">
+            <input type="search" name="q_make" value="{{ q_make }}" placeholder="Search makes…" aria-label="Search makes">
         </form>
         <div class="vm-list">
             {% for m in makes %}
@@ -50,7 +50,7 @@
                class="vm-row{% if selected_make and selected_make.pk == m.pk %} active{% endif %}">
                 <div class="vm-name-wrap">
                     <span class="vm-name">{{ m.name }}</span>
-                    <span class="vm-meta">{{ m.model_count }} models Â· {{ m.variant_count }} variants</span>
+                    <span class="vm-meta">{{ m.model_count }} models · {{ m.variant_count }} variants</span>
                 </div>
                 <span class="vm-count">{{ m.variant_count }}</span>
                 <div class="vm-acts">
@@ -61,7 +61,7 @@
                         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75"><path d="M4 20h4l11-11-4-4L4 16v4z"/><path d="M14 6l4 4"/></svg>
                     </button>
                     <form method="post" action="{% url 'admin_panel:vehicle_master_make_delete' m.pk %}" class="vm-delete-form"
-                          data-confirm="Delete â€œ{{ m.name }}â€ and all models under it?">
+                          data-confirm="Delete "{{ m.name }}" and all models under it?">
                         {% csrf_token %}
                         <input type="hidden" name="make" value="{{ m.pk }}">
                         <input type="hidden" name="q_make" value="{{ q_make }}">
@@ -78,7 +78,7 @@
                 <div class="ic" aria-hidden="true">
                     <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75"><circle cx="11" cy="11" r="7"/><path d="M20 20l-3-3"/></svg>
                 </div>
-                {% if q_make %}No makes match â€œ{{ q_make }}â€{% else %}No makes yet. Click â€œAdd Makeâ€ to create one.{% endif %}
+                {% if q_make %}No makes match "{{ q_make }}"{% else %}No makes yet. Click "Add Make" to create one.{% endif %}
             </div>
             {% endfor %}
         </div>
@@ -87,7 +87,7 @@
     <div class="vm-col{% if not selected_make %} disabled{% endif %}">
         <div class="vm-head">
             <div style="min-width:0">
-                <div class="crumb">Level 2 Â· {% if selected_make %}{{ selected_make.name }}{% else %}â€”{% endif %}</div>
+                <div class="crumb">Level 2 · {% if selected_make %}{{ selected_make.name }}{% else %}—{% endif %}</div>
                 <div class="title">Models</div>
             </div>
             <button type="button" class="add-btn" data-open-model-modal {% if not selected_make %}disabled{% endif %}>
@@ -103,7 +103,7 @@
             <span class="vm-search-ic" aria-hidden="true">
                 <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="7"/><path d="M20 20l-3-3"/></svg>
             </span>
-            <input type="search" name="q_model" value="{{ q_model }}" placeholder="Search modelsâ€¦" aria-label="Search models">
+            <input type="search" name="q_model" value="{{ q_model }}" placeholder="Search models…" aria-label="Search models">
         </form>
         <div class="vm-list">
             {% for md in models %}
@@ -127,7 +127,7 @@
                         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75"><path d="M4 20h4l11-11-4-4L4 16v4z"/><path d="M14 6l4 4"/></svg>
                     </button>
                     <form method="post" action="{% url 'admin_panel:vehicle_master_model_delete' md.pk %}" class="vm-delete-form"
-                          data-confirm="Delete â€œ{{ md.name }}â€ and all variants under it?">
+                          data-confirm="Delete "{{ md.name }}" and all variants under it?">
                         {% csrf_token %}
                         <input type="hidden" name="make" value="{{ selected_make.pk }}">
                         <input type="hidden" name="model" value="{{ md.pk }}">
@@ -146,7 +146,7 @@
                 <div class="ic" aria-hidden="true">
                     <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75"><path d="M3.5 7.5A1.5 1.5 0 0 1 5 6h4l2 2h8a1.5 1.5 0 0 1 1.5 1.5v8A1.5 1.5 0 0 1 19 19H5a1.5 1.5 0 0 1-1.5-1.5v-10z"/></svg>
                 </div>
-                {% if q_model %}No models match â€œ{{ q_model }}â€{% else %}No models under {{ selected_make.name }}<div style="margin-top:4px">Click â€œAdd Modelâ€ to create one.</div>{% endif %}
+                {% if q_model %}No models match "{{ q_model }}"{% else %}No models under {{ selected_make.name }}<div style="margin-top:4px">Click "Add Model" to create one.</div>{% endif %}
             </div>
             {% else %}
             <div class="vm-empty">
@@ -163,7 +163,7 @@
     <div class="vm-col{% if not selected_model %} disabled{% endif %}">
         <div class="vm-head">
             <div style="min-width:0">
-                <div class="crumb">Level 3 Â· {% if selected_model %}{{ selected_model.name }}{% else %}â€”{% endif %}</div>
+                <div class="crumb">Level 3 · {% if selected_model %}{{ selected_model.name }}{% else %}—{% endif %}</div>
                 <div class="title">Variants</div>
             </div>
             <div class="vm-head-actions">
@@ -187,7 +187,7 @@
             <span class="vm-search-ic" aria-hidden="true">
                 <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="7"/><path d="M20 20l-3-3"/></svg>
             </span>
-            <input type="search" name="q_variant" value="{{ q_variant }}" placeholder="Search variantsâ€¦" aria-label="Search variants">
+            <input type="search" name="q_variant" value="{{ q_variant }}" placeholder="Search variants…" aria-label="Search variants">
         </form>
         {% if selected_model and variants %}
         <form id="vm-variant-bulk-delete-form" method="post" action="{% url 'admin_panel:vehicle_master_variant_bulk_delete' %}">
@@ -232,7 +232,7 @@
                         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75"><path d="M4 20h4l11-11-4-4L4 16v4z"/><path d="M14 6l4 4"/></svg>
                     </button>
                     <form method="post" action="{% url 'admin_panel:vehicle_master_variant_delete' v.pk %}" class="vm-delete-form"
-                          data-confirm="Delete variant â€œ{{ v.name }}â€?">
+                          data-confirm="Delete variant "{{ v.name }}"?">
                         {% csrf_token %}
                         <input type="hidden" name="make" value="{{ selected_make.pk }}">
                         <input type="hidden" name="model" value="{{ selected_model.pk }}">
@@ -251,7 +251,7 @@
                 <div class="ic" aria-hidden="true">
                     <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75"><path d="M3.5 7.5A1.5 1.5 0 0 1 5 6h4l2 2h8a1.5 1.5 0 0 1 1.5 1.5v8A1.5 1.5 0 0 1 19 19H5a1.5 1.5 0 0 1-1.5-1.5v-10z"/></svg>
                 </div>
-                {% if q_variant %}No variants match â€œ{{ q_variant }}â€{% else %}No variants under {{ selected_model.name }}<div style="margin-top:4px">Click â€œAdd Variantâ€ to create one.</div>{% endif %}
+                {% if q_variant %}No variants match "{{ q_variant }}"{% else %}No variants under {{ selected_model.name }}<div style="margin-top:4px">Click "Add Variant" to create one.</div>{% endif %}
             </div>
             {% else %}
             <div class="vm-empty">
