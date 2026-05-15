@@ -39,6 +39,7 @@ from cars.admin_panel.forms import (
     CarModelForm,
     CarModelVariantForm,
     CarStaffForm,
+    CarStaffFormPreview,
     CSVUploadForm,
     StaffAuthenticationForm,
     VehicleMasterMakeForm,
@@ -787,6 +788,37 @@ class CarUpdateView(StaffRequiredMixin, AdminPanelContextMixin, UpdateView):
 
     def _save_images(self, car):
         _save_car_images_with_primary(self.request, car)
+
+
+class CarCreatePreviewView(CarCreateView):
+    form_class = CarStaffFormPreview
+    template_name = 'admin_panel/car_form_new.html'
+
+    def get_context_data(self, **kwargs):
+        ctx = super().get_context_data(**kwargs)
+        ctx['cancel_url'] = reverse_lazy('admin_panel:car_list_preview')
+        return ctx
+
+    def get_success_url(self):
+        return reverse_lazy('admin_panel:car_list_preview')
+
+
+class CarUpdatePreviewView(CarUpdateView):
+    form_class = CarStaffFormPreview
+    template_name = 'admin_panel/car_form_new.html'
+
+    def get_context_data(self, **kwargs):
+        ctx = super().get_context_data(**kwargs)
+        if ctx.get('return_to_sell'):
+            ctx['cancel_url'] = reverse_lazy('admin_panel:sell_car_inquiry_preview')
+        else:
+            ctx['cancel_url'] = reverse_lazy('admin_panel:car_list_preview')
+        return ctx
+
+    def get_success_url(self):
+        if self.request.POST.get('return') == 'sell':
+            return reverse_lazy('admin_panel:sell_car_inquiry_preview')
+        return reverse_lazy('admin_panel:car_list_preview')
 
 
 class CarImageDeleteView(StaffRequiredMixin, View):

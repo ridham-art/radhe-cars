@@ -105,6 +105,12 @@ urlpatterns = [
         name='vehicle_master_variant_delete',
     ),
     path('cars/export/csv/', views.CarListCSVExportView.as_view(), name='car_list_csv'),
+    path('cars-add-preview/', views.CarCreatePreviewView.as_view(), name='car_add_preview'),
+    path(
+        'cars/<int:pk>/edit-preview/',
+        views.CarUpdatePreviewView.as_view(),
+        name='car_edit_preview',
+    ),
     path('cars/add/', views.CarCreateView.as_view(), name='car_add'),
     path('cars/<int:pk>/edit/', views.CarUpdateView.as_view(), name='car_edit'),
     path(

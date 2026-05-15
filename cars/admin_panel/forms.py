@@ -270,6 +270,21 @@ class CarStaffForm(forms.ModelForm):
             self.fields['model'].queryset = CarModel.objects.none()
 
 
+class CarStaffFormPreview(CarStaffForm):
+    """Same fields as CarStaffForm; widgets styled for base_new car form preview."""
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        for name, field in self.fields.items():
+            if isinstance(field.widget, forms.CheckboxInput):
+                field.widget.attrs['class'] = 'cf-checkbox'
+            else:
+                field.widget.attrs['class'] = 'cf-input'
+        self.fields['variant'].widget.attrs.setdefault(
+            'placeholder', 'Or type a custom variant name'
+        )
+
+
 class CSVUploadForm(forms.Form):
     file = forms.FileField(
         label='CSV file',
