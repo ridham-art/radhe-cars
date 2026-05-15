@@ -1,6 +1,16 @@
 (function () {
     'use strict';
 
+    var MODAL_IDS = [
+        'vm-make-modal',
+        'vm-model-modal',
+        'vm-variant-modal',
+        'vm-variant-bulk-modal',
+        'vm-variant-bulk-delete-modal',
+    ];
+    var modalsWired = false;
+    var partialAbort = null;
+
     function qs(sel, root) {
         return (root || document).querySelector(sel);
     }
@@ -14,7 +24,7 @@
         if (el) {
             el.classList.add('is-open');
             el.setAttribute('aria-hidden', 'false');
-            var input = el.querySelector('input[type="text"], select');
+            var input = el.querySelector('input[type="text"], select, textarea');
             if (input) input.focus();
         }
     }
@@ -25,6 +35,10 @@
             el.classList.remove('is-open');
             el.setAttribute('aria-hidden', 'true');
         }
+    }
+
+    function closeAllModals() {
+        MODAL_IDS.forEach(closeModal);
     }
 
     function syncConfirm(form, btnSel) {
@@ -40,183 +54,272 @@
         btn.disabled = disabled;
     }
 
-    function wireModal(backdropId, openSelectors) {
-        var backdrop = document.getElementById(backdropId);
-        if (!backdrop) return;
-        var form = backdrop.querySelector('form');
-
-        backdrop.addEventListener('click', function (e) {
-            if (e.target === backdrop) closeModal(backdropId);
-        });
-
-        qsa('[data-close="' + backdropId + '"]').forEach(function (btn) {
-            btn.addEventListener('click', function () {
-                closeModal(backdropId);
-            });
-        });
-
-        openSelectors.forEach(function (sel) {
-            qsa(sel).forEach(function (btn) {
-                btn.addEventListener('click', function (e) {
-                    e.preventDefault();
-                    e.stopPropagation();
-                    if (form) {
-                        if (btn.dataset.editName !== undefined) {
-                            var nameInput = form.querySelector('input[name="name"]');
-                            if (nameInput) nameInput.value = btn.dataset.editName;
-                        }
-                        if (btn.dataset.editId) {
-                            var action = btn.dataset.editAction;
-                            if (action) form.action = action;
-                        }
-                        if (btn.dataset.editFuels) {
-                            var fuels = btn.dataset.editFuels.split(',');
-                            qsa('input[name="supported_fuels"]', form).forEach(function (cb) {
-                                cb.checked = fuels.indexOf(cb.value) !== -1;
-                                cb.closest('.vm-check').classList.toggle('on', cb.checked);
-                            });
-                        }
-                        if (btn.dataset.variantFuel) {
-                            var fuelSel = form.querySelector('select[name="fuel_type"]');
-                            if (fuelSel) fuelSel.value = btn.dataset.variantFuel;
-                        }
-                        if (btn.dataset.variantTrans) {
-                            var transSel = form.querySelector('select[name="transmission"]');
-                            if (transSel) transSel.value = btn.dataset.variantTrans;
-                        }
-                        if (!btn.dataset.editId && form.dataset.addAction) {
-                            form.action = form.dataset.addAction;
-                            var nameInput2 = form.querySelector('input[name="name"]');
-                            if (nameInput2 && !btn.dataset.editName) nameInput2.value = '';
-                        }
-                        syncConfirm(form);
-                    }
-                    openModal(backdropId);
-                });
-            });
-        });
-
-        if (form) {
-            form.addEventListener('input', function () {
-                syncConfirm(form);
-            });
-            form.addEventListener('change', function () {
-                syncConfirm(form);
-            });
-            syncConfirm(form);
-        }
+    function setHidden(form, name, value) {
+        var el = form && form.querySelector('input[name="' + name + '"]');
+        if (el) el.value = value || '';
     }
 
-    function destroy() {}
+    function syncModalFields() {
+        var state = document.getElementById('vm-state');
+        var makeId = '';
+        var makeName = '';
+        var modelId = '';
+        var modelName = '';
+        var qMake = '';
+        var qModel = '';
+        var qVariant = '';
 
-    function init() {
-        if (!document.getElementById('vm-make-form')) return;
+        if (state) {
+            makeId = state.getAttribute('data-make') || '';
+            makeName = state.getAttribute('data-make-name') || '';
+            modelId = state.getAttribute('data-model') || '';
+            modelName = state.getAttribute('data-model-name') || '';
+            qMake = state.getAttribute('data-q-make') || '';
+            qModel = state.getAttribute('data-q-model') || '';
+            qVariant = state.getAttribute('data-q-variant') || '';
+        } else {
+            var params = new URLSearchParams(window.location.search);
+            makeId = params.get('make') || '';
+            modelId = params.get('model') || '';
+            qMake = params.get('q_make') || '';
+            qModel = params.get('q_model') || '';
+            qVariant = params.get('q_variant') || '';
+        }
+
+        var forms = [
+            'vm-make-form',
+            'vm-model-form',
+            'vm-variant-form',
+            'vm-variant-bulk-form',
+            'vm-variant-bulk-delete-names-form',
+        ];
+        forms.forEach(function (id) {
+            var form = document.getElementById(id);
+            if (!form) return;
+            setHidden(form, 'make', makeId);
+            setHidden(form, 'model', modelId);
+            setHidden(form, 'q_make', qMake);
+            setHidden(form, 'q_model', qModel);
+            setHidden(form, 'q_variant', qVariant);
+            setHidden(form, 'brand_id', makeId);
+            setHidden(form, 'car_model_id', modelId);
+        });
+
+        var makeLabel = document.getElementById('vm-model-modal-make');
+        if (makeLabel) makeLabel.textContent = makeName || '—';
+        ['vm-variant-modal-model', 'vm-variant-bulk-modal-model', 'vm-variant-bulk-delete-modal-model'].forEach(
+            function (id) {
+                var el = document.getElementById(id);
+                if (el) el.textContent = modelName || '—';
+            }
+        );
+    }
+
+    function prepareFormFromButton(form, btn) {
+        if (!form || !btn) return;
+        if (btn.dataset.editName !== undefined) {
+            var nameInput = form.querySelector('input[name="name"]');
+            if (nameInput) nameInput.value = btn.dataset.editName;
+        }
+        if (btn.dataset.editId) {
+            var action = btn.dataset.editAction;
+            if (action) form.action = action;
+        }
+        if (btn.dataset.editFuels) {
+            var fuels = btn.dataset.editFuels.split(',');
+            qsa('input[name="supported_fuels"]', form).forEach(function (cb) {
+                cb.checked = fuels.indexOf(cb.value) !== -1;
+                var wrap = cb.closest('.vm-check');
+                if (wrap) wrap.classList.toggle('on', cb.checked);
+            });
+        }
+        if (btn.dataset.variantFuel) {
+            var fuelSel = form.querySelector('select[name="fuel_type"]');
+            if (fuelSel) fuelSel.value = btn.dataset.variantFuel;
+        }
+        if (btn.dataset.variantTrans) {
+            var transSel = form.querySelector('select[name="transmission"]');
+            if (transSel) transSel.value = btn.dataset.variantTrans;
+        }
+        if (!btn.dataset.editId && form.dataset.addAction) {
+            form.action = form.dataset.addAction;
+            var nameInput2 = form.querySelector('input[name="name"]');
+            if (nameInput2 && btn.dataset.editName === undefined) nameInput2.value = '';
+        }
+        syncConfirm(form);
+    }
+
+    function initModals() {
+        if (modalsWired || !document.getElementById('vm-make-form')) return;
+        modalsWired = true;
 
         qsa('.vm-check input').forEach(function (cb) {
             cb.addEventListener('change', function () {
-                cb.closest('.vm-check').classList.toggle('on', cb.checked);
+                var wrap = cb.closest('.vm-check');
+                if (wrap) wrap.classList.toggle('on', cb.checked);
             });
         });
 
-        qsa('form.vm-delete-form').forEach(function (form) {
-            form.addEventListener('submit', function (e) {
-                var msg = form.getAttribute('data-confirm');
-                if (msg && !window.confirm(msg)) e.preventDefault();
+        MODAL_IDS.forEach(function (backdropId) {
+            var backdrop = document.getElementById(backdropId);
+            if (!backdrop) return;
+            backdrop.addEventListener('click', function (e) {
+                if (e.target === backdrop) closeModal(backdropId);
             });
-        });
-
-        qsa('.vm-acts button, .vm-acts form').forEach(function (el) {
-            el.addEventListener('click', function (e) {
-                e.stopPropagation();
-            });
-        });
-
-        wireModal('vm-make-modal', ['[data-open-make-modal]']);
-        wireModal('vm-model-modal', ['[data-open-model-modal]']);
-        wireModal('vm-variant-modal', ['[data-open-variant-modal]']);
-
-        var bulkBackdrop = document.getElementById('vm-variant-bulk-modal');
-        var bulkForm = document.getElementById('vm-variant-bulk-form');
-        var bulkText = document.getElementById('vm-variant-bulk-text');
-        var bulkSubmit = document.getElementById('vm-variant-bulk-submit');
-
-        function syncBulkSubmit() {
-            if (bulkSubmit && bulkText) {
-                bulkSubmit.disabled = !bulkText.value.trim();
-            }
-        }
-
-        if (bulkBackdrop && bulkForm) {
-            bulkBackdrop.addEventListener('click', function (e) {
-                if (e.target === bulkBackdrop) closeModal('vm-variant-bulk-modal');
-            });
-            qsa('[data-close="vm-variant-bulk-modal"]').forEach(function (btn) {
+            qsa('[data-close="' + backdropId + '"]', backdrop).forEach(function (btn) {
                 btn.addEventListener('click', function () {
-                    closeModal('vm-variant-bulk-modal');
+                    closeModal(backdropId);
                 });
             });
-            qsa('[data-open-variant-bulk-modal]').forEach(function (btn) {
-                btn.addEventListener('click', function (e) {
+            var form = backdrop.querySelector('form');
+            if (form) {
+                form.addEventListener('input', function () {
+                    syncConfirm(form);
+                });
+                form.addEventListener('change', function () {
+                    syncConfirm(form);
+                });
+            }
+        });
+
+        document.addEventListener(
+            'click',
+            function (e) {
+                var makeBtn = e.target.closest('[data-open-make-modal]');
+                if (makeBtn) {
                     e.preventDefault();
                     e.stopPropagation();
+                    var form = document.getElementById('vm-make-form');
+                    prepareFormFromButton(form, makeBtn);
+                    openModal('vm-make-modal');
+                    return;
+                }
+                var modelBtn = e.target.closest('[data-open-model-modal]');
+                if (modelBtn && !modelBtn.disabled) {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    var modelForm = document.getElementById('vm-model-form');
+                    prepareFormFromButton(modelForm, modelBtn);
+                    openModal('vm-model-modal');
+                    return;
+                }
+                var variantBtn = e.target.closest('[data-open-variant-modal]');
+                if (variantBtn && !variantBtn.disabled) {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    var variantForm = document.getElementById('vm-variant-form');
+                    prepareFormFromButton(variantForm, variantBtn);
+                    openModal('vm-variant-modal');
+                    return;
+                }
+                var bulkBtn = e.target.closest('[data-open-variant-bulk-modal]');
+                if (bulkBtn && !bulkBtn.disabled) {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    var bulkText = document.getElementById('vm-variant-bulk-text');
                     if (bulkText) bulkText.value = '';
                     syncBulkSubmit();
                     openModal('vm-variant-bulk-modal');
-                });
-            });
-            if (bulkText) {
-                bulkText.addEventListener('input', syncBulkSubmit);
-            }
-        }
-
-        var bulkDeleteBackdrop = document.getElementById('vm-variant-bulk-delete-modal');
-        var bulkDeleteText = document.getElementById('vm-variant-bulk-delete-text');
-        var bulkDeleteSubmit = document.getElementById('vm-variant-bulk-delete-submit');
-
-        function syncBulkDeleteSubmit() {
-            if (bulkDeleteSubmit && bulkDeleteText) {
-                bulkDeleteSubmit.disabled = !bulkDeleteText.value.trim();
-            }
-        }
-
-        if (bulkDeleteBackdrop) {
-            bulkDeleteBackdrop.addEventListener('click', function (e) {
-                if (e.target === bulkDeleteBackdrop) closeModal('vm-variant-bulk-delete-modal');
-            });
-            qsa('[data-close="vm-variant-bulk-delete-modal"]').forEach(function (btn) {
-                btn.addEventListener('click', function () {
-                    closeModal('vm-variant-bulk-delete-modal');
-                });
-            });
-            qsa('[data-open-variant-bulk-delete-modal]').forEach(function (btn) {
-                btn.addEventListener('click', function (e) {
+                    return;
+                }
+                var bulkDelBtn = e.target.closest('[data-open-variant-bulk-delete-modal]');
+                if (bulkDelBtn && !bulkDelBtn.disabled) {
                     e.preventDefault();
                     e.stopPropagation();
-                    if (bulkDeleteText) bulkDeleteText.value = '';
+                    var bulkDeleteText = document.getElementById('vm-variant-bulk-delete-text');
+                    if (bulkDeleteText) {
+                        bulkDeleteText.value = '';
+                        bulkDeleteText.focus();
+                    }
                     syncBulkDeleteSubmit();
                     openModal('vm-variant-bulk-delete-modal');
-                    if (bulkDeleteText) bulkDeleteText.focus();
-                });
+                }
+            },
+            true
+        );
+
+        var bulkText = document.getElementById('vm-variant-bulk-text');
+        if (bulkText) bulkText.addEventListener('input', syncBulkSubmit);
+
+        var bulkDeleteText = document.getElementById('vm-variant-bulk-delete-text');
+        if (bulkDeleteText) bulkDeleteText.addEventListener('input', syncBulkDeleteSubmit);
+
+        var bulkDeleteNamesForm = document.getElementById('vm-variant-bulk-delete-names-form');
+        if (bulkDeleteNamesForm) {
+            bulkDeleteNamesForm.addEventListener('submit', function (e) {
+                if (!window.confirm('Delete the listed variants for this model?')) {
+                    e.preventDefault();
+                }
             });
-            if (bulkDeleteText) {
-                bulkDeleteText.addEventListener('input', syncBulkDeleteSubmit);
-            }
-            var bulkDeleteNamesForm = document.getElementById('vm-variant-bulk-delete-names-form');
-            if (bulkDeleteNamesForm) {
-                bulkDeleteNamesForm.addEventListener('submit', function (e) {
-                    if (!window.confirm('Delete the listed variants for this model?')) {
-                        e.preventDefault();
-                    }
-                });
-            }
         }
 
-        var selectAll = document.getElementById('vm-variant-select-all');
-        var deleteSelected = document.getElementById('vm-variant-delete-selected');
-        var bulkDeleteForm = document.getElementById('vm-variant-bulk-delete-form');
+        document.addEventListener('ap:form:success', function () {
+            closeAllModals();
+            qsa('#vm-make-form input[name="name"], #vm-variant-form input[name="name"]').forEach(
+                function (inp) {
+                    inp.value = '';
+                }
+            );
+            var bulkT = document.getElementById('vm-variant-bulk-text');
+            if (bulkT) bulkT.value = '';
+            var bulkDT = document.getElementById('vm-variant-bulk-delete-text');
+            if (bulkDT) bulkDT.value = '';
+            syncBulkSubmit();
+            syncBulkDeleteSubmit();
+        });
+    }
+
+    function syncBulkSubmit() {
+        var bulkSubmit = document.getElementById('vm-variant-bulk-submit');
+        var bulkText = document.getElementById('vm-variant-bulk-text');
+        if (bulkSubmit && bulkText) {
+            bulkSubmit.disabled = !bulkText.value.trim();
+        }
+    }
+
+    function syncBulkDeleteSubmit() {
+        var bulkDeleteSubmit = document.getElementById('vm-variant-bulk-delete-submit');
+        var bulkDeleteText = document.getElementById('vm-variant-bulk-delete-text');
+        if (bulkDeleteSubmit && bulkDeleteText) {
+            bulkDeleteSubmit.disabled = !bulkDeleteText.value.trim();
+        }
+    }
+
+    function initPartial(root) {
+        if (!root) root = document.querySelector('[data-ap-partial-root]');
+        if (!root) return;
+
+        if (partialAbort) partialAbort.abort();
+        partialAbort = new AbortController();
+        var signal = partialAbort.signal;
+
+        qsa('form.vm-delete-form', root).forEach(function (form) {
+            form.addEventListener(
+                'submit',
+                function (e) {
+                    var msg = form.getAttribute('data-confirm');
+                    if (msg && !window.confirm(msg)) e.preventDefault();
+                },
+                { signal: signal }
+            );
+        });
+
+        qsa('.vm-acts button, .vm-acts form', root).forEach(function (el) {
+            el.addEventListener(
+                'click',
+                function (e) {
+                    e.stopPropagation();
+                },
+                { signal: signal }
+            );
+        });
+
+        var selectAll = root.querySelector('#vm-variant-select-all');
+        var deleteSelected = root.querySelector('#vm-variant-delete-selected');
+        var bulkDeleteForm = root.querySelector('#vm-variant-bulk-delete-form');
 
         function variantCheckboxes() {
-            return qsa('.vm-variant-cb');
+            return qsa('.vm-variant-cb', root);
         }
 
         function syncVariantSelection() {
@@ -237,32 +340,64 @@
         }
 
         if (selectAll) {
-            selectAll.addEventListener('change', function () {
-                variantCheckboxes().forEach(function (cb) {
-                    cb.checked = selectAll.checked;
-                });
-                syncVariantSelection();
-            });
+            selectAll.addEventListener(
+                'change',
+                function () {
+                    variantCheckboxes().forEach(function (cb) {
+                        cb.checked = selectAll.checked;
+                    });
+                    syncVariantSelection();
+                },
+                { signal: signal }
+            );
         }
 
         variantCheckboxes().forEach(function (cb) {
-            cb.addEventListener('change', syncVariantSelection);
-            cb.addEventListener('click', function (e) {
-                e.stopPropagation();
-            });
+            cb.addEventListener('change', syncVariantSelection, { signal: signal });
+            cb.addEventListener(
+                'click',
+                function (e) {
+                    e.stopPropagation();
+                },
+                { signal: signal }
+            );
         });
 
         if (bulkDeleteForm) {
-            bulkDeleteForm.addEventListener('submit', function (e) {
-                var msg = deleteSelected && deleteSelected.getAttribute('data-confirm');
-                if (msg && !window.confirm(msg)) {
-                    e.preventDefault();
-                }
-            });
+            bulkDeleteForm.addEventListener(
+                'submit',
+                function (e) {
+                    var msg = deleteSelected && deleteSelected.getAttribute('data-confirm');
+                    if (msg && !window.confirm(msg)) {
+                        e.preventDefault();
+                    }
+                },
+                { signal: signal }
+            );
         }
 
         syncVariantSelection();
+        syncModalFields();
     }
+
+    function destroy() {
+        if (partialAbort) {
+            partialAbort.abort();
+            partialAbort = null;
+        }
+    }
+
+    function init() {
+        if (!document.getElementById('vm-make-form')) return;
+        initModals();
+        initPartial();
+    }
+
+    document.addEventListener('ap:partial:load', function (e) {
+        if (e.detail && e.detail.root && e.detail.root.hasAttribute('data-ap-partial-root')) {
+            initPartial(e.detail.root);
+        }
+    });
 
     if (window.AdminPanel) {
         window.AdminPanel.register('vehicle_master', { init: init, destroy: destroy });

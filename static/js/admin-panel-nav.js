@@ -40,7 +40,10 @@
         },
         vehicle_master: {
             css: ['css/admin-panel-dashboard.css', 'css/admin-panel-vehicle-master.css'],
-            scripts: [{ url: 'js/admin-panel-vehicle-master.js' }],
+            scripts: [
+                { url: 'js/admin-panel-list.js' },
+                { url: 'js/admin-panel-vehicle-master.js' },
+            ],
         },
         lists: {
             css: [

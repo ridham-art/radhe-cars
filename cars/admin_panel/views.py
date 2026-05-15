@@ -1425,21 +1425,40 @@ class BrandModelsJsonView(StaffRequiredMixin, View):
         return JsonResponse({'models': [{'id': m.id, 'name': m.name} for m in models]})
 
 
-def _vehicle_master_redirect(request, make_id=None, model_id=None):
+def _vehicle_master_url(request, make_id=None, model_id=None):
     params = {}
     for key in ('make', 'model', 'q_make', 'q_model', 'q_variant'):
         val = (request.POST.get(key) or request.GET.get(key) or '').strip()
         if val:
             params[key] = val
     if make_id is not None:
-        params['make'] = make_id
+        if make_id == '':
+            params.pop('make', None)
+        else:
+            params['make'] = make_id
     if model_id is not None:
-        params['model'] = model_id
+        if model_id == '':
+            params.pop('model', None)
+        else:
+            params['model'] = model_id
     qs = urlencode(params)
     url = reverse('admin_panel:vehicle_master')
     if qs:
         url = f'{url}?{qs}'
-    return redirect(url)
+    return url
+
+
+def _vehicle_master_redirect(
+    request, make_id=None, model_id=None, *, message=None, level='success'
+):
+    url = _vehicle_master_url(request, make_id=make_id, model_id=model_id)
+    return admin_ajax_response(
+        request,
+        redirect_to=url,
+        message=message,
+        reload_url=request.build_absolute_uri(url),
+        level=level,
+    )
 
 
 def _vm_model_display_fuels(car_model):
@@ -1467,8 +1486,11 @@ def _vm_model_display_fuels(car_model):
     return out
 
 
-class VehicleMasterPreviewView(StaffRequiredMixin, AdminPanelContextMixin, TemplateView):
+class VehicleMasterPreviewView(
+    StaffRequiredMixin, AdminPanelContextMixin, AdminListPartialMixin, TemplateView
+):
     template_name = 'admin_panel/vehicle_master_new.html'
+    partial_template_name = 'admin_panel/partials/vehicle_master_partial.html'
 
     def get_context_data(self, **kwargs):
         ctx = super().get_context_data(**kwargs)
@@ -1554,10 +1576,17 @@ class VehicleMasterMakeAddView(StaffRequiredMixin, View):
         form = VehicleMasterMakeForm(request.POST)
         if form.is_valid():
             brand = form.save()
-            messages.success(request, f'Added make · {brand.name}')
-            return _vehicle_master_redirect(request, make_id=brand.pk, model_id='')
-        messages.error(request, 'Could not add make. Check the name and try again.')
-        return _vehicle_master_redirect(request)
+            return _vehicle_master_redirect(
+                request,
+                make_id=brand.pk,
+                model_id='',
+                message=f'Added make · {brand.name}',
+            )
+        return _vehicle_master_redirect(
+            request,
+            message='Could not add make. Check the name and try again.',
+            level='error',
+        )
 
 
 class VehicleMasterMakeEditView(StaffRequiredMixin, View):
@@ -1566,30 +1595,41 @@ class VehicleMasterMakeEditView(StaffRequiredMixin, View):
         form = VehicleMasterMakeForm(request.POST, instance=brand)
         if form.is_valid():
             brand = form.save()
-            messages.success(request, f'Renamed make · {brand.name}')
-        else:
-            messages.error(request, 'Could not save make.')
-        return _vehicle_master_redirect(request, make_id=brand.pk)
+            return _vehicle_master_redirect(
+                request, make_id=brand.pk, message=f'Renamed make · {brand.name}'
+            )
+        return _vehicle_master_redirect(
+            request, make_id=brand.pk, message='Could not save make.', level='error'
+        )
 
 
 class VehicleMasterMakeDeleteView(StaffRequiredMixin, View):
     def post(self, request, pk):
         brand = get_object_or_404(Brand, pk=pk)
         if Car.objects.filter(brand=brand).exists():
-            messages.error(request, 'Cannot delete make: cars still reference it.')
-            return _vehicle_master_redirect(request, make_id=brand.pk)
+            return _vehicle_master_redirect(
+                request,
+                make_id=brand.pk,
+                message='Cannot delete make: cars still reference it.',
+                level='error',
+            )
         name = brand.name
         brand.delete()
-        messages.success(request, f'Deleted make · {name}')
-        return _vehicle_master_redirect(request, make_id='', model_id='')
+        return _vehicle_master_redirect(
+            request,
+            make_id='',
+            model_id='',
+            message=f'Deleted make · {name}',
+        )
 
 
 class VehicleMasterModelAddView(StaffRequiredMixin, View):
     def post(self, request):
         brand_id = request.POST.get('brand_id', '').strip()
         if not brand_id.isdigit():
-            messages.error(request, 'Select a make first.')
-            return _vehicle_master_redirect(request)
+            return _vehicle_master_redirect(
+                request, message='Select a make first.', level='error'
+            )
         brand = get_object_or_404(Brand, pk=int(brand_id))
         form = VehicleMasterModelForm(request.POST)
         if form.is_valid():
@@ -1598,12 +1638,15 @@ class VehicleMasterModelAddView(StaffRequiredMixin, View):
                 name=form.cleaned_data['name'],
                 supported_fuels=form.cleaned_data['supported_fuels'],
             )
-            messages.success(request, f'Added model · {car_model.name}')
             return _vehicle_master_redirect(
-                request, make_id=brand.pk, model_id=car_model.pk
+                request,
+                make_id=brand.pk,
+                model_id=car_model.pk,
+                message=f'Added model · {car_model.name}',
             )
-        messages.error(request, 'Could not add model.')
-        return _vehicle_master_redirect(request, make_id=brand.pk)
+        return _vehicle_master_redirect(
+            request, make_id=brand.pk, message='Could not add model.', level='error'
+        )
 
 
 class VehicleMasterModelEditView(StaffRequiredMixin, View):
@@ -1614,11 +1657,18 @@ class VehicleMasterModelEditView(StaffRequiredMixin, View):
             car_model.name = form.cleaned_data['name']
             car_model.supported_fuels = form.cleaned_data['supported_fuels']
             car_model.save()
-            messages.success(request, f'Saved model · {car_model.name}')
-        else:
-            messages.error(request, 'Could not save model.')
+            return _vehicle_master_redirect(
+                request,
+                make_id=car_model.brand_id,
+                model_id=car_model.pk,
+                message=f'Saved model · {car_model.name}',
+            )
         return _vehicle_master_redirect(
-            request, make_id=car_model.brand_id, model_id=car_model.pk
+            request,
+            make_id=car_model.brand_id,
+            model_id=car_model.pk,
+            message='Could not save model.',
+            level='error',
         )
 
 
@@ -1627,33 +1677,48 @@ class VehicleMasterModelDeleteView(StaffRequiredMixin, View):
         car_model = get_object_or_404(CarModel.objects.select_related('brand'), pk=pk)
         brand_id = car_model.brand_id
         if Car.objects.filter(model=car_model).exists():
-            messages.error(request, 'Cannot delete model: cars still reference it.')
             return _vehicle_master_redirect(
-                request, make_id=brand_id, model_id=car_model.pk
+                request,
+                make_id=brand_id,
+                model_id=car_model.pk,
+                message='Cannot delete model: cars still reference it.',
+                level='error',
             )
         name = car_model.name
         car_model.delete()
-        messages.success(request, f'Deleted model · {name}')
-        return _vehicle_master_redirect(request, make_id=brand_id, model_id='')
+        return _vehicle_master_redirect(
+            request,
+            make_id=brand_id,
+            model_id='',
+            message=f'Deleted model · {name}',
+        )
 
 
 class VehicleMasterVariantAddView(StaffRequiredMixin, View):
     def post(self, request):
         model_id = request.POST.get('car_model_id', '').strip()
         if not model_id.isdigit():
-            messages.error(request, 'Select a model first.')
-            return _vehicle_master_redirect(request)
+            return _vehicle_master_redirect(
+                request, message='Select a model first.', level='error'
+            )
         car_model = get_object_or_404(CarModel, pk=int(model_id))
         form = CarModelVariantForm(request.POST, car_model=car_model)
         if form.is_valid():
             variant = form.save(commit=False)
             variant.car_model = car_model
             variant.save()
-            messages.success(request, f'Added variant · {variant.name}')
-        else:
-            messages.error(request, 'Could not add variant.')
+            return _vehicle_master_redirect(
+                request,
+                make_id=car_model.brand_id,
+                model_id=car_model.pk,
+                message=f'Added variant · {variant.name}',
+            )
         return _vehicle_master_redirect(
-            request, make_id=car_model.brand_id, model_id=car_model.pk
+            request,
+            make_id=car_model.brand_id,
+            model_id=car_model.pk,
+            message='Could not add variant.',
+            level='error',
         )
 
 
@@ -1661,14 +1726,18 @@ class VehicleMasterVariantBulkAddView(StaffRequiredMixin, View):
     def post(self, request):
         model_id = request.POST.get('car_model_id', '').strip()
         if not model_id.isdigit():
-            messages.error(request, 'Select a model first.')
-            return _vehicle_master_redirect(request)
+            return _vehicle_master_redirect(
+                request, message='Select a model first.', level='error'
+            )
         car_model = get_object_or_404(CarModel, pk=int(model_id))
         form = VehicleMasterVariantBulkForm(request.POST)
         if not form.is_valid():
-            messages.error(request, 'Could not parse bulk variants. Check the format.')
             return _vehicle_master_redirect(
-                request, make_id=car_model.brand_id, model_id=car_model.pk
+                request,
+                make_id=car_model.brand_id,
+                model_id=car_model.pk,
+                message='Could not parse bulk variants. Check the format.',
+                level='error',
             )
 
         allowed = [c[0] for c in CarModelVariant.FUEL_CHOICES]
@@ -1681,9 +1750,12 @@ class VehicleMasterVariantBulkAddView(StaffRequiredMixin, View):
             allowed,
         )
         if not parsed:
-            messages.warning(request, 'No variant names were found in your list.')
             return _vehicle_master_redirect(
-                request, make_id=car_model.brand_id, model_id=car_model.pk
+                request,
+                make_id=car_model.brand_id,
+                model_id=car_model.pk,
+                message='No variant names were found in your list.',
+                level='warning',
             )
 
         created = 0
@@ -1703,18 +1775,19 @@ class VehicleMasterVariantBulkAddView(StaffRequiredMixin, View):
             created += 1
 
         if created:
-            messages.success(
-                request, f'Added {created} variant(s) to {car_model.name}.'
-            )
+            msg = f'Added {created} variant(s) to {car_model.name}.'
+            level = 'success'
         else:
-            messages.warning(request, 'No new variants were added.')
+            msg = 'No new variants were added.'
+            level = 'warning'
         if skipped_dup:
-            messages.info(
-                request,
-                f'Skipped {skipped_dup} name(s) that already exist for this model.',
-            )
+            msg += f' Skipped {skipped_dup} duplicate name(s).'
         return _vehicle_master_redirect(
-            request, make_id=car_model.brand_id, model_id=car_model.pk
+            request,
+            make_id=car_model.brand_id,
+            model_id=car_model.pk,
+            message=msg,
+            level=level,
         )
 
 
@@ -1746,8 +1819,9 @@ class VehicleMasterVariantBulkDeleteView(StaffRequiredMixin, View):
             request.POST.get('car_model_id') or request.POST.get('model') or ''
         ).strip()
         if not model_id.isdigit():
-            messages.error(request, 'Select a model first.')
-            return _vehicle_master_redirect(request)
+            return _vehicle_master_redirect(
+                request, message='Select a model first.', level='error'
+            )
         car_model = get_object_or_404(CarModel, pk=int(model_id))
 
         ids = request.POST.getlist('ids')
@@ -1757,26 +1831,39 @@ class VehicleMasterVariantBulkDeleteView(StaffRequiredMixin, View):
             )
             count = qs.count()
             if not count:
-                messages.warning(request, 'No matching variants to delete.')
-            else:
-                qs.delete()
-                messages.success(request, f'Deleted {count} variant(s).')
+                return _vehicle_master_redirect(
+                    request,
+                    make_id=car_model.brand_id,
+                    model_id=car_model.pk,
+                    message='No matching variants to delete.',
+                    level='warning',
+                )
+            qs.delete()
             return _vehicle_master_redirect(
-                request, make_id=car_model.brand_id, model_id=car_model.pk
+                request,
+                make_id=car_model.brand_id,
+                model_id=car_model.pk,
+                message=f'Deleted {count} variant(s).',
             )
 
         form = VehicleMasterVariantBulkDeleteForm(request.POST)
         if not form.is_valid():
-            messages.error(request, 'Could not read variant names to delete.')
             return _vehicle_master_redirect(
-                request, make_id=car_model.brand_id, model_id=car_model.pk
+                request,
+                make_id=car_model.brand_id,
+                model_id=car_model.pk,
+                message='Could not read variant names to delete.',
+                level='error',
             )
 
         names = _parse_bulk_delete_names(form.cleaned_data['variants'])
         if not names:
-            messages.warning(request, 'No variant names were found in your list.')
             return _vehicle_master_redirect(
-                request, make_id=car_model.brand_id, model_id=car_model.pk
+                request,
+                make_id=car_model.brand_id,
+                model_id=car_model.pk,
+                message='No variant names were found in your list.',
+                level='warning',
             )
 
         deleted = 0
@@ -1793,18 +1880,19 @@ class VehicleMasterVariantBulkDeleteView(StaffRequiredMixin, View):
                 not_found += 1
 
         if deleted:
-            messages.success(
-                request, f'Deleted {deleted} variant(s) from {car_model.name}.'
-            )
+            msg = f'Deleted {deleted} variant(s) from {car_model.name}.'
+            level = 'success'
         else:
-            messages.warning(request, 'No matching variants were deleted.')
+            msg = 'No matching variants were deleted.'
+            level = 'warning'
         if not_found:
-            messages.info(
-                request,
-                f'{not_found} name(s) did not match any variant for this model.',
-            )
+            msg += f' {not_found} name(s) did not match.'
         return _vehicle_master_redirect(
-            request, make_id=car_model.brand_id, model_id=car_model.pk
+            request,
+            make_id=car_model.brand_id,
+            model_id=car_model.pk,
+            message=msg,
+            level=level,
         )
 
 
@@ -1819,11 +1907,18 @@ class VehicleMasterVariantEditView(StaffRequiredMixin, View):
         )
         if form.is_valid():
             form.save()
-            messages.success(request, f'Saved variant · {variant.name}')
-        else:
-            messages.error(request, 'Could not save variant.')
+            return _vehicle_master_redirect(
+                request,
+                make_id=car_model.brand_id,
+                model_id=car_model.pk,
+                message=f'Saved variant · {variant.name}',
+            )
         return _vehicle_master_redirect(
-            request, make_id=car_model.brand_id, model_id=car_model.pk
+            request,
+            make_id=car_model.brand_id,
+            model_id=car_model.pk,
+            message='Could not save variant.',
+            level='error',
         )
 
 
@@ -1835,9 +1930,11 @@ class VehicleMasterVariantDeleteView(StaffRequiredMixin, View):
         car_model = variant.car_model
         name = variant.name
         variant.delete()
-        messages.success(request, f'Deleted variant · {name}')
         return _vehicle_master_redirect(
-            request, make_id=car_model.brand_id, model_id=car_model.pk
+            request,
+            make_id=car_model.brand_id,
+            model_id=car_model.pk,
+            message=f'Deleted variant · {name}',
         )
 
 

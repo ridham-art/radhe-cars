@@ -109,5 +109,5 @@
         });
     }
 
-    register(['inventory', 'lists', 'requests']);
+    register(['inventory', 'lists', 'requests', 'vehicle_master']);
 })();

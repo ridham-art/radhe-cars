@@ -91,6 +91,17 @@
         var form = e.target;
         if (!isAjaxForm(form)) return;
 
+        var confirmMsg = form.getAttribute('data-confirm');
+        if (!confirmMsg) {
+            var submitBtn = e.submitter;
+            if (submitBtn) confirmMsg = submitBtn.getAttribute('data-confirm');
+        }
+        if (confirmMsg && !window.confirm(confirmMsg)) {
+            e.preventDefault();
+            e.stopPropagation();
+            return;
+        }
+
         e.preventDefault();
         e.stopPropagation();
 
