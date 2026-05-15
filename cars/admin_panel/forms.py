@@ -357,7 +357,9 @@ class CSVUploadFormPreview(CSVUploadForm):
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        self.fields['file'].widget.attrs['class'] = 'cf-input'
+        self.fields['file'].widget = forms.FileInput(
+            attrs={'class': 'csv-file-native', 'accept': '.csv'},
+        )
         self.fields['replace_all'].widget.attrs['class'] = 'cf-checkbox'
 
 

@@ -14,17 +14,56 @@
 </div>
 
 <div class="csv-grid">
-    <div class="csv-panel">
+    <div class="csv-panel csv-panel--upload">
         <h2>Upload CSV</h2>
-        <p class="note">Required: title, brand, model, year, price, mileage. Optional: id, model_month, variant, fuel_type, transmission, body_type, ownership, status, city, color, description, is_featured, original_price.</p>
-        <form method="post" enctype="multipart/form-data">
+        <p class="note">Import vehicles in bulk. Column headers must match the names below.</p>
+
+        <div class="csv-cols">
+            <div class="csv-cols-group">
+                <span class="csv-cols-label">Required</span>
+                <ul class="csv-cols-list">
+                    <li>title</li>
+                    <li>brand</li>
+                    <li>model</li>
+                    <li>year</li>
+                    <li>price</li>
+                    <li>mileage</li>
+                </ul>
+            </div>
+            <div class="csv-cols-group">
+                <span class="csv-cols-label">Optional</span>
+                <ul class="csv-cols-list">
+                    <li>id</li>
+                    <li>model_month</li>
+                    <li>variant</li>
+                    <li>fuel_type</li>
+                    <li>transmission</li>
+                    <li>body_type</li>
+                    <li>ownership</li>
+                    <li>status</li>
+                    <li>city</li>
+                    <li>color</li>
+                    <li>description</li>
+                    <li>is_featured</li>
+                    <li>original_price</li>
+                </ul>
+            </div>
+        </div>
+
+        <form method="post" enctype="multipart/form-data" class="csv-panel-form">
             {% csrf_token %}
             {% for field in form %}
-            <div class="csv-field">
+            <div class="csv-field{% if field.field.widget.input_type == 'file' %} csv-field--file{% endif %}">
                 {% if field.field.widget.input_type == 'checkbox' %}
                 <div class="csv-check-row">
                     {{ field }}
                     <label for="{{ field.id_for_label }}">{{ field.label }}</label>
+                </div>
+                {% elif field.field.widget.input_type == 'file' %}
+                <label for="{{ field.id_for_label }}">{{ field.label }}</label>
+                <div class="csv-file-wrap">
+                    {{ field }}
+                    <span class="csv-file-hint">.csv only</span>
                 </div>
                 {% else %}
                 <label for="{{ field.id_for_label }}">{{ field.label }}</label>
@@ -33,20 +72,32 @@
                 {% if field.errors %}<ul class="cf-errors">{% for e in field.errors %}<li>{{ e }}</li>{% endfor %}</ul>{% endif %}
             </div>
             {% endfor %}
-            <button type="submit" class="btn-primary">Upload and preview</button>
+            <div class="csv-panel-actions">
+                <button type="submit" class="btn-primary">Upload and preview</button>
+            </div>
         </form>
     </div>
-    <div class="csv-panel">
+
+    <div class="csv-panel csv-panel--export">
         <h2>Export</h2>
-        <p class="note">Download all cars as a CSV file.</p>
-        <a href="{% url 'admin_panel:csv_export' %}" class="btn-primary">Download CSV</a>
+        <p class="note">Download the full vehicle catalogue as a CSV file.</p>
+        <div class="csv-export-body">
+            <div class="csv-export-info">
+                <span class="csv-export-icon" aria-hidden="true">
+                    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></svg>
+                </span>
+                <p class="csv-export-title">Full catalogue export</p>
+                <p class="csv-export-desc">Includes all listed vehicles with the same columns used for import.</p>
+            </div>
+            <a href="{% url 'admin_panel:csv_export' %}" class="btn-primary csv-export-btn">Download CSV</a>
+        </div>
     </div>
 </div>
 
 {% if csv_skip_log %}
-<div class="csv-alert warn" style="margin-top:16px">
-    <p style="margin:0 0 8px;font-weight:600">Last import skipped rows</p>
-    <ul class="csv-errors-list" style="color:#92400e">
+<div class="csv-alert warn csv-skip-log">
+    <p class="csv-skip-log-title">Last import skipped rows</p>
+    <ul class="csv-errors-list csv-skip-log-list">
         {% for item in csv_skip_log %}
         <li>Row {{ item.row_num }}: {{ item.message }}</li>
         {% endfor %}
