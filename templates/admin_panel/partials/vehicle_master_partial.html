@@ -54,7 +54,7 @@
                         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75"><path d="M4 20h4l11-11-4-4L4 16v4z"/><path d="M14 6l4 4"/></svg>
                     </button>
                     <form method="post" action="{% url 'admin_panel:vehicle_master_make_delete' m.pk %}" class="vm-delete-form"
-                          data-confirm="Delete "{{ m.name }}" and all models under it?">
+                          data-confirm="Delete &quot;{{ m.name }}&quot; and all models under it?">
                         {% csrf_token %}
                         <input type="hidden" name="make" value="{{ m.pk }}">
                         <input type="hidden" name="q_make" value="{{ q_make }}">
@@ -128,7 +128,7 @@
                         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75"><path d="M4 20h4l11-11-4-4L4 16v4z"/><path d="M14 6l4 4"/></svg>
                     </button>
                     <form method="post" action="{% url 'admin_panel:vehicle_master_model_delete' md.pk %}" class="vm-delete-form"
-                          data-confirm="Delete "{{ md.name }}" and all variants under it?">
+                          data-confirm="Delete &quot;{{ md.name }}&quot; and all variants under it?">
                         {% csrf_token %}
                         <input type="hidden" name="make" value="{{ selected_make.pk }}">
                         <input type="hidden" name="model" value="{{ md.pk }}">
@@ -233,7 +233,7 @@
                         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75"><path d="M4 20h4l11-11-4-4L4 16v4z"/><path d="M14 6l4 4"/></svg>
                     </button>
                     <form method="post" action="{% url 'admin_panel:vehicle_master_variant_delete' v.pk %}" class="vm-delete-form"
-                          data-confirm="Delete variant "{{ v.name }}"?">
+                          data-confirm="Delete variant &quot;{{ v.name }}&quot;?">
                         {% csrf_token %}
                         <input type="hidden" name="make" value="{{ selected_make.pk }}">
                         <input type="hidden" name="model" value="{{ selected_model.pk }}">
