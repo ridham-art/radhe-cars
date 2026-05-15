@@ -5,23 +5,6 @@
     margin: 0 auto;
 }
 
-.cf-page-head {
-    margin-bottom: 20px;
-}
-
-.cf-page-head h1 {
-    margin: 0;
-    font-size: 22px;
-    font-weight: 700;
-    letter-spacing: -0.02em;
-}
-
-.cf-page-head .sub {
-    margin-top: 4px;
-    font-size: 13px;
-    color: var(--text-muted);
-}
-
 .cf-form {
     display: flex;
     flex-direction: column;

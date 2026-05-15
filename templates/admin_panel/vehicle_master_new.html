@@ -7,6 +7,21 @@
 <link rel="stylesheet" href="{% static 'css/admin-panel-vehicle-master.css' %}" data-ap-server="1">
 {% endblock %}
 {% block content %}
+<div class="page-head">
+    <div>
+        <h1>Vehicle Master</h1>
+        <div class="vm-summary">
+            <span class="pill">{{ total_makes }} makes</span>
+            <span class="pill">{{ total_models }} models</span>
+            <span class="pill">{{ total_variants }} variants</span>
+        </div>
+    </div>
+    <button type="button" class="btn-primary" data-open-make-modal>
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg>
+        Add Make
+    </button>
+</div>
+
 <div id="ap-vehicle-master-partial" data-ap-partial-root
      {% if selected_make %}data-vm-make-name="{{ selected_make.name }}"{% endif %}
      {% if selected_model %}data-vm-model-name="{{ selected_model.name }}"{% endif %}>

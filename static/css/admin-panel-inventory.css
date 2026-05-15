@@ -1,27 +1,5 @@
 /* Inventory page — from new_dashboard.html prototype (subtabs, filterbar, cards) */
 
-.page-head-inv {
-  display: flex;
-  align-items: flex-end;
-  justify-content: space-between;
-  gap: 16px;
-  flex-wrap: wrap;
-}
-
-.page-head-inv h1 {
-  margin: 0;
-  font-size: 22px;
-  font-weight: 700;
-  letter-spacing: -0.015em;
-  color: var(--text);
-}
-
-.page-head-inv .sub {
-  color: var(--text-muted);
-  font-size: 13px;
-  margin-top: 4px;
-}
-
 .subtabs {
   display: inline-flex;
   gap: 4px;

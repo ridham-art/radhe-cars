@@ -1,19 +1,5 @@
 /* Listing Requests — from new_dashboard.html prototype */
 
-.page-head-req h1 {
-  margin: 0;
-  font-size: 22px;
-  font-weight: 700;
-  letter-spacing: -0.015em;
-  color: var(--text);
-}
-
-.page-head-req .sub {
-  color: var(--text-muted);
-  font-size: 13px;
-  margin-top: 4px;
-}
-
 .req-card {
   background: var(--surface);
   border: 1px solid var(--border);

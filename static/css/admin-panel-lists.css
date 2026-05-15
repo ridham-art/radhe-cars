@@ -1,21 +1,6 @@
 /* Session 7 — Customers, Wishlist, Inquiries, CSV list/detail pages */
 
-.page-head-list {
-    margin-bottom: 20px;
-}
-
-.page-head-list h1 {
-    margin: 0;
-    font-size: 22px;
-    font-weight: 700;
-    letter-spacing: -0.015em;
-    color: var(--text);
-}
-
 .page-head-list .sub {
-    color: var(--text-muted);
-    font-size: 13px;
-    margin-top: 4px;
     max-width: 42rem;
 }
 
