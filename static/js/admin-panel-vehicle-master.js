@@ -5,6 +5,10 @@
         'vm-make-modal',
         'vm-model-modal',
         'vm-variant-modal',
+        'vm-brand-bulk-modal',
+        'vm-brand-bulk-delete-modal',
+        'vm-model-bulk-modal',
+        'vm-model-bulk-delete-modal',
         'vm-variant-bulk-modal',
         'vm-variant-bulk-delete-modal',
     ];
@@ -90,6 +94,10 @@
             'vm-make-form',
             'vm-model-form',
             'vm-variant-form',
+            'vm-brand-bulk-form',
+            'vm-brand-bulk-delete-form',
+            'vm-model-bulk-form',
+            'vm-model-bulk-delete-form',
             'vm-variant-bulk-form',
             'vm-variant-bulk-delete-names-form',
         ];
@@ -107,6 +115,10 @@
 
         var makeLabel = document.getElementById('vm-model-modal-make');
         if (makeLabel) makeLabel.textContent = makeName || '—';
+        ['vm-model-bulk-modal-brand', 'vm-model-bulk-delete-modal-brand'].forEach(function (id) {
+            var el = document.getElementById(id);
+            if (el) el.textContent = makeName || '—';
+        });
         ['vm-variant-modal-model', 'vm-variant-bulk-modal-model', 'vm-variant-bulk-delete-modal-model'].forEach(
             function (id) {
                 var el = document.getElementById(id);
@@ -212,13 +224,59 @@
                     openModal('vm-variant-modal');
                     return;
                 }
+                var brandBulkBtn = e.target.closest('[data-open-brand-bulk-modal]');
+                if (brandBulkBtn) {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    var brandBulkText = document.getElementById('vm-brand-bulk-text');
+                    if (brandBulkText) brandBulkText.value = '';
+                    syncBrandBulkSubmit();
+                    openModal('vm-brand-bulk-modal');
+                    return;
+                }
+                var brandBulkDelBtn = e.target.closest('[data-open-brand-bulk-delete-modal]');
+                if (brandBulkDelBtn) {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    var brandBulkDeleteText = document.getElementById('vm-brand-bulk-delete-text');
+                    if (brandBulkDeleteText) {
+                        brandBulkDeleteText.value = '';
+                        brandBulkDeleteText.focus();
+                    }
+                    syncBrandBulkDeleteSubmit();
+                    openModal('vm-brand-bulk-delete-modal');
+                    return;
+                }
+                var modelBulkBtn = e.target.closest('[data-open-model-bulk-modal]');
+                if (modelBulkBtn && !modelBulkBtn.disabled) {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    var modelBulkText = document.getElementById('vm-model-bulk-text');
+                    if (modelBulkText) modelBulkText.value = '';
+                    syncModelBulkSubmit();
+                    openModal('vm-model-bulk-modal');
+                    return;
+                }
+                var modelBulkDelBtn = e.target.closest('[data-open-model-bulk-delete-modal]');
+                if (modelBulkDelBtn && !modelBulkDelBtn.disabled) {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    var modelBulkDeleteText = document.getElementById('vm-model-bulk-delete-text');
+                    if (modelBulkDeleteText) {
+                        modelBulkDeleteText.value = '';
+                        modelBulkDeleteText.focus();
+                    }
+                    syncModelBulkDeleteSubmit();
+                    openModal('vm-model-bulk-delete-modal');
+                    return;
+                }
                 var bulkBtn = e.target.closest('[data-open-variant-bulk-modal]');
                 if (bulkBtn && !bulkBtn.disabled) {
                     e.preventDefault();
                     e.stopPropagation();
                     var bulkText = document.getElementById('vm-variant-bulk-text');
                     if (bulkText) bulkText.value = '';
-                    syncBulkSubmit();
+                    syncVariantBulkSubmit();
                     openModal('vm-variant-bulk-modal');
                     return;
                 }
@@ -231,19 +289,44 @@
                         bulkDeleteText.value = '';
                         bulkDeleteText.focus();
                     }
-                    syncBulkDeleteSubmit();
+                    syncVariantBulkDeleteSubmit();
                     openModal('vm-variant-bulk-delete-modal');
                 }
             },
             true
         );
 
+        var brandBulkText = document.getElementById('vm-brand-bulk-text');
+        if (brandBulkText) brandBulkText.addEventListener('input', syncBrandBulkSubmit);
+        var brandBulkDeleteText = document.getElementById('vm-brand-bulk-delete-text');
+        if (brandBulkDeleteText) brandBulkDeleteText.addEventListener('input', syncBrandBulkDeleteSubmit);
+        var modelBulkText = document.getElementById('vm-model-bulk-text');
+        if (modelBulkText) modelBulkText.addEventListener('input', syncModelBulkSubmit);
+        var modelBulkDeleteText = document.getElementById('vm-model-bulk-delete-text');
+        if (modelBulkDeleteText) modelBulkDeleteText.addEventListener('input', syncModelBulkDeleteSubmit);
+
         var bulkText = document.getElementById('vm-variant-bulk-text');
-        if (bulkText) bulkText.addEventListener('input', syncBulkSubmit);
+        if (bulkText) bulkText.addEventListener('input', syncVariantBulkSubmit);
 
         var bulkDeleteText = document.getElementById('vm-variant-bulk-delete-text');
-        if (bulkDeleteText) bulkDeleteText.addEventListener('input', syncBulkDeleteSubmit);
+        if (bulkDeleteText) bulkDeleteText.addEventListener('input', syncVariantBulkDeleteSubmit);
 
+        var brandBulkDeleteForm = document.getElementById('vm-brand-bulk-delete-form');
+        if (brandBulkDeleteForm) {
+            brandBulkDeleteForm.addEventListener('submit', function (e) {
+                if (!window.confirm('Delete the listed brands? Brands in use by inventory are skipped.')) {
+                    e.preventDefault();
+                }
+            });
+        }
+        var modelBulkDeleteForm = document.getElementById('vm-model-bulk-delete-form');
+        if (modelBulkDeleteForm) {
+            modelBulkDeleteForm.addEventListener('submit', function (e) {
+                if (!window.confirm('Delete the listed models for this brand?')) {
+                    e.preventDefault();
+                }
+            });
+        }
         var bulkDeleteNamesForm = document.getElementById('vm-variant-bulk-delete-names-form');
         if (bulkDeleteNamesForm) {
             bulkDeleteNamesForm.addEventListener('submit', function (e) {
@@ -260,16 +343,46 @@
                     inp.value = '';
                 }
             );
-            var bulkT = document.getElementById('vm-variant-bulk-text');
-            if (bulkT) bulkT.value = '';
-            var bulkDT = document.getElementById('vm-variant-bulk-delete-text');
-            if (bulkDT) bulkDT.value = '';
-            syncBulkSubmit();
-            syncBulkDeleteSubmit();
+            ['vm-brand-bulk-text', 'vm-brand-bulk-delete-text', 'vm-model-bulk-text', 'vm-model-bulk-delete-text', 'vm-variant-bulk-text', 'vm-variant-bulk-delete-text'].forEach(
+                function (id) {
+                    var el = document.getElementById(id);
+                    if (el) el.value = '';
+                }
+            );
+            syncBrandBulkSubmit();
+            syncBrandBulkDeleteSubmit();
+            syncModelBulkSubmit();
+            syncModelBulkDeleteSubmit();
+            syncVariantBulkSubmit();
+            syncVariantBulkDeleteSubmit();
         });
     }
 
-    function syncBulkSubmit() {
+    function syncBrandBulkSubmit() {
+        var btn = document.getElementById('vm-brand-bulk-submit');
+        var text = document.getElementById('vm-brand-bulk-text');
+        if (btn && text) btn.disabled = !text.value.trim();
+    }
+
+    function syncBrandBulkDeleteSubmit() {
+        var btn = document.getElementById('vm-brand-bulk-delete-submit');
+        var text = document.getElementById('vm-brand-bulk-delete-text');
+        if (btn && text) btn.disabled = !text.value.trim();
+    }
+
+    function syncModelBulkSubmit() {
+        var btn = document.getElementById('vm-model-bulk-submit');
+        var text = document.getElementById('vm-model-bulk-text');
+        if (btn && text) btn.disabled = !text.value.trim();
+    }
+
+    function syncModelBulkDeleteSubmit() {
+        var btn = document.getElementById('vm-model-bulk-delete-submit');
+        var text = document.getElementById('vm-model-bulk-delete-text');
+        if (btn && text) btn.disabled = !text.value.trim();
+    }
+
+    function syncVariantBulkSubmit() {
         var bulkSubmit = document.getElementById('vm-variant-bulk-submit');
         var bulkText = document.getElementById('vm-variant-bulk-text');
         if (bulkSubmit && bulkText) {
@@ -277,7 +390,7 @@
         }
     }
 
-    function syncBulkDeleteSubmit() {
+    function syncVariantBulkDeleteSubmit() {
         var bulkDeleteSubmit = document.getElementById('vm-variant-bulk-delete-submit');
         var bulkDeleteText = document.getElementById('vm-variant-bulk-delete-text');
         if (bulkDeleteSubmit && bulkDeleteText) {

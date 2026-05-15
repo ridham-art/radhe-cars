@@ -126,6 +126,62 @@ class VehicleMasterModelForm(forms.Form):
         return fuels
 
 
+class VehicleMasterBrandBulkForm(forms.Form):
+    brands = forms.CharField(
+        label='Brand names',
+        widget=forms.Textarea(
+            attrs={
+                'class': 'vm-textarea',
+                'rows': 12,
+                'placeholder': 'Honda, Hyundai, Tata\nor one per line',
+            }
+        ),
+        help_text='One brand per line or comma-separated. Existing names are skipped.',
+    )
+
+
+class VehicleMasterBrandBulkDeleteForm(forms.Form):
+    brands = forms.CharField(
+        label='Brand names to delete',
+        widget=forms.Textarea(
+            attrs={
+                'class': 'vm-textarea',
+                'rows': 12,
+                'placeholder': 'Audi\nBMW\nTata',
+            }
+        ),
+        help_text='One brand per line or comma-separated. Brands in use by inventory are skipped.',
+    )
+
+
+class VehicleMasterModelBulkForm(forms.Form):
+    models = forms.CharField(
+        label='Model names',
+        widget=forms.Textarea(
+            attrs={
+                'class': 'vm-textarea',
+                'rows': 12,
+                'placeholder': 'City, Amaze, WR-V\nor one per line',
+            }
+        ),
+        help_text='One model per line or comma-separated. Duplicates for this brand are skipped.',
+    )
+
+
+class VehicleMasterModelBulkDeleteForm(forms.Form):
+    models = forms.CharField(
+        label='Model names to delete',
+        widget=forms.Textarea(
+            attrs={
+                'class': 'vm-textarea',
+                'rows': 12,
+                'placeholder': 'City\nAmaze',
+            }
+        ),
+        help_text='One model per line or comma-separated. Only models under the selected brand are removed.',
+    )
+
+
 class VehicleMasterVariantBulkForm(forms.Form):
     variants = forms.CharField(
         label='Variant names',

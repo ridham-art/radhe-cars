@@ -45,6 +45,10 @@ from cars.admin_panel.forms import (
     StaffAuthenticationForm,
     VehicleMasterMakeForm,
     VehicleMasterModelForm,
+    VehicleMasterBrandBulkForm,
+    VehicleMasterBrandBulkDeleteForm,
+    VehicleMasterModelBulkForm,
+    VehicleMasterModelBulkDeleteForm,
     VehicleMasterVariantBulkForm,
     VehicleMasterVariantBulkDeleteForm,
     VM_FUEL_OPTIONS,
@@ -1580,11 +1584,11 @@ class VehicleMasterMakeAddView(StaffRequiredMixin, View):
                 request,
                 make_id=brand.pk,
                 model_id='',
-                message=f'Added make · {brand.name}',
+                message=f'Added brand · {brand.name}',
             )
         return _vehicle_master_redirect(
             request,
-            message='Could not add make. Check the name and try again.',
+            message='Could not add brand. Check the name and try again.',
             level='error',
         )
 
@@ -1596,10 +1600,10 @@ class VehicleMasterMakeEditView(StaffRequiredMixin, View):
         if form.is_valid():
             brand = form.save()
             return _vehicle_master_redirect(
-                request, make_id=brand.pk, message=f'Renamed make · {brand.name}'
+                request, make_id=brand.pk, message=f'Renamed brand · {brand.name}'
             )
         return _vehicle_master_redirect(
-            request, make_id=brand.pk, message='Could not save make.', level='error'
+            request, make_id=brand.pk, message='Could not save brand.', level='error'
         )
 
 
@@ -1610,7 +1614,7 @@ class VehicleMasterMakeDeleteView(StaffRequiredMixin, View):
             return _vehicle_master_redirect(
                 request,
                 make_id=brand.pk,
-                message='Cannot delete make: cars still reference it.',
+                message='Cannot delete brand: cars still reference it.',
                 level='error',
             )
         name = brand.name
@@ -1619,7 +1623,98 @@ class VehicleMasterMakeDeleteView(StaffRequiredMixin, View):
             request,
             make_id='',
             model_id='',
-            message=f'Deleted make · {name}',
+            message=f'Deleted brand · {name}',
+        )
+
+
+class VehicleMasterMakeBulkAddView(StaffRequiredMixin, View):
+    def post(self, request):
+        form = VehicleMasterBrandBulkForm(request.POST)
+        if not form.is_valid():
+            return _vehicle_master_redirect(
+                request,
+                message='Could not parse brand list.',
+                level='error',
+            )
+        names = _parse_bulk_list(form.cleaned_data['brands'])
+        if not names:
+            return _vehicle_master_redirect(
+                request,
+                message='No brand names were found in your list.',
+                level='warning',
+            )
+        created = 0
+        skipped_dup = 0
+        last_pk = None
+        for n in names:
+            if Brand.objects.filter(name__iexact=n).exists():
+                skipped_dup += 1
+                continue
+            brand = Brand.objects.create(name=n)
+            created += 1
+            last_pk = brand.pk
+        if created:
+            msg = f'Added {created} brand(s).'
+            level = 'success'
+        else:
+            msg = 'No new brands were added.'
+            level = 'warning'
+        if skipped_dup:
+            msg += f' Skipped {skipped_dup} duplicate name(s).'
+        return _vehicle_master_redirect(
+            request,
+            make_id=last_pk or request.POST.get('make') or '',
+            model_id='',
+            message=msg,
+            level=level,
+        )
+
+
+class VehicleMasterMakeBulkDeleteView(StaffRequiredMixin, View):
+    def post(self, request):
+        form = VehicleMasterBrandBulkDeleteForm(request.POST)
+        if not form.is_valid():
+            return _vehicle_master_redirect(
+                request,
+                message='Could not read brand names to delete.',
+                level='error',
+            )
+        names = _parse_bulk_delete_names(form.cleaned_data['brands'])
+        if not names:
+            return _vehicle_master_redirect(
+                request,
+                message='No brand names were found in your list.',
+                level='warning',
+            )
+        deleted = 0
+        skipped_in_use = 0
+        not_found = 0
+        for name in names:
+            brand = Brand.objects.filter(name__iexact=name).first()
+            if not brand:
+                not_found += 1
+                continue
+            if Car.objects.filter(brand=brand).exists():
+                skipped_in_use += 1
+                continue
+            brand.delete()
+            deleted += 1
+        if deleted:
+            msg = f'Deleted {deleted} brand(s).'
+            level = 'success'
+        else:
+            msg = 'No brands were deleted.'
+            level = 'warning'
+        if skipped_in_use:
+            msg += f' Skipped {skipped_in_use} in use by inventory.'
+        if not_found:
+            msg += f' {not_found} name(s) did not match.'
+        return _vehicle_master_redirect(
+            request,
+            make_id=request.POST.get('make') or '',
+            model_id='',
+            message=msg,
+            level=level,
         )
 
 
@@ -1628,7 +1723,7 @@ class VehicleMasterModelAddView(StaffRequiredMixin, View):
         brand_id = request.POST.get('brand_id', '').strip()
         if not brand_id.isdigit():
             return _vehicle_master_redirect(
-                request, message='Select a make first.', level='error'
+                request, message='Select a brand first.', level='error'
             )
         brand = get_object_or_404(Brand, pk=int(brand_id))
         form = VehicleMasterModelForm(request.POST)
@@ -1691,6 +1786,130 @@ class VehicleMasterModelDeleteView(StaffRequiredMixin, View):
             make_id=brand_id,
             model_id='',
             message=f'Deleted model · {name}',
+        )
+
+
+class VehicleMasterModelBulkAddView(StaffRequiredMixin, View):
+    def post(self, request):
+        brand_id = (
+            request.POST.get('brand_id') or request.POST.get('make') or ''
+        ).strip()
+        if not brand_id.isdigit():
+            return _vehicle_master_redirect(
+                request, message='Select a brand first.', level='error'
+            )
+        brand = get_object_or_404(Brand, pk=int(brand_id))
+        form = VehicleMasterModelBulkForm(request.POST)
+        if not form.is_valid():
+            return _vehicle_master_redirect(
+                request,
+                make_id=brand.pk,
+                message='Could not parse model list.',
+                level='error',
+            )
+        names = []
+        seen = set()
+        for n in _parse_bulk_list(form.cleaned_data['models']):
+            key = n.casefold()
+            if key in seen:
+                continue
+            seen.add(key)
+            names.append(n)
+        if not names:
+            return _vehicle_master_redirect(
+                request,
+                make_id=brand.pk,
+                message='No model names were found in your list.',
+                level='warning',
+            )
+        created = 0
+        skipped_dup = 0
+        last_model_pk = None
+        for n in names:
+            if CarModel.objects.filter(brand=brand, name__iexact=n).exists():
+                skipped_dup += 1
+                continue
+            car_model = CarModel.objects.create(
+                brand=brand,
+                name=n,
+                supported_fuels=['Petrol'],
+            )
+            created += 1
+            last_model_pk = car_model.pk
+        if created:
+            msg = f'Added {created} model(s) to {brand.name}.'
+            level = 'success'
+        else:
+            msg = 'No new models were added.'
+            level = 'warning'
+        if skipped_dup:
+            msg += f' Skipped {skipped_dup} duplicate name(s).'
+        return _vehicle_master_redirect(
+            request,
+            make_id=brand.pk,
+            model_id=last_model_pk or request.POST.get('model') or '',
+            message=msg,
+            level=level,
+        )
+
+
+class VehicleMasterModelBulkDeleteView(StaffRequiredMixin, View):
+    def post(self, request):
+        brand_id = (
+            request.POST.get('brand_id') or request.POST.get('make') or ''
+        ).strip()
+        if not brand_id.isdigit():
+            return _vehicle_master_redirect(
+                request, message='Select a brand first.', level='error'
+            )
+        brand = get_object_or_404(Brand, pk=int(brand_id))
+        form = VehicleMasterModelBulkDeleteForm(request.POST)
+        if not form.is_valid():
+            return _vehicle_master_redirect(
+                request,
+                make_id=brand.pk,
+                message='Could not read model names to delete.',
+                level='error',
+            )
+        names = _parse_bulk_delete_names(form.cleaned_data['models'])
+        if not names:
+            return _vehicle_master_redirect(
+                request,
+                make_id=brand.pk,
+                message='No model names were found in your list.',
+                level='warning',
+            )
+        deleted = 0
+        skipped_in_use = 0
+        not_found = 0
+        for name in names:
+            car_model = CarModel.objects.filter(
+                brand=brand, name__iexact=name
+            ).first()
+            if not car_model:
+                not_found += 1
+                continue
+            if Car.objects.filter(model=car_model).exists():
+                skipped_in_use += 1
+                continue
+            car_model.delete()
+            deleted += 1
+        if deleted:
+            msg = f'Deleted {deleted} model(s) from {brand.name}.'
+            level = 'success'
+        else:
+            msg = 'No models were deleted.'
+            level = 'warning'
+        if skipped_in_use:
+            msg += f' Skipped {skipped_in_use} in use by inventory.'
+        if not_found:
+            msg += f' {not_found} name(s) did not match.'
+        return _vehicle_master_redirect(
+            request,
+            make_id=brand.pk,
+            model_id=request.POST.get('model') or '',
+            message=msg,
+            level=level,
         )
 
 

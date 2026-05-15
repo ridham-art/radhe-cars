@@ -72,6 +72,16 @@ urlpatterns = [
         name='vehicle_master_make_delete',
     ),
     path(
+        'vehicle-master/makes/bulk-add/',
+        views.VehicleMasterMakeBulkAddView.as_view(),
+        name='vehicle_master_make_bulk_add',
+    ),
+    path(
+        'vehicle-master/makes/bulk-delete/',
+        views.VehicleMasterMakeBulkDeleteView.as_view(),
+        name='vehicle_master_make_bulk_delete',
+    ),
+    path(
         'vehicle-master/models/add/',
         views.VehicleMasterModelAddView.as_view(),
         name='vehicle_master_model_add',
@@ -85,6 +95,16 @@ urlpatterns = [
         'vehicle-master/models/<int:pk>/delete/',
         views.VehicleMasterModelDeleteView.as_view(),
         name='vehicle_master_model_delete',
+    ),
+    path(
+        'vehicle-master/models/bulk-add/',
+        views.VehicleMasterModelBulkAddView.as_view(),
+        name='vehicle_master_model_bulk_add',
+    ),
+    path(
+        'vehicle-master/models/bulk-delete/',
+        views.VehicleMasterModelBulkDeleteView.as_view(),
+        name='vehicle_master_model_bulk_delete',
     ),
     path(
         'vehicle-master/variants/add/',
