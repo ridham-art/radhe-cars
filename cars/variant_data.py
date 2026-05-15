@@ -3,6 +3,10 @@ Model-specific car variants for Indian market.
 Key: (brand_name_lower, model_name_lower) -> list of variants
 """
 
+import re
+
+from .models import CarModelVariant
+
 VARIANTS_BY_MODEL = {
     # Maruti Suzuki
     ('maruti suzuki', 'swift'): ['LXI', 'VXI', 'ZXI', 'ZXI+', 'ZXI+ Dual Tone', 'VXI AGS', 'ZXI AGS', 'ZXI+ AGS', 'LXI CNG', 'VXI CNG', 'ZXI CNG'],
@@ -182,3 +186,70 @@ def get_merged_variant_names(car_model) -> list:
             db.append(s)
             seen.add(s.casefold())
     return db
+
+
+def lookup_static_variant_names_strict(brand_name: str, model_name: str) -> list:
+    """Like get_variants_for_model but returns [] when no catalog match (never DEFAULT_VARIANTS)."""
+    if not brand_name or not model_name:
+        return []
+    b = str(brand_name).strip().lower()
+    m = str(model_name).strip().lower()
+    b = BRAND_ALIASES.get(b, b)
+    key = (b, m)
+    if key in VARIANTS_BY_MODEL:
+        return list(VARIANTS_BY_MODEL[key])
+    b_first = b.split()[0] if b else ''
+    b_aliased = BRAND_ALIASES.get(b_first, b_first)
+    if (b_aliased, m) in VARIANTS_BY_MODEL:
+        return list(VARIANTS_BY_MODEL[(b_aliased, m)])
+    return []
+
+
+_AUTO_NAME_RE = re.compile(
+    r'\b(AT|AMT|AGS|DCT|CVT|TC|ATC)\b|\(AT\)|\(ATC\)|\bAUTO\b',
+    re.IGNORECASE,
+)
+
+
+def infer_transmission_from_variant_name(name: str) -> str:
+    """Heuristic for catalog-only variant strings (no DB row)."""
+    if not name or not str(name).strip():
+        return 'Manual'
+    s = str(name).strip()
+    u = s.upper()
+    if _AUTO_NAME_RE.search(u):
+        return 'Automatic'
+    if ' AT' in u or u.endswith(' AT') or '(AT)' in u or '(ATC)' in u:
+        return 'Automatic'
+    return 'Manual'
+
+
+def get_merged_variants_for_sell(car_model) -> list:
+    """
+    Variants for sell form: DB rows first (exact transmission), then static catalog
+    names only when VARIANTS_BY_MODEL matches (never DEFAULT_VARIANTS).
+    Each item: {"name", "transmission", "fuel_type"}.
+    """
+    rows = []
+    for v in CarModelVariant.objects.filter(car_model=car_model).order_by('name'):
+        rows.append(
+            {
+                'name': v.name,
+                'transmission': v.transmission,
+                'fuel_type': v.fuel_type,
+            }
+        )
+    seen = {r['name'].casefold() for r in rows}
+    for s in lookup_static_variant_names_strict(
+        car_model.brand.name, car_model.name
+    ):
+        if s.casefold() not in seen:
+            rows.append(
+                {
+                    'name': s,
+                    'transmission': infer_transmission_from_variant_name(s),
+                    'fuel_type': None,
+                }
+            )
+            seen.add(s.casefold())
+    return rows

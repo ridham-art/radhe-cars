@@ -654,18 +654,22 @@ function pickTrans(el){
 function buildVariantList(){
   const list=document.getElementById('variant-list');
   list.innerHTML='<div class="p-4 text-center text-slate-500 text-sm">Loading variants...</div>';
-  fetch('{% url "api_get_variants" %}?model_id='+D.model).then(r=>r.json()).then(variants=>{
+  var url='{% url "api_get_variants" %}?model_id='+encodeURIComponent(D.model);
+  if(D.trans)url+='&transmission='+encodeURIComponent(D.trans);
+  fetch(url).then(r=>r.json()).then(variants=>{
     list.innerHTML='';
     if(!variants||variants.length===0){
       list.innerHTML='<div class="p-4 text-center text-slate-500 text-sm">No variants found. Use custom below.</div>';
       return;
     }
-    variants.forEach(v=>{
+    variants.forEach(function(item){
+      var name=typeof item==='string'?item:(item&&item.name);
+      if(!name)return;
       const d=document.createElement('div');
       d.className='variant-option';
-      d.dataset.nm=v;
-      d.textContent=v;
-      d.onclick=function(){pickVariantFromList(v);};
+      d.dataset.nm=name;
+      d.textContent=name;
+      d.onclick=function(){pickVariantFromList(name);};
       list.appendChild(d);
     });
   }).catch(()=>{
