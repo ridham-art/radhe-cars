@@ -294,7 +294,5 @@
 </div>
 
 <script id="cf-config" type="application/json">{"modelId":{% if object %}{{ object.model_id }}{% else %}null{% endif %},"variant":{% if object and object.variant %}"{{ object.variant|escapejs }}"{% else %}""{% endif %}}</script>
-{% endblock %}
-{% block extra_js %}
 <script src="{% static 'js/admin-panel-car-form.js' %}"></script>
 {% endblock %}

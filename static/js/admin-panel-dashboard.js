@@ -173,5 +173,7 @@
 
     if (window.AdminPanel) {
         window.AdminPanel.register('dashboard', { init: init, destroy: destroy });
+    } else {
+        init();
     }
 })();

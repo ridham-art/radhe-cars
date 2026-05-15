@@ -61,20 +61,26 @@
     var inflightAbort = null;
     var loadedScripts = new Object();
 
-    window.AdminPanel = {
-        pages: {},
-        register: function (key, handlers) {
-            this.pages[key] = handlers;
-        },
-        runDestroy: function (key) {
-            var h = key && this.pages[key];
+    var AP = window.AdminPanel || {};
+    AP.pages = AP.pages || {};
+    AP.register =
+        AP.register ||
+        function (key, handlers) {
+            AP.pages[key] = handlers;
+        };
+    AP.runDestroy =
+        AP.runDestroy ||
+        function (key) {
+            var h = key && AP.pages[key];
             if (h && typeof h.destroy === 'function') h.destroy();
-        },
-        runInit: function (key) {
-            var h = key && this.pages[key];
+        };
+    AP.runInit =
+        AP.runInit ||
+        function (key) {
+            var h = key && AP.pages[key];
             if (h && typeof h.init === 'function') h.init();
-        },
-    };
+        };
+    window.AdminPanel = AP;
 
     function staticUrl(path) {
         if (!path) return path;

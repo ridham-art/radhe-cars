@@ -78,5 +78,7 @@
 
     if (window.AdminPanel) {
         window.AdminPanel.register('requests', { init: init, destroy: destroy });
+    } else {
+        init();
     }
 })();

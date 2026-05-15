@@ -266,5 +266,7 @@
 
     if (window.AdminPanel) {
         window.AdminPanel.register('vehicle_master', { init: init, destroy: destroy });
+    } else {
+        init();
     }
 })();

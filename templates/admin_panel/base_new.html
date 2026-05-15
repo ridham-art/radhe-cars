@@ -212,6 +212,24 @@
         }
     })();
     </script>
+    <script>
+    (function () {
+        var AP = window.AdminPanel || {};
+        AP.pages = AP.pages || {};
+        AP.register = AP.register || function (key, handlers) {
+            AP.pages[key] = handlers;
+        };
+        AP.runDestroy = AP.runDestroy || function (key) {
+            var h = key && AP.pages[key];
+            if (h && typeof h.destroy === 'function') h.destroy();
+        };
+        AP.runInit = AP.runInit || function (key) {
+            var h = key && AP.pages[key];
+            if (h && typeof h.init === 'function') h.init();
+        };
+        window.AdminPanel = AP;
+    })();
+    </script>
     {% block extra_js %}{% endblock %}
     <script>
     window.AP_NAV_CONFIG = {

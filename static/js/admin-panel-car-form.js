@@ -404,5 +404,7 @@
 
     if (window.AdminPanel) {
         window.AdminPanel.register('car_form', { init: init, destroy: destroy });
+    } else {
+        init();
     }
 })();
