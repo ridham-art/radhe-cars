@@ -18,9 +18,9 @@
         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><circle cx="11" cy="11" r="6.5"/><path d="M20 20l-3.5-3.5"/></svg>
         <input class="search-i" type="search" name="q" value="{{ search_q }}" placeholder="Email, name, or username" aria-label="Search customers">
     </div>
-    <a href="{% url 'admin_panel:customer_list_preview' %}?has_wishlist=1{% if search_q %}&q={{ search_q|urlencode }}{% endif %}" class="filter-chip{% if filter_has_wishlist %} on{% endif %}">Has wishlist</a>
+    <a href="{% url 'admin_panel:customer_list' %}?has_wishlist=1{% if search_q %}&q={{ search_q|urlencode }}{% endif %}" class="filter-chip{% if filter_has_wishlist %} on{% endif %}">Has wishlist</a>
     <button type="submit" class="btn-ghost">Apply</button>
-    <a href="{% url 'admin_panel:customer_list_preview' %}" class="btn-ghost">Reset</a>
+    <a href="{% url 'admin_panel:customer_list' %}" class="btn-ghost">Reset</a>
 </form>
 
 <div class="data-card">

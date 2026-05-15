@@ -15,9 +15,9 @@
 
 <div class="list-toolbar">
     {% if filter_unread %}
-    <p class="hint">Showing unread only. <a href="{% url 'admin_panel:inquiry_list_preview' %}">View all inquiries</a></p>
+    <p class="hint">Showing unread only. <a href="{% url 'admin_panel:inquiry_list' %}">View all inquiries</a></p>
     {% else %}
-    <a href="{% url 'admin_panel:inquiry_list_preview' %}?unread=1" class="filter-chip">Unread only</a>
+    <a href="{% url 'admin_panel:inquiry_list' %}?unread=1" class="filter-chip">Unread only</a>
     {% endif %}
     <form method="post" action="{% url 'admin_panel:inquiry_mark_all_read' %}">
         {% csrf_token %}
@@ -56,7 +56,7 @@
                 <td class="num" style="color:var(--text-muted)">{{ i.created_at|date:"M j, Y H:i" }}</td>
                 <td>
                     <div class="row-actions">
-                        <a href="{% url 'admin_panel:inquiry_detail_preview' i.pk %}" class="btn-table primary">View</a>
+                        <a href="{% url 'admin_panel:inquiry_detail' i.pk %}" class="btn-table primary">View</a>
                         {% if not i.is_read %}
                         <form method="post" action="{% url 'admin_panel:inquiry_mark_read' i.pk %}">
                             {% csrf_token %}

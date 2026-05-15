@@ -11,7 +11,7 @@
         <h1>Inventory</h1>
         <div class="sub">Manage your live catalogue and past sales</div>
     </div>
-    <a href="{% url 'admin_panel:car_add_preview' %}" class="btn-primary">
+    <a href="{% url 'admin_panel:car_add' %}" class="btn-primary">
         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg>
         Add Vehicle
     </a>
@@ -50,7 +50,7 @@
         <option value="price-asc"{% if filter_sort == 'price-asc' %} selected{% endif %}>Sort: Price (Low → High)</option>
     </select>
     <button type="submit" class="btn-ghost">Apply</button>
-    <a href="{% url 'admin_panel:car_list_preview' %}?tab={{ active_tab }}" class="btn-ghost">Reset</a>
+    <a href="{% url 'admin_panel:car_list' %}?tab={{ active_tab }}" class="btn-ghost">Reset</a>
 </form>
 
 <div class="result-count">Showing {% if page_obj.paginator.count %}{{ page_obj.start_index }}–{{ page_obj.end_index }} of {{ page_obj.paginator.count }}{% else %}0{% endif %} vehicles</div>
@@ -91,7 +91,7 @@
             </div>
             <div class="inv-foot">
                 <span class="inv-meta">#{{ car.pk }} · {% if car.contact_name %}{{ car.contact_name }}{% elif car.seller_id %}{{ car.seller.get_full_name|default:car.seller.username }}{% else %}Radhe Auto{% endif %}</span>
-                <a class="btn-ghost primary" href="{% url 'admin_panel:car_edit_preview' car.pk %}">
+                <a class="btn-ghost primary" href="{% url 'admin_panel:car_edit' car.pk %}">
                     View Details
                     <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M9 6l6 6-6 6"/></svg>
                 </a>

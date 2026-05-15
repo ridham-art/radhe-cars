@@ -217,7 +217,7 @@
         </div>
         <form id="reject-form" method="post" action="">
             {% csrf_token %}
-            <input type="hidden" name="next" value="{% url 'admin_panel:sell_car_inquiry_preview' %}?tab=rejected">
+            <input type="hidden" name="next" value="{% url 'admin_panel:sell_car_inquiry_list' %}?tab=rejected">
             <div class="modal-body">
                 <label for="reject-reason">Reason for rejection</label>
                 <textarea id="reject-reason" name="reason" placeholder="Share why this listing is being rejected. The seller will see this message."></textarea>

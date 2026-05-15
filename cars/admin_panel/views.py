@@ -87,7 +87,7 @@ def filter_car_list_queryset(request):
     else:
         tab = request.GET.get('tab', '').strip()
         url_name = getattr(getattr(request, 'resolver_match', None), 'url_name', None)
-        if url_name == 'car_list_preview' and not tab:
+        if url_name in ('car_list', 'car_list_preview') and not tab:
             tab = 'stock'
         if tab == 'sold':
             qs = qs.filter(status='SOLD')
@@ -627,7 +627,7 @@ class CustomerListPreviewView(CustomerListView):
     def get_context_data(self, **kwargs):
         ctx = super().get_context_data(**kwargs)
         ctx['list_querystring'] = car_list_querystring_except_page(self.request)
-        ctx['list_url'] = reverse('admin_panel:customer_list_preview')
+        ctx['list_url'] = reverse('admin_panel:customer_list')
         return ctx
 
 
@@ -671,7 +671,7 @@ class WishlistListPreviewView(WishlistActivityListView):
     def get_context_data(self, **kwargs):
         ctx = super().get_context_data(**kwargs)
         ctx['list_querystring'] = car_list_querystring_except_page(self.request)
-        ctx['list_url'] = reverse('admin_panel:wishlist_list_preview')
+        ctx['list_url'] = reverse('admin_panel:wishlist_list')
         return ctx
 
 
@@ -815,31 +815,10 @@ class CarCreatePreviewView(CarCreateView):
     form_class = CarStaffFormPreview
     template_name = 'admin_panel/car_form_new.html'
 
-    def get_context_data(self, **kwargs):
-        ctx = super().get_context_data(**kwargs)
-        ctx['cancel_url'] = reverse_lazy('admin_panel:car_list_preview')
-        return ctx
-
-    def get_success_url(self):
-        return reverse_lazy('admin_panel:car_list_preview')
-
 
 class CarUpdatePreviewView(CarUpdateView):
     form_class = CarStaffFormPreview
     template_name = 'admin_panel/car_form_new.html'
-
-    def get_context_data(self, **kwargs):
-        ctx = super().get_context_data(**kwargs)
-        if ctx.get('return_to_sell'):
-            ctx['cancel_url'] = reverse_lazy('admin_panel:sell_car_inquiry_preview')
-        else:
-            ctx['cancel_url'] = reverse_lazy('admin_panel:car_list_preview')
-        return ctx
-
-    def get_success_url(self):
-        if self.request.POST.get('return') == 'sell':
-            return reverse_lazy('admin_panel:sell_car_inquiry_preview')
-        return reverse_lazy('admin_panel:car_list_preview')
 
 
 class CarImageDeleteView(StaffRequiredMixin, View):
@@ -1030,7 +1009,7 @@ class SellCarInquiryPreviewView(
         filt.pop('page', None)
         ctx['filter_querystring'] = urlencode(filt)
         ctx['list_querystring'] = car_list_querystring_except_page(self.request)
-        ctx['preview_return_url'] = reverse('admin_panel:sell_car_inquiry_preview') + '?tab=' + tab
+        ctx['preview_return_url'] = reverse('admin_panel:sell_car_inquiry_list') + '?tab=' + tab
         return ctx
 
 
@@ -1065,9 +1044,7 @@ class SellCarInquiryRejectView(StaffRequiredMixin, View):
         reason = request.POST.get('reason', '').strip()
         if not reason:
             messages.error(request, 'A rejection reason is required.')
-            return _sell_inquiry_redirect(
-                request, fallback_name='admin_panel:sell_car_inquiry_preview'
-            )
+            return _sell_inquiry_redirect(request)
         car.status = 'REJECTED'
         car.rejection_reason = reason
         car.save()
@@ -1312,11 +1289,11 @@ class InquiryListPreviewView(InquiryListView):
     def get_context_data(self, **kwargs):
         ctx = super().get_context_data(**kwargs)
         ctx['list_querystring'] = car_list_querystring_except_page(self.request)
-        ctx['list_url'] = reverse('admin_panel:inquiry_list_preview')
+        ctx['list_url'] = reverse('admin_panel:inquiry_list')
         unread_qs = ''
         if self.request.GET.get('unread') == '1':
             unread_qs = '?unread=1'
-        ctx['inquiry_list_url'] = reverse('admin_panel:inquiry_list_preview') + unread_qs
+        ctx['inquiry_list_url'] = reverse('admin_panel:inquiry_list') + unread_qs
         return ctx
 
 
@@ -1343,7 +1320,7 @@ class InquiryDetailPreviewView(InquiryDetailView):
 
     def get_context_data(self, **kwargs):
         ctx = super().get_context_data(**kwargs)
-        ctx['back_url'] = reverse('admin_panel:inquiry_list_preview')
+        ctx['back_url'] = reverse('admin_panel:inquiry_list')
         return ctx
 
 
@@ -1415,7 +1392,7 @@ def _vehicle_master_redirect(request, make_id=None, model_id=None):
     if model_id is not None:
         params['model'] = model_id
     qs = urlencode(params)
-    url = reverse('admin_panel:vehicle_master_preview')
+    url = reverse('admin_panel:vehicle_master')
     if qs:
         url = f'{url}?{qs}'
     return redirect(url)
@@ -1861,13 +1838,6 @@ class CSVImportPreviewView(CSVImportView):
     template_name = 'admin_panel/csv_import_new.html'
     form_class = CSVUploadFormPreview
 
-    def get_preview_redirect_name(self):
-        return 'admin_panel:csv_preview_preview'
-
-    def form_valid(self, form):
-        self.request.session['csv_from_preview'] = True
-        return super().form_valid(form)
-
 
 class CSVPreviewView(StaffRequiredMixin, AdminPanelContextMixin, TemplateView):
     template_name = 'admin_panel/csv_preview.html'
@@ -1892,20 +1862,15 @@ class CSVPreviewPreviewView(CSVPreviewView):
 
     def get_context_data(self, **kwargs):
         ctx = super().get_context_data(**kwargs)
-        ctx['import_url'] = reverse('admin_panel:csv_import_preview')
-        ctx['from_preview'] = True
+        ctx['import_url'] = reverse('admin_panel:csv_import')
         return ctx
 
 
 def _csv_import_redirect(request):
-    if request.POST.get('from_preview') == '1' or request.session.get('csv_from_preview'):
-        return redirect('admin_panel:csv_import_preview')
     return redirect('admin_panel:csv_import')
 
 
 def _csv_preview_redirect(request):
-    if request.POST.get('from_preview') == '1' or request.session.get('csv_from_preview'):
-        return redirect('admin_panel:csv_preview_preview')
     return redirect('admin_panel:csv_preview')
 
 
@@ -1931,9 +1896,6 @@ class CSVConfirmView(StaffRequiredMixin, View):
             except OSError:
                 pass
             request.session.pop('admin_csv_path', None)
-        from_preview = (
-            request.POST.get('from_preview') == '1' or request.session.pop('csv_from_preview', False)
-        )
         messages.success(
             request,
             f"Import finished: {result['created']} created, {result['updated']} updated.",
@@ -1941,8 +1903,6 @@ class CSVConfirmView(StaffRequiredMixin, View):
         if result['skipped']:
             messages.warning(request, f"{len(result['skipped'])} row(s) skipped — see logs.")
             request.session['csv_skip_log'] = result['skipped'][:200]
-        if from_preview:
-            return redirect('admin_panel:csv_import_preview')
         return redirect('admin_panel:csv_import')
 
 
