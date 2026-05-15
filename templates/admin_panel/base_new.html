@@ -9,9 +9,10 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter+Tight:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="{% static 'css/admin-panel-shell.css' %}">
+    <div id="ap-dynamic-css" aria-hidden="true"></div>
     {% block extra_css %}{% endblock %}
 </head>
-<body>
+<body data-ap-shell="1">
     <div id="ap-sidebar-backdrop" class="ap-sidebar-backdrop" aria-hidden="true"></div>
     <div class="app">
         <aside id="ap-sidebar" class="sidebar">
@@ -212,5 +213,12 @@
     })();
     </script>
     {% block extra_js %}{% endblock %}
+    <script>
+    window.AP_NAV_CONFIG = {
+        staticPrefix: "{% get_static_prefix %}",
+        adminPrefix: "/admin-panel/"
+    };
+    </script>
+    <script src="{% static 'js/admin-panel-nav.js' %}"></script>
 </body>
 </html>

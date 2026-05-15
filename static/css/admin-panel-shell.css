@@ -543,3 +543,9 @@ body.overflow-hidden { overflow: hidden; }
     padding: 12px 16px 0;
   }
 }
+
+main.page.is-loading {
+  opacity: 0.55;
+  pointer-events: none;
+  transition: opacity 0.15s ease;
+}

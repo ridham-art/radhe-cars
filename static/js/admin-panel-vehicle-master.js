@@ -1,4 +1,6 @@
 (function () {
+    'use strict';
+
     function qs(sel, root) {
         return (root || document).querySelector(sel);
     }
@@ -105,152 +107,164 @@
         }
     }
 
-    qsa('.vm-check input').forEach(function (cb) {
-        cb.addEventListener('change', function () {
-            cb.closest('.vm-check').classList.toggle('on', cb.checked);
-        });
-    });
+    function destroy() {}
 
-    qsa('form.vm-delete-form').forEach(function (form) {
-        form.addEventListener('submit', function (e) {
-            var msg = form.getAttribute('data-confirm');
-            if (msg && !window.confirm(msg)) e.preventDefault();
-        });
-    });
+    function init() {
+        if (!document.getElementById('vm-make-form')) return;
 
-    qsa('.vm-acts button, .vm-acts form').forEach(function (el) {
-        el.addEventListener('click', function (e) {
-            e.stopPropagation();
-        });
-    });
-
-    wireModal('vm-make-modal', ['[data-open-make-modal]']);
-    wireModal('vm-model-modal', ['[data-open-model-modal]']);
-    wireModal('vm-variant-modal', ['[data-open-variant-modal]']);
-
-    var bulkBackdrop = document.getElementById('vm-variant-bulk-modal');
-    var bulkForm = document.getElementById('vm-variant-bulk-form');
-    var bulkText = document.getElementById('vm-variant-bulk-text');
-    var bulkSubmit = document.getElementById('vm-variant-bulk-submit');
-
-    function syncBulkSubmit() {
-        if (bulkSubmit && bulkText) {
-            bulkSubmit.disabled = !bulkText.value.trim();
-        }
-    }
-
-    if (bulkBackdrop && bulkForm) {
-        bulkBackdrop.addEventListener('click', function (e) {
-            if (e.target === bulkBackdrop) closeModal('vm-variant-bulk-modal');
-        });
-        qsa('[data-close="vm-variant-bulk-modal"]').forEach(function (btn) {
-            btn.addEventListener('click', function () {
-                closeModal('vm-variant-bulk-modal');
+        qsa('.vm-check input').forEach(function (cb) {
+            cb.addEventListener('change', function () {
+                cb.closest('.vm-check').classList.toggle('on', cb.checked);
             });
         });
-        qsa('[data-open-variant-bulk-modal]').forEach(function (btn) {
-            btn.addEventListener('click', function (e) {
-                e.preventDefault();
+
+        qsa('form.vm-delete-form').forEach(function (form) {
+            form.addEventListener('submit', function (e) {
+                var msg = form.getAttribute('data-confirm');
+                if (msg && !window.confirm(msg)) e.preventDefault();
+            });
+        });
+
+        qsa('.vm-acts button, .vm-acts form').forEach(function (el) {
+            el.addEventListener('click', function (e) {
                 e.stopPropagation();
-                if (bulkText) bulkText.value = '';
-                syncBulkSubmit();
-                openModal('vm-variant-bulk-modal');
             });
         });
-        if (bulkText) {
-            bulkText.addEventListener('input', syncBulkSubmit);
+
+        wireModal('vm-make-modal', ['[data-open-make-modal]']);
+        wireModal('vm-model-modal', ['[data-open-model-modal]']);
+        wireModal('vm-variant-modal', ['[data-open-variant-modal]']);
+
+        var bulkBackdrop = document.getElementById('vm-variant-bulk-modal');
+        var bulkForm = document.getElementById('vm-variant-bulk-form');
+        var bulkText = document.getElementById('vm-variant-bulk-text');
+        var bulkSubmit = document.getElementById('vm-variant-bulk-submit');
+
+        function syncBulkSubmit() {
+            if (bulkSubmit && bulkText) {
+                bulkSubmit.disabled = !bulkText.value.trim();
+            }
         }
-    }
 
-    var bulkDeleteBackdrop = document.getElementById('vm-variant-bulk-delete-modal');
-    var bulkDeleteText = document.getElementById('vm-variant-bulk-delete-text');
-    var bulkDeleteSubmit = document.getElementById('vm-variant-bulk-delete-submit');
-
-    function syncBulkDeleteSubmit() {
-        if (bulkDeleteSubmit && bulkDeleteText) {
-            bulkDeleteSubmit.disabled = !bulkDeleteText.value.trim();
-        }
-    }
-
-    if (bulkDeleteBackdrop) {
-        bulkDeleteBackdrop.addEventListener('click', function (e) {
-            if (e.target === bulkDeleteBackdrop) closeModal('vm-variant-bulk-delete-modal');
-        });
-        qsa('[data-close="vm-variant-bulk-delete-modal"]').forEach(function (btn) {
-            btn.addEventListener('click', function () {
-                closeModal('vm-variant-bulk-delete-modal');
+        if (bulkBackdrop && bulkForm) {
+            bulkBackdrop.addEventListener('click', function (e) {
+                if (e.target === bulkBackdrop) closeModal('vm-variant-bulk-modal');
             });
-        });
-        qsa('[data-open-variant-bulk-delete-modal]').forEach(function (btn) {
-            btn.addEventListener('click', function (e) {
-                e.preventDefault();
+            qsa('[data-close="vm-variant-bulk-modal"]').forEach(function (btn) {
+                btn.addEventListener('click', function () {
+                    closeModal('vm-variant-bulk-modal');
+                });
+            });
+            qsa('[data-open-variant-bulk-modal]').forEach(function (btn) {
+                btn.addEventListener('click', function (e) {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    if (bulkText) bulkText.value = '';
+                    syncBulkSubmit();
+                    openModal('vm-variant-bulk-modal');
+                });
+            });
+            if (bulkText) {
+                bulkText.addEventListener('input', syncBulkSubmit);
+            }
+        }
+
+        var bulkDeleteBackdrop = document.getElementById('vm-variant-bulk-delete-modal');
+        var bulkDeleteText = document.getElementById('vm-variant-bulk-delete-text');
+        var bulkDeleteSubmit = document.getElementById('vm-variant-bulk-delete-submit');
+
+        function syncBulkDeleteSubmit() {
+            if (bulkDeleteSubmit && bulkDeleteText) {
+                bulkDeleteSubmit.disabled = !bulkDeleteText.value.trim();
+            }
+        }
+
+        if (bulkDeleteBackdrop) {
+            bulkDeleteBackdrop.addEventListener('click', function (e) {
+                if (e.target === bulkDeleteBackdrop) closeModal('vm-variant-bulk-delete-modal');
+            });
+            qsa('[data-close="vm-variant-bulk-delete-modal"]').forEach(function (btn) {
+                btn.addEventListener('click', function () {
+                    closeModal('vm-variant-bulk-delete-modal');
+                });
+            });
+            qsa('[data-open-variant-bulk-delete-modal]').forEach(function (btn) {
+                btn.addEventListener('click', function (e) {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    if (bulkDeleteText) bulkDeleteText.value = '';
+                    syncBulkDeleteSubmit();
+                    openModal('vm-variant-bulk-delete-modal');
+                    if (bulkDeleteText) bulkDeleteText.focus();
+                });
+            });
+            if (bulkDeleteText) {
+                bulkDeleteText.addEventListener('input', syncBulkDeleteSubmit);
+            }
+            var bulkDeleteNamesForm = document.getElementById('vm-variant-bulk-delete-names-form');
+            if (bulkDeleteNamesForm) {
+                bulkDeleteNamesForm.addEventListener('submit', function (e) {
+                    if (!window.confirm('Delete the listed variants for this model?')) {
+                        e.preventDefault();
+                    }
+                });
+            }
+        }
+
+        var selectAll = document.getElementById('vm-variant-select-all');
+        var deleteSelected = document.getElementById('vm-variant-delete-selected');
+        var bulkDeleteForm = document.getElementById('vm-variant-bulk-delete-form');
+
+        function variantCheckboxes() {
+            return qsa('.vm-variant-cb');
+        }
+
+        function syncVariantSelection() {
+            var boxes = variantCheckboxes();
+            var checked = boxes.filter(function (cb) {
+                return cb.checked;
+            });
+            if (deleteSelected) {
+                deleteSelected.disabled = checked.length === 0;
+                deleteSelected.textContent = checked.length
+                    ? 'Delete selected (' + checked.length + ')'
+                    : 'Delete selected';
+            }
+            if (selectAll && boxes.length) {
+                selectAll.checked = checked.length === boxes.length;
+                selectAll.indeterminate = checked.length > 0 && checked.length < boxes.length;
+            }
+        }
+
+        if (selectAll) {
+            selectAll.addEventListener('change', function () {
+                variantCheckboxes().forEach(function (cb) {
+                    cb.checked = selectAll.checked;
+                });
+                syncVariantSelection();
+            });
+        }
+
+        variantCheckboxes().forEach(function (cb) {
+            cb.addEventListener('change', syncVariantSelection);
+            cb.addEventListener('click', function (e) {
                 e.stopPropagation();
-                if (bulkDeleteText) bulkDeleteText.value = '';
-                syncBulkDeleteSubmit();
-                openModal('vm-variant-bulk-delete-modal');
-                if (bulkDeleteText) bulkDeleteText.focus();
             });
         });
-        if (bulkDeleteText) {
-            bulkDeleteText.addEventListener('input', syncBulkDeleteSubmit);
-        }
-        var bulkDeleteNamesForm = document.getElementById('vm-variant-bulk-delete-names-form');
-        if (bulkDeleteNamesForm) {
-            bulkDeleteNamesForm.addEventListener('submit', function (e) {
-                if (!window.confirm('Delete the listed variants for this model?')) {
+
+        if (bulkDeleteForm) {
+            bulkDeleteForm.addEventListener('submit', function (e) {
+                var msg = deleteSelected && deleteSelected.getAttribute('data-confirm');
+                if (msg && !window.confirm(msg)) {
                     e.preventDefault();
                 }
             });
         }
+
+        syncVariantSelection();
     }
 
-    var selectAll = document.getElementById('vm-variant-select-all');
-    var deleteSelected = document.getElementById('vm-variant-delete-selected');
-    var bulkDeleteForm = document.getElementById('vm-variant-bulk-delete-form');
-
-    function variantCheckboxes() {
-        return qsa('.vm-variant-cb');
+    if (window.AdminPanel) {
+        window.AdminPanel.register('vehicle_master', { init: init, destroy: destroy });
     }
-
-    function syncVariantSelection() {
-        var boxes = variantCheckboxes();
-        var checked = boxes.filter(function (cb) { return cb.checked; });
-        if (deleteSelected) {
-            deleteSelected.disabled = checked.length === 0;
-            deleteSelected.textContent = checked.length
-                ? 'Delete selected (' + checked.length + ')'
-                : 'Delete selected';
-        }
-        if (selectAll && boxes.length) {
-            selectAll.checked = checked.length === boxes.length;
-            selectAll.indeterminate = checked.length > 0 && checked.length < boxes.length;
-        }
-    }
-
-    if (selectAll) {
-        selectAll.addEventListener('change', function () {
-            variantCheckboxes().forEach(function (cb) {
-                cb.checked = selectAll.checked;
-            });
-            syncVariantSelection();
-        });
-    }
-
-    variantCheckboxes().forEach(function (cb) {
-        cb.addEventListener('change', syncVariantSelection);
-        cb.addEventListener('click', function (e) {
-            e.stopPropagation();
-        });
-    });
-
-    if (bulkDeleteForm) {
-        bulkDeleteForm.addEventListener('submit', function (e) {
-            var msg = deleteSelected && deleteSelected.getAttribute('data-confirm');
-            if (msg && !window.confirm(msg)) {
-                e.preventDefault();
-            }
-        });
-    }
-
-    syncVariantSelection();
 })();

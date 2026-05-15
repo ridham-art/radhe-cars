@@ -1,59 +1,82 @@
 (function () {
-    var backdrop = document.getElementById('reject-modal-backdrop');
-    var form = document.getElementById('reject-form');
-    var reasonEl = document.getElementById('reject-reason');
-    var confirmBtn = document.getElementById('reject-confirm');
-    var subtitleEl = document.getElementById('reject-modal-subtitle');
+    'use strict';
 
-    if (!backdrop || !form || !reasonEl) return;
+    var escHandler = null;
 
-    function syncConfirm() {
-        if (confirmBtn) {
-            confirmBtn.disabled = !reasonEl.value.trim();
+    function destroy() {
+        if (escHandler) {
+            document.removeEventListener('keydown', escHandler);
+            escHandler = null;
         }
     }
 
-    function openModal(actionUrl, subtitle) {
-        form.action = actionUrl;
-        reasonEl.value = '';
-        if (subtitleEl) subtitleEl.textContent = subtitle || '';
-        syncConfirm();
-        backdrop.classList.add('is-open');
-        backdrop.setAttribute('aria-hidden', 'false');
-        reasonEl.focus();
-    }
+    function init() {
+        destroy();
 
-    function closeModal() {
-        backdrop.classList.remove('is-open');
-        backdrop.setAttribute('aria-hidden', 'true');
-    }
+        var backdrop = document.getElementById('reject-modal-backdrop');
+        var form = document.getElementById('reject-form');
+        var reasonEl = document.getElementById('reject-reason');
+        var confirmBtn = document.getElementById('reject-confirm');
+        var subtitleEl = document.getElementById('reject-modal-subtitle');
 
-    document.querySelectorAll('[data-reject-url]').forEach(function (btn) {
-        btn.addEventListener('click', function () {
-            openModal(btn.getAttribute('data-reject-url'), btn.getAttribute('data-reject-subtitle') || '');
-        });
-    });
+        if (!backdrop || !form || !reasonEl) return;
 
-    document.querySelectorAll('[data-reject-close]').forEach(function (el) {
-        el.addEventListener('click', closeModal);
-    });
+        function syncConfirm() {
+            if (confirmBtn) {
+                confirmBtn.disabled = !reasonEl.value.trim();
+            }
+        }
 
-    backdrop.addEventListener('mousedown', function (e) {
-        if (e.target === backdrop) closeModal();
-    });
-
-    reasonEl.addEventListener('input', syncConfirm);
-
-    document.querySelectorAll('[data-reject-preset]').forEach(function (btn) {
-        btn.addEventListener('click', function () {
-            reasonEl.value = btn.getAttribute('data-reject-preset') || '';
+        function openModal(actionUrl, subtitle) {
+            form.action = actionUrl;
+            reasonEl.value = '';
+            if (subtitleEl) subtitleEl.textContent = subtitle || '';
             syncConfirm();
-        });
-    });
-
-    document.addEventListener('keydown', function (e) {
-        if (e.key === 'Escape' && backdrop.classList.contains('is-open')) {
-            closeModal();
+            backdrop.classList.add('is-open');
+            backdrop.setAttribute('aria-hidden', 'false');
+            reasonEl.focus();
         }
-    });
+
+        function closeModal() {
+            backdrop.classList.remove('is-open');
+            backdrop.setAttribute('aria-hidden', 'true');
+        }
+
+        document.querySelectorAll('[data-reject-url]').forEach(function (btn) {
+            btn.addEventListener('click', function () {
+                openModal(
+                    btn.getAttribute('data-reject-url'),
+                    btn.getAttribute('data-reject-subtitle') || ''
+                );
+            });
+        });
+
+        document.querySelectorAll('[data-reject-close]').forEach(function (el) {
+            el.addEventListener('click', closeModal);
+        });
+
+        backdrop.addEventListener('mousedown', function (e) {
+            if (e.target === backdrop) closeModal();
+        });
+
+        reasonEl.addEventListener('input', syncConfirm);
+
+        document.querySelectorAll('[data-reject-preset]').forEach(function (btn) {
+            btn.addEventListener('click', function () {
+                reasonEl.value = btn.getAttribute('data-reject-preset') || '';
+                syncConfirm();
+            });
+        });
+
+        escHandler = function (e) {
+            if (e.key === 'Escape' && backdrop.classList.contains('is-open')) {
+                closeModal();
+            }
+        };
+        document.addEventListener('keydown', escHandler);
+    }
+
+    if (window.AdminPanel) {
+        window.AdminPanel.register('requests', { init: init, destroy: destroy });
+    }
 })();

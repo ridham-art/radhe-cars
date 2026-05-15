@@ -1,10 +1,24 @@
 (function () {
     'use strict';
 
-    var cfgEl = document.getElementById('cf-config');
-    if (!cfgEl) return;
+    var previewObjectUrls = [];
 
-    var cfg = {};
+    function destroy() {
+        previewObjectUrls.forEach(function (url) {
+            try {
+                URL.revokeObjectURL(url);
+            } catch (_e) {}
+        });
+        previewObjectUrls = [];
+    }
+
+    function init() {
+        destroy();
+
+        var cfgEl = document.getElementById('cf-config');
+        if (!cfgEl) return;
+
+        var cfg = {};
     try {
         cfg = JSON.parse(cfgEl.textContent || '{}');
     } catch (_e) {
@@ -193,7 +207,6 @@
 
     if (!formEl || !imagesInput) return;
 
-    var previewObjectUrls = [];
     var compressionMeta = [];
 
     function formatSize(bytes) {
@@ -387,4 +400,9 @@
                 delete formEl.dataset.compressedOnce;
             });
     });
+    }
+
+    if (window.AdminPanel) {
+        window.AdminPanel.register('car_form', { init: init, destroy: destroy });
+    }
 })();
