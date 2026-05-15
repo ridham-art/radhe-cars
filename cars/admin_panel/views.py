@@ -41,6 +41,7 @@ from cars.admin_panel.forms import (
     CarStaffForm,
     CarStaffFormPreview,
     CSVUploadForm,
+    CSVUploadFormPreview,
     StaffAuthenticationForm,
     VehicleMasterMakeForm,
     VehicleMasterModelForm,
@@ -620,6 +621,16 @@ class CustomerListView(
         return ctx
 
 
+class CustomerListPreviewView(CustomerListView):
+    template_name = 'admin_panel/customer_list_new.html'
+
+    def get_context_data(self, **kwargs):
+        ctx = super().get_context_data(**kwargs)
+        ctx['list_querystring'] = car_list_querystring_except_page(self.request)
+        ctx['list_url'] = reverse('admin_panel:customer_list_preview')
+        return ctx
+
+
 class WishlistActivityListView(
     StaffRequiredMixin,
     AdminPanelContextMixin,
@@ -651,6 +662,16 @@ class WishlistActivityListView(
     def get_context_data(self, **kwargs):
         ctx = super().get_context_data(**kwargs)
         ctx['search_q'] = self.request.GET.get('q', '')
+        return ctx
+
+
+class WishlistListPreviewView(WishlistActivityListView):
+    template_name = 'admin_panel/wishlist_list_new.html'
+
+    def get_context_data(self, **kwargs):
+        ctx = super().get_context_data(**kwargs)
+        ctx['list_querystring'] = car_list_querystring_except_page(self.request)
+        ctx['list_url'] = reverse('admin_panel:wishlist_list_preview')
         return ctx
 
 
@@ -1285,6 +1306,20 @@ class InquiryListView(
         return ctx
 
 
+class InquiryListPreviewView(InquiryListView):
+    template_name = 'admin_panel/inquiry_list_new.html'
+
+    def get_context_data(self, **kwargs):
+        ctx = super().get_context_data(**kwargs)
+        ctx['list_querystring'] = car_list_querystring_except_page(self.request)
+        ctx['list_url'] = reverse('admin_panel:inquiry_list_preview')
+        unread_qs = ''
+        if self.request.GET.get('unread') == '1':
+            unread_qs = '?unread=1'
+        ctx['inquiry_list_url'] = reverse('admin_panel:inquiry_list_preview') + unread_qs
+        return ctx
+
+
 class InquiryDetailView(StaffRequiredMixin, AdminPanelContextMixin, DetailView):
     model = Inquiry
     template_name = 'admin_panel/inquiry_detail.html'
@@ -1303,13 +1338,33 @@ class InquiryDetailView(StaffRequiredMixin, AdminPanelContextMixin, DetailView):
         return response
 
 
+class InquiryDetailPreviewView(InquiryDetailView):
+    template_name = 'admin_panel/inquiry_detail_new.html'
+
+    def get_context_data(self, **kwargs):
+        ctx = super().get_context_data(**kwargs)
+        ctx['back_url'] = reverse('admin_panel:inquiry_list_preview')
+        return ctx
+
+
+def _inquiry_redirect(request, fallback_name='admin_panel:inquiry_list'):
+    from django.utils.http import url_has_allowed_host_and_scheme
+
+    nxt = (request.POST.get('next') or request.GET.get('next') or '').strip()
+    if nxt and url_has_allowed_host_and_scheme(
+        nxt, allowed_hosts={request.get_host()}, require_https=request.is_secure()
+    ):
+        return redirect(nxt)
+    return redirect(fallback_name)
+
+
 class InquiryMarkReadView(StaffRequiredMixin, View):
     def post(self, request, pk):
         n = Inquiry.objects.filter(pk=pk).update(is_read=True)
         if n:
             invalidate_admin_nav_counts_cache()
         messages.success(request, 'Marked as read.')
-        return redirect('admin_panel:inquiry_list')
+        return _inquiry_redirect(request)
 
 
 class InquiryMarkAllReadView(StaffRequiredMixin, View):
@@ -1318,7 +1373,7 @@ class InquiryMarkAllReadView(StaffRequiredMixin, View):
         if n:
             invalidate_admin_nav_counts_cache()
         messages.success(request, f'Marked {n} inquiry(ies) as read.')
-        return redirect('admin_panel:inquiry_list')
+        return _inquiry_redirect(request)
 
 
 class InquiryDeleteView(StaffRequiredMixin, View):
@@ -1326,7 +1381,7 @@ class InquiryDeleteView(StaffRequiredMixin, View):
         Inquiry.objects.filter(pk=pk).delete()
         invalidate_admin_nav_counts_cache()
         messages.success(request, 'Inquiry deleted.')
-        return redirect('admin_panel:inquiry_list')
+        return _inquiry_redirect(request)
 
 
 class UnreadInquiryCountJsonView(StaffRequiredMixin, View):
@@ -1796,7 +1851,22 @@ class CSVImportView(StaffRequiredMixin, AdminPanelContextMixin, FormView):
         self.request.session['admin_csv_path'] = path
         if errs and not ok:
             messages.error(self.request, 'CSV has errors; fix the file and try again.')
-        return redirect('admin_panel:csv_preview')
+        return redirect(self.get_preview_redirect_name())
+
+    def get_preview_redirect_name(self):
+        return 'admin_panel:csv_preview'
+
+
+class CSVImportPreviewView(CSVImportView):
+    template_name = 'admin_panel/csv_import_new.html'
+    form_class = CSVUploadFormPreview
+
+    def get_preview_redirect_name(self):
+        return 'admin_panel:csv_preview_preview'
+
+    def form_valid(self, form):
+        self.request.session['csv_from_preview'] = True
+        return super().form_valid(form)
 
 
 class CSVPreviewView(StaffRequiredMixin, AdminPanelContextMixin, TemplateView):
@@ -1817,12 +1887,34 @@ class CSVPreviewView(StaffRequiredMixin, AdminPanelContextMixin, TemplateView):
         return ctx
 
 
+class CSVPreviewPreviewView(CSVPreviewView):
+    template_name = 'admin_panel/csv_preview_new.html'
+
+    def get_context_data(self, **kwargs):
+        ctx = super().get_context_data(**kwargs)
+        ctx['import_url'] = reverse('admin_panel:csv_import_preview')
+        ctx['from_preview'] = True
+        return ctx
+
+
+def _csv_import_redirect(request):
+    if request.POST.get('from_preview') == '1' or request.session.get('csv_from_preview'):
+        return redirect('admin_panel:csv_import_preview')
+    return redirect('admin_panel:csv_import')
+
+
+def _csv_preview_redirect(request):
+    if request.POST.get('from_preview') == '1' or request.session.get('csv_from_preview'):
+        return redirect('admin_panel:csv_preview_preview')
+    return redirect('admin_panel:csv_preview')
+
+
 class CSVConfirmView(StaffRequiredMixin, View):
     def post(self, request):
         path = request.session.get('admin_csv_path')
         if not path or not os.path.isfile(path):
             messages.error(request, 'No import session; upload again.')
-            return redirect('admin_panel:csv_import')
+            return _csv_import_redirect(request)
         with open(path, encoding='utf-8') as f:
             data = json.load(f)
         ok = data.get('ok', [])
@@ -1830,7 +1922,7 @@ class CSVConfirmView(StaffRequiredMixin, View):
         confirm = request.POST.get('confirm_replace')
         if replace_all and confirm != 'REPLACE':
             messages.error(request, 'Type REPLACE to confirm deleting all cars.')
-            return redirect('admin_panel:csv_preview')
+            return _csv_preview_redirect(request)
         try:
             result = csv_io.apply_import(ok, replace_all=replace_all)
         finally:
@@ -1839,6 +1931,9 @@ class CSVConfirmView(StaffRequiredMixin, View):
             except OSError:
                 pass
             request.session.pop('admin_csv_path', None)
+        from_preview = (
+            request.POST.get('from_preview') == '1' or request.session.pop('csv_from_preview', False)
+        )
         messages.success(
             request,
             f"Import finished: {result['created']} created, {result['updated']} updated.",
@@ -1846,6 +1941,8 @@ class CSVConfirmView(StaffRequiredMixin, View):
         if result['skipped']:
             messages.warning(request, f"{len(result['skipped'])} row(s) skipped — see logs.")
             request.session['csv_skip_log'] = result['skipped'][:200]
+        if from_preview:
+            return redirect('admin_panel:csv_import_preview')
         return redirect('admin_panel:csv_import')
 
 

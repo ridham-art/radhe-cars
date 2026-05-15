@@ -296,6 +296,15 @@ class CSVUploadForm(forms.Form):
     )
 
 
+class CSVUploadFormPreview(CSVUploadForm):
+    """CSV upload widgets styled for base_new preview."""
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.fields['file'].widget.attrs['class'] = 'cf-input'
+        self.fields['replace_all'].widget.attrs['class'] = 'cf-checkbox'
+
+
 class CSVConfirmForm(forms.Form):
     confirm_replace = forms.CharField(required=False, widget=forms.HiddenInput())
 

@@ -1,0 +1,86 @@
+{% extends "admin_panel/base_new.html" %}
+{% load static %}
+{% block title %}CSV preview{% endblock %}
+{% block heading %}Import preview{% endblock %}
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'css/admin-panel-car-form.css' %}">
+<link rel="stylesheet" href="{% static 'css/admin-panel-dashboard.css' %}">
+<link rel="stylesheet" href="{% static 'css/admin-panel-lists.css' %}">
+{% endblock %}
+{% block content %}
+<div class="page-head-list">
+    <h1>Import preview</h1>
+    <p class="sub">Review validation results before confirming the import.</p>
+</div>
+
+{% if missing %}
+<div class="csv-alert error">
+    No preview session. <a href="{{ import_url }}" class="link">Upload again</a>.
+</div>
+{% else %}
+{% if replace_all %}
+<div class="csv-alert warn">Replace all mode: existing cars will be deleted before import.</div>
+{% endif %}
+
+{% if preview_errors %}
+<div class="csv-panel" style="margin-bottom:16px">
+    <h2>Validation errors</h2>
+    <ul class="csv-errors-list">
+        {% for e in preview_errors %}
+        <li>Row {{ e.row_num }}: {{ e.message }}</li>
+        {% endfor %}
+    </ul>
+</div>
+{% endif %}
+
+{% if preview_ok %}
+<div class="data-card" style="margin-bottom:16px">
+    <table class="tbl">
+        <thead>
+            <tr>
+                <th>#</th>
+                <th>Title</th>
+                <th>Brand</th>
+                <th>Model</th>
+                <th>Year</th>
+                <th>Price</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for row in preview_ok %}
+            <tr>
+                <td class="num">{{ row.row_num }}</td>
+                <td>{{ row.data.title }}</td>
+                <td>{{ row.data.brand }}</td>
+                <td>{{ row.data.model }}</td>
+                <td>{{ row.data.year }}</td>
+                <td>{{ row.data.price }}</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+<p style="font-size:13px;color:var(--text-muted);margin-bottom:16px">{{ preview_ok|length }} row(s) ready to import.</p>
+
+<form method="post" action="{% url 'admin_panel:csv_confirm' %}">
+    {% csrf_token %}
+    <input type="hidden" name="from_preview" value="1">
+    {% if replace_all %}
+    <div class="csv-field">
+        <label for="confirm_replace">Type REPLACE to confirm deleting all cars</label>
+        <input type="text" name="confirm_replace" id="confirm_replace" class="cf-input csv-confirm-input" placeholder="REPLACE" autocomplete="off">
+    </div>
+    {% endif %}
+    {% if can_confirm %}
+    <button type="submit" class="btn-confirm">Confirm import</button>
+    {% else %}
+    <p style="font-size:13px;color:var(--text-muted)">No valid rows to import.</p>
+    {% endif %}
+    <a href="{{ import_url }}" class="btn-ghost" style="margin-left:10px">Cancel</a>
+</form>
+{% else %}
+<p style="color:var(--text-muted)">No valid rows. Fix errors and re-upload.</p>
+<a href="{{ import_url }}" class="link">Back to import</a>
+{% endif %}
+{% endif %}
+{% endblock %}
