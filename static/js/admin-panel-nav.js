@@ -351,6 +351,7 @@
         var messages = doc.querySelector('.ap-messages');
         return {
             mainHtml: main.innerHTML,
+            mainClass: main.className || 'page',
             heading: headingEl ? headingEl.textContent.trim() : '',
             title: title ? title.textContent.trim() : '',
             messagesHtml: messages ? messages.innerHTML : '',
@@ -465,6 +466,7 @@
                         return applyPageAssets(pageKey);
                     })
                     .then(function () {
+                        mainEl.className = parsed.mainClass || 'page';
                         mainEl.innerHTML = parsed.mainHtml;
                         if (parsed.title) document.title = parsed.title;
                         if (parsed.heading) setHeading(parsed.heading);

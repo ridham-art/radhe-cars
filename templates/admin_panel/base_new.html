@@ -118,7 +118,7 @@
             </div>
             {% endif %}
 
-            <main class="page">
+            <main class="page{% block page_extra_class %}{% endblock %}">
                 {% block content %}{% endblock %}
             </main>
         </div>

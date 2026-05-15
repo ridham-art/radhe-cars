@@ -592,7 +592,16 @@
     }
 }
 
-/* Half gap between summary pills and Makes/Models/Variants grid */
-main.page:has(#ap-vehicle-master-partial) {
-    gap: 8px;
+/* Tight gap between summary pills and Level 1 / 2 / 3 columns */
+main.page.page--vm {
+    gap: 4px;
+}
+
+main.page.page--vm #ap-vehicle-master-partial {
+    gap: 0;
+    margin: 0;
+}
+
+main.page.page--vm .page-head {
+    align-items: center;
 }
