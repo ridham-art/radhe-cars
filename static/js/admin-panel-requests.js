@@ -74,7 +74,51 @@
             }
         };
         document.addEventListener('keydown', escHandler);
+
+        form.addEventListener('submit', function (e) {
+            if (!window.AdminPanelAjax) return;
+            e.preventDefault();
+            e.stopPropagation();
+            var body = new FormData(form);
+            var btn = confirmBtn;
+            if (btn) btn.disabled = true;
+            window.AdminPanelAjax.fetchPost(form.action, body, { accept: 'application/json' })
+                .then(function (data) {
+                    closeModal();
+                    if (data.message) {
+                        window.AdminPanelAjax.showMessage(data.message, data.level || 'warning');
+                    }
+                    if (data.reload) {
+                        var root = document.querySelector('[data-ap-partial-root]');
+                        if (root) {
+                            return window.AdminPanelAjax.fetchHtml(
+                                window.AdminPanelAjax.partialListUrl(data.reload)
+                            ).then(function (html) {
+                                root.innerHTML = html;
+                                window.AdminPanelAjax.pushUrl(data.reload, true);
+                                document.dispatchEvent(
+                                    new CustomEvent('ap:partial:load', {
+                                        detail: { url: data.reload, root: root },
+                                    })
+                                );
+                                if (window.AdminPanel) window.AdminPanel.runInit('requests');
+                            });
+                        }
+                    }
+                })
+                .catch(function (err) {
+                    var msg = (err && err.message) || 'Rejection failed.';
+                    window.AdminPanelAjax.showMessage(msg, 'error');
+                })
+                .finally(function () {
+                    if (btn) btn.disabled = !reasonEl.value.trim();
+                });
+        });
     }
+
+    document.addEventListener('ap:partial:load', function () {
+        if (window.AdminPanel) window.AdminPanel.runInit('requests');
+    });
 
     if (window.AdminPanel) {
         window.AdminPanel.register('requests', { init: init, destroy: destroy });

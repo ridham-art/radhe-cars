@@ -1,0 +1,45 @@
+<form method="get" class="filterbar">
+    <div class="search-wrap">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><circle cx="11" cy="11" r="6.5"/><path d="M20 20l-3.5-3.5"/></svg>
+        <input class="search-i" type="search" name="q" value="{{ search_q }}" placeholder="Customer email or car title" aria-label="Search wishlist">
+    </div>
+    <button type="submit" class="btn-ghost">Apply</button>
+    <a href="{% url 'admin_panel:wishlist_list' %}" class="btn-ghost">Reset</a>
+</form>
+
+<div class="data-card">
+    <table class="tbl">
+        <thead>
+            <tr>
+                <th>Customer email</th>
+                <th>Car</th>
+                <th>Saved on</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for w in wishlists %}
+            <tr>
+                <td>{{ w.user.email|default:w.user.username }}</td>
+                <td>
+                    <a href="{% url 'car_detail' w.car.pk %}" target="_blank" rel="noopener" class="link">{{ w.car.title }}</a>
+                </td>
+                <td class="num" style="color:var(--text-muted)">{{ w.created_at|date:"M j, Y, g:i a" }}</td>
+            </tr>
+            {% empty %}
+            <tr><td colspan="3" class="data-empty">No wishlist matches.</td></tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+
+{% if page_obj.has_other_pages %}
+<nav class="list-pagination" aria-label="Wishlist pagination">
+    {% if page_obj.has_previous %}
+    <a href="?page={{ page_obj.previous_page_number }}{% if list_querystring %}&{{ list_querystring }}{% endif %}">Prev</a>
+    {% endif %}
+    <span class="meta">Page {{ page_obj.number }} of {{ page_obj.paginator.num_pages }}</span>
+    {% if page_obj.has_next %}
+    <a href="?page={{ page_obj.next_page_number }}{% if list_querystring %}&{{ list_querystring }}{% endif %}">Next</a>
+    {% endif %}
+</nav>
+{% endif %}

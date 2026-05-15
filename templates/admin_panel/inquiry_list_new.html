@@ -13,76 +13,7 @@
     <p class="sub">Messages from customers interested in buying a vehicle.</p>
 </div>
 
-<div class="list-toolbar">
-    {% if filter_unread %}
-    <p class="hint">Showing unread only. <a href="{% url 'admin_panel:inquiry_list' %}">View all inquiries</a></p>
-    {% else %}
-    <a href="{% url 'admin_panel:inquiry_list' %}?unread=1" class="filter-chip">Unread only</a>
-    {% endif %}
-    <form method="post" action="{% url 'admin_panel:inquiry_mark_all_read' %}">
-        {% csrf_token %}
-        <input type="hidden" name="next" value="{{ inquiry_list_url }}">
-        <button type="submit" class="btn-ghost">Mark all as read</button>
-    </form>
+<div data-ap-partial-root>
+{% include "admin_panel/partials/inquiry_list_partial.html" %}
 </div>
-
-<div class="data-card">
-    <table class="tbl">
-        <thead>
-            <tr>
-                <th>Name</th>
-                <th>Email</th>
-                <th>Phone</th>
-                <th>Subject</th>
-                <th>Car</th>
-                <th>Date</th>
-                <th style="text-align:right">Actions</th>
-            </tr>
-        </thead>
-        <tbody>
-            {% for i in inquiries %}
-            <tr class="{% if not i.is_read %}row-unread{% endif %}">
-                <td>{{ i.first_name }} {{ i.last_name }}</td>
-                <td>{{ i.email }}</td>
-                <td>{{ i.phone }}</td>
-                <td>{{ i.get_subject_display|default:"—" }}</td>
-                <td>
-                    {% if i.car %}
-                    <a href="{% url 'car_detail' i.car.pk %}" target="_blank" rel="noopener" class="link">{{ i.car.title }}</a>
-                    {% else %}
-                    <span style="color:var(--text-faint)">—</span>
-                    {% endif %}
-                </td>
-                <td class="num" style="color:var(--text-muted)">{{ i.created_at|date:"M j, Y H:i" }}</td>
-                <td>
-                    <div class="row-actions">
-                        <a href="{% url 'admin_panel:inquiry_detail' i.pk %}" class="btn-table primary">View</a>
-                        {% if not i.is_read %}
-                        <form method="post" action="{% url 'admin_panel:inquiry_mark_read' i.pk %}">
-                            {% csrf_token %}
-                            <input type="hidden" name="next" value="{{ inquiry_list_url }}">
-                            <button type="submit" class="btn-table">Mark read</button>
-                        </form>
-                        {% endif %}
-                    </div>
-                </td>
-            </tr>
-            {% empty %}
-            <tr><td colspan="7" class="data-empty">{% if filter_unread %}No unread inquiries.{% else %}No inquiries yet.{% endif %}</td></tr>
-            {% endfor %}
-        </tbody>
-    </table>
-</div>
-
-{% if page_obj.has_other_pages %}
-<nav class="list-pagination" aria-label="Inquiries pagination">
-    {% if page_obj.has_previous %}
-    <a href="?page={{ page_obj.previous_page_number }}{% if list_querystring %}&{{ list_querystring }}{% endif %}">Prev</a>
-    {% endif %}
-    <span class="meta">Page {{ page_obj.number }} of {{ page_obj.paginator.num_pages }}</span>
-    {% if page_obj.has_next %}
-    <a href="?page={{ page_obj.next_page_number }}{% if list_querystring %}&{{ list_querystring }}{% endif %}">Next</a>
-    {% endif %}
-</nav>
-{% endif %}
 {% endblock %}

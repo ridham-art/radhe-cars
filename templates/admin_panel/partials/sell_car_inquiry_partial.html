@@ -1,0 +1,195 @@
+<nav class="subtabs" aria-label="Listing request tabs">
+    <a href="?tab=pending{% if filter_querystring %}&{{ filter_querystring }}{% endif %}" class="subtab warn{% if active_tab == 'pending' %} on{% endif %}">
+        Pending <span class="tab-count">{{ pending_count }}</span>
+    </a>
+    <a href="?tab=approved{% if filter_querystring %}&{{ filter_querystring }}{% endif %}" class="subtab{% if active_tab == 'approved' %} on{% endif %}">
+        Approved <span class="tab-count">{{ approved_count }}</span>
+    </a>
+    <a href="?tab=rejected{% if filter_querystring %}&{{ filter_querystring }}{% endif %}" class="subtab{% if active_tab == 'rejected' %} on{% endif %}">
+        Rejected <span class="tab-count">{{ rejected_count }}</span>
+    </a>
+</nav>
+
+<div class="req-card">
+    {% if active_tab == 'pending' %}
+    <table class="tbl">
+        <thead>
+            <tr>
+                <th>Car Details</th>
+                <th>Seller</th>
+                <th>Phone</th>
+                <th>Submitted</th>
+                <th>Expected Price</th>
+                <th style="text-align:right">Actions</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for car in cars %}
+            <tr>
+                <td>
+                    <div class="car-cell">
+                        <div class="car-thumb" aria-hidden="true">
+                            {% with img=car.primary_image %}
+                            {% if img and img.display_url %}
+                            <img src="{{ img.display_url }}" alt="">
+                            {% else %}
+                            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75"><path d="M5 13l1.6-4.2A2 2 0 0 1 8.5 7.5h7a2 2 0 0 1 1.9 1.3L19 13"/><path d="M3.5 17h17v-2.5a1.5 1.5 0 0 0-1.5-1.5h-14A1.5 1.5 0 0 0 3.5 14.5V17z"/></svg>
+                            {% endif %}
+                            {% endwith %}
+                        </div>
+                        <div>
+                            <div class="car-name">{{ car.brand.name }} {{ car.model.name }}</div>
+                            <div class="car-meta">{{ car.year }} · #{{ car.pk }}</div>
+                        </div>
+                    </div>
+                </td>
+                <td><span class="seller-name">{% if car.contact_name %}{{ car.contact_name }}{% elif car.seller_id %}{{ car.seller.get_full_name|default:car.seller.username }}{% else %}—{% endif %}</span></td>
+                <td class="num" style="color:var(--text-muted)">{{ car.contact_number|default:"—" }}</td>
+                <td class="num" style="color:var(--text-muted)">{{ car.created_at|date:"d M Y" }}</td>
+                <td class="num" style="font-weight:600">{{ car.price_display }}</td>
+                <td style="text-align:right">
+                    <div class="row-actions" style="justify-content:flex-end">
+                        <form class="approve-form" method="post" action="{% url 'admin_panel:sell_car_inquiry_approve' car.pk %}">
+                            {% csrf_token %}
+                            <input type="hidden" name="next" value="{{ preview_return_url }}">
+                            <button type="submit" class="btn-approve">Approve</button>
+                        </form>
+                        <button type="button" class="btn-reject"
+                            data-reject-url="{% url 'admin_panel:sell_car_inquiry_reject' car.pk %}"
+                            data-reject-subtitle="{{ car.brand.name }} {{ car.model.name }} ({{ car.year }}) · {% if car.contact_name %}{{ car.contact_name }}{% elif car.seller_id %}{{ car.seller.get_full_name|default:car.seller.username }}{% else %}Seller{% endif %}">
+                            Reject
+                        </button>
+                    </div>
+                </td>
+            </tr>
+            {% empty %}
+            <tr>
+                <td colspan="6" class="req-empty">Inbox zero. No pending requests.</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+    {% elif active_tab == 'approved' %}
+    <table class="tbl">
+        <thead>
+            <tr>
+                <th>Car Details</th>
+                <th>Seller</th>
+                <th>Phone</th>
+                <th>Submitted</th>
+                <th>Expected Price</th>
+                <th>Status</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for car in cars %}
+            <tr>
+                <td>
+                    <div class="car-cell">
+                        <div class="car-thumb" aria-hidden="true">
+                            {% with img=car.primary_image %}
+                            {% if img and img.display_url %}
+                            <img src="{{ img.display_url }}" alt="">
+                            {% else %}
+                            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75"><path d="M5 13l1.6-4.2A2 2 0 0 1 8.5 7.5h7a2 2 0 0 1 1.9 1.3L19 13"/><path d="M3.5 17h17v-2.5a1.5 1.5 0 0 0-1.5-1.5h-14A1.5 1.5 0 0 0 3.5 14.5V17z"/></svg>
+                            {% endif %}
+                            {% endwith %}
+                        </div>
+                        <div>
+                            <div class="car-name">{{ car.brand.name }} {{ car.model.name }}</div>
+                            <div class="car-meta">{{ car.year }} · #{{ car.pk }}</div>
+                        </div>
+                    </div>
+                </td>
+                <td><span class="seller-name">{% if car.contact_name %}{{ car.contact_name }}{% elif car.seller_id %}{{ car.seller.get_full_name|default:car.seller.username }}{% else %}—{% endif %}</span></td>
+                <td class="num" style="color:var(--text-muted)">{{ car.contact_number|default:"—" }}</td>
+                <td class="num" style="color:var(--text-muted)">{{ car.created_at|date:"d M Y" }}</td>
+                <td class="num" style="font-weight:600">{{ car.price_display }}</td>
+                <td>
+                    <span class="stamp">
+                        <span class="dot-g" aria-hidden="true"></span>
+                        Approved on {% if car.listed_at %}{{ car.listed_at|date:"d M Y" }}{% else %}{{ car.updated_at|date:"d M Y" }}{% endif %}
+                    </span>
+                </td>
+            </tr>
+            {% empty %}
+            <tr>
+                <td colspan="6" class="req-empty">No approved requests yet.</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+    {% else %}
+    <table class="tbl">
+        <thead>
+            <tr>
+                <th>Car Details</th>
+                <th>Seller</th>
+                <th>Submitted</th>
+                <th>Expected Price</th>
+                <th>Rejection Reason</th>
+                <th>Status</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for car in cars %}
+            <tr>
+                <td>
+                    <div class="car-cell">
+                        <div class="car-thumb" aria-hidden="true">
+                            {% with img=car.primary_image %}
+                            {% if img and img.display_url %}
+                            <img src="{{ img.display_url }}" alt="">
+                            {% else %}
+                            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75"><path d="M5 13l1.6-4.2A2 2 0 0 1 8.5 7.5h7a2 2 0 0 1 1.9 1.3L19 13"/><path d="M3.5 17h17v-2.5a1.5 1.5 0 0 0-1.5-1.5h-14A1.5 1.5 0 0 0 3.5 14.5V17z"/></svg>
+                            {% endif %}
+                            {% endwith %}
+                        </div>
+                        <div>
+                            <div class="car-name">{{ car.brand.name }} {{ car.model.name }}</div>
+                            <div class="car-meta">{{ car.year }} · #{{ car.pk }}</div>
+                        </div>
+                    </div>
+                </td>
+                <td><span class="seller-name">{% if car.contact_name %}{{ car.contact_name }}{% elif car.seller_id %}{{ car.seller.get_full_name|default:car.seller.username }}{% else %}—{% endif %}</span></td>
+                <td class="num" style="color:var(--text-muted)">{{ car.created_at|date:"d M Y" }}</td>
+                <td class="num" style="font-weight:600">{{ car.price_display }}</td>
+                <td>
+                    <div class="reason-cell">
+                        <span class="why">{{ car.rejection_reason|default:"—" }}</span>
+                    </div>
+                </td>
+                <td>
+                    <span class="stamp">
+                        <span class="dot-r" aria-hidden="true"></span>
+                        Rejected on {{ car.updated_at|date:"d M Y" }}
+                    </span>
+                </td>
+            </tr>
+            {% empty %}
+            <tr>
+                <td colspan="6" class="req-empty">No rejected requests.</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+    {% endif %}
+</div>
+
+{% if page_obj.has_other_pages %}
+<nav class="req-pagination" aria-label="Listing requests pagination">
+    {% if page_obj.has_previous %}
+    <a href="?page={{ page_obj.previous_page_number }}{% if list_querystring %}&{{ list_querystring }}{% endif %}">Prev</a>
+    {% endif %}
+    {% for num in page_obj.paginator.page_range %}
+        {% if num == page_obj.number %}
+        <span class="on">{{ num }}</span>
+        {% elif num > page_obj.number|add:'-3' and num < page_obj.number|add:'3' %}
+        <a href="?page={{ num }}{% if list_querystring %}&{{ list_querystring }}{% endif %}">{{ num }}</a>
+        {% endif %}
+    {% endfor %}
+    {% if page_obj.has_next %}
+    <a href="?page={{ page_obj.next_page_number }}{% if list_querystring %}&{{ list_querystring }}{% endif %}">Next</a>
+    {% endif %}
+</nav>
+{% endif %}

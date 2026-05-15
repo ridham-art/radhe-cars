@@ -19,7 +19,9 @@
         },
         inventory: {
             css: ['css/admin-panel-inventory.css'],
-            scripts: [],
+            scripts: [
+                { url: 'js/admin-panel-list.js' },
+            ],
         },
         car_form: {
             css: ['css/admin-panel-dashboard.css', 'css/admin-panel-car-form.css'],
@@ -31,7 +33,10 @@
                 'css/admin-panel-dashboard.css',
                 'css/admin-panel-requests.css',
             ],
-            scripts: [{ url: 'js/admin-panel-requests.js' }],
+            scripts: [
+                { url: 'js/admin-panel-list.js' },
+                { url: 'js/admin-panel-requests.js' },
+            ],
         },
         vehicle_master: {
             css: ['css/admin-panel-dashboard.css', 'css/admin-panel-vehicle-master.css'],
@@ -43,7 +48,7 @@
                 'css/admin-panel-dashboard.css',
                 'css/admin-panel-lists.css',
             ],
-            scripts: [],
+            scripts: [{ url: 'js/admin-panel-list.js' }],
         },
         csv: {
             css: [
@@ -151,6 +156,11 @@
         var u = new URL(a.href, window.location.origin);
         if (u.pathname.indexOf('/csv/export') !== -1) return false;
         if (u.pathname.indexOf('/cars/export/') !== -1) return false;
+        if (a.closest('[data-ap-partial-root]')) {
+            if (normalizePath(u.pathname) === normalizePath(window.location.pathname)) {
+                return false;
+            }
+        }
         return isAdminUrl(a.href);
     }
 
@@ -382,6 +392,7 @@
     function onFormSubmit(e) {
         var form = e.target;
         if (!form || form.method.toLowerCase() !== 'get') return;
+        if (form.closest('[data-ap-partial-root]')) return;
         if (form.hasAttribute('data-ap-full')) return;
         var action = form.getAttribute('action') || window.location.href;
         if (!isAdminUrl(action)) return;
@@ -395,6 +406,24 @@
     }
 
     function onPopState() {
+        var root = document.querySelector('[data-ap-partial-root]');
+        if (root && window.AdminPanelAjax) {
+            window.AdminPanelAjax.fetchHtml(
+                window.AdminPanelAjax.partialListUrl(window.location.href)
+            )
+                .then(function (html) {
+                    root.innerHTML = html;
+                    dispatch('ap:partial:load', {
+                        url: window.location.href,
+                        root: root,
+                    });
+                    if (curPageKey) window.AdminPanel.runInit(curPageKey);
+                })
+                .catch(function () {
+                    navigateTo(window.location.href, { replace: true, force: true });
+                });
+            return;
+        }
         navigateTo(window.location.href, { replace: true, force: true });
     }
 

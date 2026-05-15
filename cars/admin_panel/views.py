@@ -51,6 +51,7 @@ from cars.admin_panel.forms import (
 )
 from cars.admin_panel import csv_io
 from cars.admin_panel.cache_utils import get_cached_nav_counts, invalidate_admin_nav_counts_cache
+from cars.admin_panel.mixins import AdminListPartialMixin, admin_ajax_response
 
 logger = logging.getLogger('cars.admin_panel.auth')
 
@@ -621,8 +622,9 @@ class CustomerListView(
         return ctx
 
 
-class CustomerListPreviewView(CustomerListView):
+class CustomerListPreviewView(AdminListPartialMixin, CustomerListView):
     template_name = 'admin_panel/customer_list_new.html'
+    partial_template_name = 'admin_panel/partials/customer_list_partial.html'
 
     def get_context_data(self, **kwargs):
         ctx = super().get_context_data(**kwargs)
@@ -665,8 +667,9 @@ class WishlistActivityListView(
         return ctx
 
 
-class WishlistListPreviewView(WishlistActivityListView):
+class WishlistListPreviewView(AdminListPartialMixin, WishlistActivityListView):
     template_name = 'admin_panel/wishlist_list_new.html'
+    partial_template_name = 'admin_panel/partials/wishlist_list_partial.html'
 
     def get_context_data(self, **kwargs):
         ctx = super().get_context_data(**kwargs)
@@ -707,6 +710,7 @@ class CarListView(
 
 
 class CarListPreviewView(
+    AdminListPartialMixin,
     StaffRequiredMixin,
     AdminPanelContextMixin,
     SafePagePaginationMixin,
@@ -714,6 +718,7 @@ class CarListPreviewView(
 ):
     model = Car
     template_name = 'admin_panel/car_list_new.html'
+    partial_template_name = 'admin_panel/partials/car_list_partial.html'
     context_object_name = 'cars'
     paginate_by = 24
 
@@ -961,6 +966,7 @@ class SellCarInquiryListView(
 
 
 class SellCarInquiryPreviewView(
+    AdminListPartialMixin,
     StaffRequiredMixin,
     AdminPanelContextMixin,
     SafePagePaginationMixin,
@@ -968,6 +974,7 @@ class SellCarInquiryPreviewView(
 ):
     model = Car
     template_name = 'admin_panel/sell_car_inquiry_list_new.html'
+    partial_template_name = 'admin_panel/partials/sell_car_inquiry_partial.html'
     context_object_name = 'cars'
     paginate_by = 25
 
@@ -1034,8 +1041,17 @@ class SellCarInquiryApproveView(StaffRequiredMixin, View):
         car.status = 'APPROVED'
         car.rejection_reason = ''
         car.save()
-        messages.success(request, f'Approved: {car.title} is now visible on the site.')
-        return _sell_inquiry_redirect(request)
+        invalidate_admin_nav_counts_cache()
+        msg = f'Approved: {car.title} is now visible on the site.'
+        reload = request.build_absolute_uri(
+            reverse('admin_panel:sell_car_inquiry_list') + '?tab=pending'
+        )
+        return admin_ajax_response(
+            request,
+            redirect_to=reverse('admin_panel:sell_car_inquiry_list'),
+            message=msg,
+            reload_url=reload,
+        )
 
 
 class SellCarInquiryRejectView(StaffRequiredMixin, View):
@@ -1043,14 +1059,26 @@ class SellCarInquiryRejectView(StaffRequiredMixin, View):
         car = get_object_or_404(Car, pk=pk, submit_via_sell_form=True)
         reason = request.POST.get('reason', '').strip()
         if not reason:
-            messages.error(request, 'A rejection reason is required.')
-            return _sell_inquiry_redirect(request)
+            return admin_ajax_response(
+                request,
+                redirect_to=reverse('admin_panel:sell_car_inquiry_list'),
+                message='A rejection reason is required.',
+                level='error',
+            )
         car.status = 'REJECTED'
         car.rejection_reason = reason
         car.save()
         invalidate_admin_nav_counts_cache()
-        messages.warning(request, f'Rejected: {car.title}')
-        return _sell_inquiry_redirect(request)
+        reload = request.build_absolute_uri(
+            reverse('admin_panel:sell_car_inquiry_list') + '?tab=rejected'
+        )
+        return admin_ajax_response(
+            request,
+            redirect_to=reverse('admin_panel:sell_car_inquiry_list'),
+            message=f'Rejected: {car.title}',
+            level='warning',
+            reload_url=reload,
+        )
 
 
 class SellCarInquiryToggleFeaturedView(StaffRequiredMixin, View):
@@ -1283,8 +1311,9 @@ class InquiryListView(
         return ctx
 
 
-class InquiryListPreviewView(InquiryListView):
+class InquiryListPreviewView(AdminListPartialMixin, InquiryListView):
     template_name = 'admin_panel/inquiry_list_new.html'
+    partial_template_name = 'admin_panel/partials/inquiry_list_partial.html'
 
     def get_context_data(self, **kwargs):
         ctx = super().get_context_data(**kwargs)
@@ -1340,8 +1369,13 @@ class InquiryMarkReadView(StaffRequiredMixin, View):
         n = Inquiry.objects.filter(pk=pk).update(is_read=True)
         if n:
             invalidate_admin_nav_counts_cache()
-        messages.success(request, 'Marked as read.')
-        return _inquiry_redirect(request)
+        reload = request.build_absolute_uri(reverse('admin_panel:inquiry_list'))
+        return admin_ajax_response(
+            request,
+            redirect_to=reverse('admin_panel:inquiry_list'),
+            message='Marked as read.',
+            reload_url=reload,
+        )
 
 
 class InquiryMarkAllReadView(StaffRequiredMixin, View):
@@ -1349,16 +1383,26 @@ class InquiryMarkAllReadView(StaffRequiredMixin, View):
         n = Inquiry.objects.filter(is_read=False).update(is_read=True)
         if n:
             invalidate_admin_nav_counts_cache()
-        messages.success(request, f'Marked {n} inquiry(ies) as read.')
-        return _inquiry_redirect(request)
+        reload = request.build_absolute_uri(reverse('admin_panel:inquiry_list'))
+        return admin_ajax_response(
+            request,
+            redirect_to=reverse('admin_panel:inquiry_list'),
+            message=f'Marked {n} inquiry(ies) as read.',
+            reload_url=reload,
+        )
 
 
 class InquiryDeleteView(StaffRequiredMixin, View):
     def post(self, request, pk):
         Inquiry.objects.filter(pk=pk).delete()
         invalidate_admin_nav_counts_cache()
-        messages.success(request, 'Inquiry deleted.')
-        return _inquiry_redirect(request)
+        reload = request.build_absolute_uri(reverse('admin_panel:inquiry_list'))
+        return admin_ajax_response(
+            request,
+            redirect_to=reverse('admin_panel:inquiry_list'),
+            message='Inquiry deleted.',
+            reload_url=reload,
+        )
 
 
 class UnreadInquiryCountJsonView(StaffRequiredMixin, View):

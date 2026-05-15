@@ -544,7 +544,8 @@ body.overflow-hidden { overflow: hidden; }
   }
 }
 
-main.page.is-loading {
+main.page.is-loading,
+[data-ap-partial-root].is-loading {
   opacity: 0.55;
   pointer-events: none;
   transition: opacity 0.15s ease;
