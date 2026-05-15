@@ -172,23 +172,10 @@ class CarModelVariantForm(forms.ModelForm):
     def __init__(self, *args, car_model=None, **kwargs):
         super().__init__(*args, **kwargs)
         self.car_model = car_model
-        allowed = ['Petrol']
-        if car_model is not None:
-            allowed = list(car_model.supported_fuels or [])
-            if not allowed:
-                allowed = list(
-                    car_model.variants.values_list('fuel_type', flat=True).distinct()
-                ) or ['Petrol']
-        self.fields['fuel_type'].choices = [
-            (v, v) for v, _ in CarModelVariant.FUEL_CHOICES if v in allowed
-        ] or CarModelVariant.FUEL_CHOICES
+        self.fields['fuel_type'].choices = list(CarModelVariant.FUEL_CHOICES)
 
     def clean_fuel_type(self):
-        fuel = self.cleaned_data['fuel_type']
-        if self.car_model and self.car_model.supported_fuels:
-            if fuel not in self.car_model.supported_fuels:
-                raise ValidationError('Fuel type is not supported for this model.')
-        return fuel
+        return self.cleaned_data['fuel_type']
 
 
 class CarStaffForm(forms.ModelForm):

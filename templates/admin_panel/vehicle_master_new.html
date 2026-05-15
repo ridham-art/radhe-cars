@@ -357,17 +357,9 @@
                 <div class="vm-field">
                     <label for="vm-variant-fuel">Fuel type</label>
                     <select id="vm-variant-fuel" class="vm-input" name="fuel_type">
-                        {% if selected_model %}
-                            {% for fuel in selected_model.display_fuels %}
-                            <option value="{{ fuel }}">{{ fuel }}</option>
-                            {% empty %}
-                            <option value="Petrol">Petrol</option>
-                            {% endfor %}
-                        {% else %}
                         {% for val, label in vm_fuel_options %}
                         <option value="{{ val }}">{{ label }}</option>
                         {% endfor %}
-                        {% endif %}
                     </select>
                 </div>
                 <div class="vm-field">

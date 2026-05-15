@@ -1563,12 +1563,8 @@ class VehicleMasterVariantBulkAddView(StaffRequiredMixin, View):
                 request, make_id=car_model.brand_id, model_id=car_model.pk
             )
 
-        allowed = list(car_model.supported_fuels or [])
-        if not allowed:
-            allowed = list(
-                car_model.variants.values_list('fuel_type', flat=True).distinct()
-            ) or ['Petrol']
-        default_fuel = allowed[0]
+        allowed = [c[0] for c in CarModelVariant.FUEL_CHOICES]
+        default_fuel = 'Petrol'
         default_trans = 'Manual'
         parsed = _parse_bulk_variants(
             form.cleaned_data['variants'],
