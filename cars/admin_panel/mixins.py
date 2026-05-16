@@ -1,5 +1,7 @@
 """AJAX partial rendering helpers for the admin panel."""
 
+import json
+
 from django.contrib import messages
 from django.http import JsonResponse
 from django.shortcuts import redirect
@@ -53,6 +55,17 @@ class CarFormAjaxMixin:
     """XHR save / validation for car add/edit (AutoVault preview templates)."""
 
     car_form_partial_template = 'admin_panel/partials/car_form_body_partial.html'
+
+    def get_context_data(self, **kwargs):
+        ctx = super().get_context_data(**kwargs)
+        obj = ctx.get('object') or getattr(self, 'object', None)
+        model_id = None
+        variant = ''
+        if obj and getattr(obj, 'pk', None):
+            model_id = obj.model_id
+            variant = obj.variant or ''
+        ctx['cf_config_json'] = json.dumps({'modelId': model_id, 'variant': variant})
+        return ctx
 
     def _is_car_form_xhr(self):
         return self.request.headers.get('x-requested-with') == 'XMLHttpRequest'

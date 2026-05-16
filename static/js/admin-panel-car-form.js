@@ -2,6 +2,8 @@
     'use strict';
 
     var previewObjectUrls = [];
+    var cascadeBound = false;
+    var variantInputBound = false;
 
     function destroy() {
         previewObjectUrls.forEach(function (url) {
@@ -10,6 +12,227 @@
             } catch (_e) {}
         });
         previewObjectUrls = [];
+    }
+
+    function adminPrefix() {
+        var cfg = window.AP_NAV_CONFIG || {};
+        var p = cfg.adminPrefix || '/admin-panel/';
+        return p.charAt(p.length - 1) === '/' ? p : p + '/';
+    }
+
+    function showCfMessage(text, level) {
+        if (!text || !window.AdminPanelAjax) return;
+        window.AdminPanelAjax.showMessage(text, level || 'info');
+    }
+
+    function getCarFormRoot(el) {
+        if (!el || !el.closest) return null;
+        return el.closest('[data-ap-car-form-root]');
+    }
+
+    function readCfConfig(root) {
+        var scope = root || document.querySelector('[data-ap-car-form-root]');
+        if (!scope) return {};
+        var el =
+            scope.querySelector('[data-cf-config]') ||
+            (scope.hasAttribute('data-cf-config') ? scope : null) ||
+            document.getElementById('cf-config');
+        if (!el) return {};
+        var raw = el.getAttribute('data-cf-config');
+        if (raw == null && el.textContent) raw = el.textContent;
+        try {
+            return JSON.parse(raw || '{}');
+        } catch (_e) {
+            return {};
+        }
+    }
+
+    function apiTransmission(root) {
+        var transEl = root.querySelector('#id_transmission');
+        if (!transEl || !transEl.value) return '';
+        return transEl.value === 'AT' ? 'AUTOMATIC' : 'MANUAL';
+    }
+
+    function setVariantSelectOptions(root, variants) {
+        var variantSelect = root.querySelector('#cf-variant-select');
+        var variantEl = root.querySelector('#id_variant');
+        var modelEl = root.querySelector('#id_model');
+        if (!variantSelect) return;
+
+        var current = variantEl ? variantEl.value.trim() : '';
+        variantSelect.innerHTML = '';
+        var placeholder = document.createElement('option');
+        placeholder.value = '';
+        placeholder.textContent = variants.length
+            ? '— Pick a variant —'
+            : '— No variants (type custom below) —';
+        variantSelect.appendChild(placeholder);
+
+        variants.forEach(function (item) {
+            var name = typeof item === 'string' ? item : item && item.name;
+            if (!name) return;
+            var opt = document.createElement('option');
+            opt.value = name;
+            opt.textContent = name;
+            if (item && typeof item === 'object') {
+                if (item.fuel_type) opt.dataset.fuel = item.fuel_type;
+                if (item.transmission) opt.dataset.trans = item.transmission;
+            }
+            if (current && name === current) opt.selected = true;
+            variantSelect.appendChild(opt);
+        });
+
+        variantSelect.disabled = !modelEl || !modelEl.value;
+    }
+
+    function applyVariantMeta(root, item) {
+        if (!item) return;
+        var fuelEl = root.querySelector('#id_fuel_type');
+        var transEl = root.querySelector('#id_transmission');
+        var fuel = item.fuel_type || (item.dataset && item.dataset.fuel);
+        var trans = item.transmission || (item.dataset && item.dataset.trans);
+        if (fuel && fuelEl) fuelEl.value = fuel;
+        if (trans === 'Manual' && transEl) transEl.value = 'MT';
+        if (trans === 'Automatic' && transEl) transEl.value = 'AT';
+    }
+
+    function loadVariants(root) {
+        var variantSelect = root.querySelector('#cf-variant-select');
+        var modelEl = root.querySelector('#id_model');
+        if (!variantSelect || !modelEl) return;
+
+        var modelId = modelEl.value;
+        if (!modelId) {
+            setVariantSelectOptions(root, []);
+            return;
+        }
+
+        var url = '/api/variants/?model_id=' + encodeURIComponent(modelId);
+        var t = apiTransmission(root);
+        if (t) url += '&transmission=' + encodeURIComponent(t);
+
+        variantSelect.disabled = true;
+        variantSelect.innerHTML = '<option value="">Loading variants…</option>';
+
+        fetch(url, { credentials: 'same-origin', headers: { Accept: 'application/json' } })
+            .then(function (r) {
+                if (!r.ok) throw new Error('Could not load variants.');
+                return r.json();
+            })
+            .then(function (rows) {
+                setVariantSelectOptions(root, rows || []);
+            })
+            .catch(function (err) {
+                setVariantSelectOptions(root, []);
+                showCfMessage((err && err.message) || 'Could not load variants.', 'error');
+            });
+    }
+
+    function loadModels(root, brandId, selectedId) {
+        var brandEl = root.querySelector('#id_brand');
+        var modelEl = root.querySelector('#id_model');
+        if (!brandEl || !modelEl) return;
+
+        if (!brandId) {
+            modelEl.innerHTML = '<option value="">---------</option>';
+            setVariantSelectOptions(root, []);
+            return;
+        }
+
+        var url =
+            adminPrefix() + 'api/brands/' + encodeURIComponent(brandId) + '/models/';
+
+        fetch(url, { credentials: 'same-origin', headers: { Accept: 'application/json' } })
+            .then(function (r) {
+                if (!r.ok) throw new Error('Could not load models for this brand.');
+                return r.json();
+            })
+            .then(function (data) {
+                var keep = selectedId ? String(selectedId) : String(modelEl.value || '');
+                var models = data.models || [];
+                modelEl.innerHTML = '';
+                models.forEach(function (m) {
+                    var opt = document.createElement('option');
+                    opt.value = m.id;
+                    opt.textContent = m.name;
+                    if (keep && String(m.id) === keep) opt.selected = true;
+                    modelEl.appendChild(opt);
+                });
+                if (!models.length) {
+                    showCfMessage(
+                        'No models for this brand. Add models in Vehicle Master first.',
+                        'info'
+                    );
+                }
+                loadVariants(root);
+            })
+            .catch(function (err) {
+                showCfMessage((err && err.message) || 'Could not load models.', 'error');
+            });
+    }
+
+    function bindCarFormCascade() {
+        if (cascadeBound) return;
+        cascadeBound = true;
+
+        document.addEventListener('change', function (e) {
+            var root = getCarFormRoot(e.target);
+            if (!root) return;
+
+            if (e.target.id === 'id_brand') {
+                loadModels(root, e.target.value, null);
+                return;
+            }
+            if (e.target.id === 'id_model' || e.target.id === 'id_transmission') {
+                loadVariants(root);
+                return;
+            }
+            if (e.target.id === 'cf-variant-select') {
+                var opt = e.target.options[e.target.selectedIndex];
+                if (!opt || !opt.value) return;
+                var variantEl = root.querySelector('#id_variant');
+                if (variantEl) variantEl.value = opt.value;
+                applyVariantMeta(root, opt);
+            }
+        });
+    }
+
+    function bindVariantInput() {
+        if (variantInputBound) return;
+        variantInputBound = true;
+
+        document.addEventListener('input', function (e) {
+            if (e.target.id !== 'id_variant') return;
+            var root = getCarFormRoot(e.target);
+            if (!root) return;
+            var variantSelect = root.querySelector('#cf-variant-select');
+            if (!variantSelect) return;
+
+            var v = e.target.value.trim();
+            if (!v) {
+                variantSelect.value = '';
+                return;
+            }
+            for (var i = 0; i < variantSelect.options.length; i++) {
+                if (variantSelect.options[i].value === v) {
+                    variantSelect.selectedIndex = i;
+                    return;
+                }
+            }
+            variantSelect.value = '';
+        });
+    }
+
+    function bootstrapCascade(root) {
+        if (!root) return;
+        var cfg = readCfConfig(root);
+        var brandEl = root.querySelector('#id_brand');
+        var modelEl = root.querySelector('#id_model');
+        if (brandEl && brandEl.value) {
+            loadModels(root, brandEl.value, cfg.modelId || (modelEl && modelEl.value));
+        } else if (cfg.modelId && modelEl) {
+            loadVariants(root);
+        }
     }
 
     function applyCarFormPartial(html) {
@@ -75,182 +298,12 @@
             });
     }
 
-    function readCfConfig() {
-        var el =
-            document.querySelector('[data-ap-car-form-root] [data-cf-config]') ||
-            document.querySelector('[data-ap-car-form-root][data-cf-config]') ||
-            document.getElementById('cf-config');
-        if (!el) return {};
-        var raw = el.getAttribute('data-cf-config');
-        if (raw == null && el.textContent) raw = el.textContent;
-        try {
-            return JSON.parse(raw || '{}');
-        } catch (_e) {
-            return {};
-        }
-    }
+    function wireDropzone(root) {
+        var dropzone = root.querySelector('#cf-dropzone');
+        var imagesInput = root.querySelector('#admin-images-input');
+        if (!dropzone || !imagesInput || dropzone.dataset.cfDropzoneBound === '1') return;
+        dropzone.dataset.cfDropzoneBound = '1';
 
-    function init() {
-        destroy();
-
-        var cfg = readCfConfig();
-
-        var brandEl = document.getElementById('id_brand');
-    var modelEl = document.getElementById('id_model');
-    var transEl = document.getElementById('id_transmission');
-    var fuelEl = document.getElementById('id_fuel_type');
-    var variantEl = document.getElementById('id_variant');
-    var variantSelect = document.getElementById('cf-variant-select');
-
-    if (!brandEl && !modelEl) return;
-
-    function apiTransmission() {
-        if (!transEl || !transEl.value) return '';
-        return transEl.value === 'AT' ? 'AUTOMATIC' : 'MANUAL';
-    }
-
-    function loadModels(brandId, selectedId) {
-        if (!brandEl || !modelEl) return;
-        if (!brandId) {
-            modelEl.innerHTML = '<option value="">---------</option>';
-            return;
-        }
-        fetch('/admin-panel/api/brands/' + brandId + '/models/', {
-            credentials: 'same-origin',
-            headers: { Accept: 'application/json' },
-        })
-            .then(function (r) {
-                return r.json();
-            })
-            .then(function (data) {
-                var keep = selectedId ? String(selectedId) : String(modelEl.value || '');
-                modelEl.innerHTML = '';
-                (data.models || []).forEach(function (m) {
-                    var opt = document.createElement('option');
-                    opt.value = m.id;
-                    opt.textContent = m.name;
-                    if (keep && String(m.id) === keep) opt.selected = true;
-                    modelEl.appendChild(opt);
-                });
-                loadVariants();
-            })
-            .catch(function () {});
-    }
-
-    function setVariantSelectOptions(variants) {
-        if (!variantSelect) return;
-        var current = variantEl ? variantEl.value.trim() : '';
-        variantSelect.innerHTML = '';
-        var placeholder = document.createElement('option');
-        placeholder.value = '';
-        placeholder.textContent = variants.length
-            ? '— Pick a variant —'
-            : '— No variants (type custom below) —';
-        variantSelect.appendChild(placeholder);
-
-        variants.forEach(function (item) {
-            var name = typeof item === 'string' ? item : item && item.name;
-            if (!name) return;
-            var opt = document.createElement('option');
-            opt.value = name;
-            opt.textContent = name;
-            if (item && typeof item === 'object') {
-                if (item.fuel_type) opt.dataset.fuel = item.fuel_type;
-                if (item.transmission) opt.dataset.trans = item.transmission;
-            }
-            if (current && name === current) opt.selected = true;
-            variantSelect.appendChild(opt);
-        });
-
-        variantSelect.disabled = !modelEl || !modelEl.value;
-    }
-
-    function applyVariantMeta(item) {
-        if (!item) return;
-        var fuel = item.fuel_type || (item.dataset && item.dataset.fuel);
-        var trans = item.transmission || (item.dataset && item.dataset.trans);
-        if (fuel && fuelEl) fuelEl.value = fuel;
-        if (trans === 'Manual' && transEl) transEl.value = 'MT';
-        if (trans === 'Automatic' && transEl) transEl.value = 'AT';
-    }
-
-    function loadVariants() {
-        if (!variantSelect || !modelEl) return;
-        var modelId = modelEl.value;
-        if (!modelId) {
-            setVariantSelectOptions([]);
-            return;
-        }
-        var url = '/api/variants/?model_id=' + encodeURIComponent(modelId);
-        var t = apiTransmission();
-        if (t) url += '&transmission=' + encodeURIComponent(t);
-
-        variantSelect.disabled = true;
-        variantSelect.innerHTML = '<option value="">Loading variants…</option>';
-
-        fetch(url, { credentials: 'same-origin', headers: { Accept: 'application/json' } })
-            .then(function (r) {
-                return r.json();
-            })
-            .then(function (rows) {
-                setVariantSelectOptions(rows || []);
-            })
-            .catch(function () {
-                setVariantSelectOptions([]);
-            });
-    }
-
-    if (brandEl) {
-        brandEl.addEventListener('change', function () {
-            loadModels(this.value, null);
-        });
-    }
-    if (modelEl) {
-        modelEl.addEventListener('change', loadVariants);
-    }
-    if (transEl) {
-        transEl.addEventListener('change', loadVariants);
-    }
-    if (variantSelect) {
-        variantSelect.addEventListener('change', function () {
-            var opt = variantSelect.options[variantSelect.selectedIndex];
-            if (!opt || !opt.value) return;
-            if (variantEl) variantEl.value = opt.value;
-            applyVariantMeta(opt);
-        });
-    }
-    if (variantEl) {
-        variantEl.addEventListener('input', function () {
-            if (!variantSelect) return;
-            var v = this.value.trim();
-            if (!v) {
-                variantSelect.value = '';
-                return;
-            }
-            for (var i = 0; i < variantSelect.options.length; i++) {
-                if (variantSelect.options[i].value === v) {
-                    variantSelect.selectedIndex = i;
-                    return;
-                }
-            }
-            variantSelect.value = '';
-        });
-    }
-
-    if (brandEl && brandEl.value) {
-        loadModels(brandEl.value, cfg.modelId || modelEl.value);
-    } else if (cfg.modelId && modelEl) {
-        loadVariants();
-    }
-
-    /* Image compression (ported from car_form.html) */
-    var formEl = document.getElementById('car-admin-form');
-    var imagesInput = document.getElementById('admin-images-input');
-    var previewWrap = document.getElementById('admin-new-image-preview-wrap');
-    var previewGrid = document.getElementById('admin-new-image-preview-grid');
-    var dropzone = document.getElementById('cf-dropzone');
-
-    if (dropzone && imagesInput) {
         dropzone.addEventListener('click', function () {
             imagesInput.click();
         });
@@ -277,14 +330,91 @@
         });
     }
 
-    if (!formEl) return;
+    function wireImagePreview(root) {
+        var imagesInput = root.querySelector('#admin-images-input');
+        var previewWrap = root.querySelector('#admin-new-image-preview-wrap');
+        var previewGrid = root.querySelector('#admin-new-image-preview-grid');
+        if (!imagesInput || !previewWrap || !previewGrid) return;
+        if (imagesInput.dataset.cfPreviewBound === '1') return;
+        imagesInput.dataset.cfPreviewBound = '1';
 
-    var compressionMeta = [];
+        imagesInput.addEventListener('change', function () {
+            renderNewImagePreview(root);
+        });
+    }
 
-    function formatSize(bytes) {
-        if (!bytes || bytes < 0) return '0 KB';
-        if (bytes < 1024 * 1024) return Math.max(1, Math.round(bytes / 1024)) + ' KB';
-        return (bytes / (1024 * 1024)).toFixed(2) + ' MB';
+    function clearPreview(root) {
+        previewObjectUrls.forEach(function (url) {
+            try {
+                URL.revokeObjectURL(url);
+            } catch (_e) {}
+        });
+        previewObjectUrls = [];
+        var previewGrid = root.querySelector('#admin-new-image-preview-grid');
+        var previewWrap = root.querySelector('#admin-new-image-preview-wrap');
+        if (previewGrid) previewGrid.innerHTML = '';
+        if (previewWrap) previewWrap.classList.add('hidden');
+    }
+
+    function renderNewImagePreview(root, preferredChoice) {
+        var imagesInput = root.querySelector('#admin-images-input');
+        var previewWrap = root.querySelector('#admin-new-image-preview-wrap');
+        var previewGrid = root.querySelector('#admin-new-image-preview-grid');
+        if (!imagesInput || !previewWrap || !previewGrid) return;
+
+        clearPreview(root);
+        var files = Array.prototype.slice.call(imagesInput.files || []);
+        if (!files.length) return;
+        previewWrap.classList.remove('hidden');
+
+        var selectedForForm = root.querySelector('input[name="primary_image_choice"]:checked');
+        var selectedChoice = preferredChoice || (selectedForForm ? selectedForForm.value : '');
+        var keepExistingChoice = selectedChoice && selectedChoice.indexOf('existing:') === 0;
+
+        files.forEach(function (file, index) {
+            var item = document.createElement('li');
+            item.className = 'cf-img-card';
+
+            var media = document.createElement('div');
+            media.className = 'cf-img-media';
+            var image = document.createElement('img');
+            image.alt = '';
+            var objectUrl = URL.createObjectURL(file);
+            previewObjectUrls.push(objectUrl);
+            image.src = objectUrl;
+            media.appendChild(image);
+            item.appendChild(media);
+
+            var foot = document.createElement('div');
+            foot.className = 'cf-img-foot';
+
+            var name = document.createElement('span');
+            name.style.fontSize = '11px';
+            name.style.color = 'var(--text-muted)';
+            name.style.overflow = 'hidden';
+            name.style.textOverflow = 'ellipsis';
+            name.style.whiteSpace = 'nowrap';
+            name.textContent = file.name;
+            foot.appendChild(name);
+
+            var label = document.createElement('label');
+            label.className = 'cf-primary-label';
+            var radio = document.createElement('input');
+            radio.type = 'radio';
+            radio.name = 'primary_image_choice';
+            radio.value = 'new:' + index;
+            radio.className = 'cf-checkbox';
+            if (selectedChoice && radio.value === selectedChoice) {
+                radio.checked = true;
+            } else if (!selectedChoice && !keepExistingChoice && index === 0) {
+                radio.checked = true;
+            }
+            label.appendChild(radio);
+            label.appendChild(document.createTextNode(' Primary'));
+            foot.appendChild(label);
+            item.appendChild(foot);
+            previewGrid.appendChild(item);
+        });
     }
 
     function toWebpName(filename) {
@@ -362,137 +492,92 @@
         }
     }
 
-    function clearPreview() {
-        previewObjectUrls.forEach(function (url) {
-            URL.revokeObjectURL(url);
-        });
-        previewObjectUrls = [];
-        if (previewGrid) previewGrid.innerHTML = '';
-        if (previewWrap) previewWrap.classList.add('hidden');
-    }
+    function wireFormSubmit(root) {
+        var formEl = root.querySelector('#car-admin-form');
+        if (!formEl || formEl.dataset.cfSubmitBound === '1') return;
+        formEl.dataset.cfSubmitBound = '1';
 
-    function renderNewImagePreview(preferredChoice) {
-        if (!previewWrap || !previewGrid) return;
-        clearPreview();
-        var files = Array.prototype.slice.call(imagesInput.files || []);
-        if (!files.length) return;
-        previewWrap.classList.remove('hidden');
+        formEl.addEventListener('submit', function (e) {
+            e.preventDefault();
+            e.stopPropagation();
 
-        var selectedForForm = document.querySelector('input[name="primary_image_choice"]:checked');
-        var selectedChoice = preferredChoice || (selectedForForm ? selectedForForm.value : '');
-        var keepExistingChoice = selectedChoice && selectedChoice.indexOf('existing:') === 0;
+            var imagesInput = root.querySelector('#admin-images-input');
+            var submitBtn = formEl.querySelector('button[type="submit"]');
+            var originalText = submitBtn ? submitBtn.textContent : '';
 
-        files.forEach(function (file, index) {
-            var item = document.createElement('li');
-            item.className = 'cf-img-card';
-
-            var media = document.createElement('div');
-            media.className = 'cf-img-media';
-            var image = document.createElement('img');
-            image.alt = '';
-            var objectUrl = URL.createObjectURL(file);
-            previewObjectUrls.push(objectUrl);
-            image.src = objectUrl;
-            media.appendChild(image);
-            item.appendChild(media);
-
-            var foot = document.createElement('div');
-            foot.className = 'cf-img-foot';
-
-            var name = document.createElement('span');
-            name.style.fontSize = '11px';
-            name.style.color = 'var(--text-muted)';
-            name.style.overflow = 'hidden';
-            name.style.textOverflow = 'ellipsis';
-            name.style.whiteSpace = 'nowrap';
-            name.textContent = file.name;
-            foot.appendChild(name);
-
-            var label = document.createElement('label');
-            label.className = 'cf-primary-label';
-            var radio = document.createElement('input');
-            radio.type = 'radio';
-            radio.name = 'primary_image_choice';
-            radio.value = 'new:' + index;
-            radio.className = 'cf-checkbox';
-            if (selectedChoice && radio.value === selectedChoice) {
-                radio.checked = true;
-            } else if (!selectedChoice && !keepExistingChoice && index === 0) {
-                radio.checked = true;
+            function finishSave() {
+                if (submitBtn) submitBtn.textContent = 'Saving...';
+                return submitCarFormAjax(formEl, submitBtn, originalText || 'Save vehicle');
             }
-            label.appendChild(radio);
-            label.appendChild(document.createTextNode(' Primary'));
-            foot.appendChild(label);
-            item.appendChild(foot);
-            previewGrid.appendChild(item);
-        });
-    }
 
-    if (imagesInput) {
-        imagesInput.addEventListener('change', function () {
-            compressionMeta = [];
-            renderNewImagePreview();
-        });
-    }
+            if (!imagesInput || !imagesInput.files || !imagesInput.files.length) {
+                if (submitBtn) {
+                    submitBtn.disabled = true;
+                    submitBtn.textContent = 'Saving...';
+                }
+                finishSave();
+                return;
+            }
+            if (typeof DataTransfer === 'undefined') {
+                if (submitBtn) submitBtn.disabled = true;
+                finishSave();
+                return;
+            }
 
-    formEl.addEventListener('submit', function (e) {
-        e.preventDefault();
-        e.stopPropagation();
-
-        var submitBtn = formEl.querySelector('button[type="submit"]');
-        var originalText = submitBtn ? submitBtn.textContent : '';
-
-        function finishSave() {
-            if (submitBtn) submitBtn.textContent = 'Saving...';
-            return submitCarFormAjax(formEl, submitBtn, originalText || 'Save vehicle');
-        }
-
-        if (!imagesInput || !imagesInput.files || !imagesInput.files.length) {
             if (submitBtn) {
                 submitBtn.disabled = true;
-                submitBtn.textContent = 'Saving...';
+                submitBtn.textContent = 'Compressing images...';
             }
-            finishSave();
-            return;
-        }
-        if (typeof DataTransfer === 'undefined') {
-            if (submitBtn) submitBtn.disabled = true;
-            finishSave();
-            return;
-        }
 
-        if (submitBtn) {
-            submitBtn.disabled = true;
-            submitBtn.textContent = 'Compressing images...';
-        }
+            var selectedBeforeCompress = '';
+            var selectedRadio = root.querySelector('input[name="primary_image_choice"]:checked');
+            if (selectedRadio) selectedBeforeCompress = selectedRadio.value;
 
-        var selectedBeforeCompress = '';
-        var selectedRadio = document.querySelector('input[name="primary_image_choice"]:checked');
-        if (selectedRadio) selectedBeforeCompress = selectedRadio.value;
-
-        var files = Array.prototype.slice.call(imagesInput.files);
-        Promise.all(files.map(compressFile))
-            .then(function (processedFiles) {
-                var dt = new DataTransfer();
-                processedFiles.forEach(function (f) {
-                    if (f) dt.items.add(f);
+            var files = Array.prototype.slice.call(imagesInput.files);
+            Promise.all(files.map(compressFile))
+                .then(function (processedFiles) {
+                    var dt = new DataTransfer();
+                    processedFiles.forEach(function (f) {
+                        if (f) dt.items.add(f);
+                    });
+                    imagesInput.files = dt.files;
+                    renderNewImagePreview(root, selectedBeforeCompress);
+                    return finishSave();
+                })
+                .catch(function () {
+                    if (submitBtn) {
+                        submitBtn.disabled = false;
+                        submitBtn.textContent = originalText || 'Save vehicle';
+                    }
                 });
-                imagesInput.files = dt.files;
-                renderNewImagePreview(selectedBeforeCompress);
-                return finishSave();
-            })
-            .catch(function () {
-                if (submitBtn) {
-                    submitBtn.disabled = false;
-                    submitBtn.textContent = originalText || 'Save vehicle';
-                }
-            });
-    });
+        });
     }
+
+    function init() {
+        destroy();
+        bindCarFormCascade();
+        bindVariantInput();
+
+        var root = document.querySelector('[data-ap-car-form-root]');
+        if (!root) return;
+
+        bootstrapCascade(root);
+        wireDropzone(root);
+        wireImagePreview(root);
+        wireFormSubmit(root);
+    }
+
+    document.addEventListener('ap:page:load', function (e) {
+        if (e.detail && e.detail.pageKey === 'car_form') {
+            init();
+        }
+    });
 
     if (window.AdminPanel) {
         window.AdminPanel.register('car_form', { init: init, destroy: destroy });
     } else {
+        bindCarFormCascade();
+        bindVariantInput();
         init();
     }
 })();

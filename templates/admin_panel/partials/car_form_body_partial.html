@@ -1,4 +1,4 @@
-<div class="cf-page" data-cf-config='{"modelId":{% if object %}{{ object.model_id }}{% else %}null{% endif %},"variant":{% if object and object.variant %}"{{ object.variant|escapejs }}"{% else %}""{% endif %}}'>
+<div class="cf-page" data-cf-config="{{ cf_config_json|escape }}">
     <div class="cf-page-head">
         <h1>{% if object %}Edit vehicle{% else %}Add vehicle to inventory{% endif %}</h1>
         <p class="sub">{% if object %}Update listing details, photos, and status.{% else %}Enter vehicle details — variants load from Vehicle Master when available.{% endif %}</p>
