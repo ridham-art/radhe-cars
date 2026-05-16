@@ -55,7 +55,7 @@
             {% with img=car.primary_image %}
             {% if img and img.display_url %}
             <div class="inv-img-inner">
-                <img src="{{ img.display_url }}" alt="{{ car.title }}">
+                <img src="{{ img.display_url }}" alt="{{ car.title }}" width="400" height="300" decoding="async"{% if forloop.counter <= 4 %} loading="eager" fetchpriority="high"{% else %} loading="lazy"{% endif %}>
             </div>
             {% else %}
             <svg width="56" height="56" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.2" aria-hidden="true"><path d="M5 13l1.6-4.2A2 2 0 0 1 8.5 7.5h7a2 2 0 0 1 1.9 1.3L19 13"/><path d="M3.5 17h17v-2.5a1.5 1.5 0 0 0-1.5-1.5h-14A1.5 1.5 0 0 0 3.5 14.5V17z"/></svg>
