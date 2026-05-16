@@ -70,11 +70,12 @@
         },
     };
 
-    var mainEl = document.querySelector('main.page');
+    var mainEl = null;
     var cssRoot = document.getElementById('ap-dynamic-css');
     var curPageKey = null;
     var inflightAbort = null;
     var loadedScripts = new Object();
+    var navBootstrapped = false;
 
     var AP = window.AdminPanel || {};
     AP.pages = AP.pages || {};
@@ -96,6 +97,21 @@
             if (h && typeof h.init === 'function') h.init();
         };
     window.AdminPanel = AP;
+
+    function navFallback(url, reason) {
+        if (typeof console !== 'undefined' && console.warn) {
+            console.warn('[AdminPanel] in-shell navigation unavailable:', reason, url);
+        }
+        window.location.href = url;
+    }
+
+    function settle(promise, label) {
+        return Promise.resolve(promise).catch(function (err) {
+            if (typeof console !== 'undefined' && console.warn) {
+                console.warn('[AdminPanel] asset load failed:', label, err);
+            }
+        });
+    }
 
     function staticUrl(path) {
         if (!path) return path;
@@ -326,7 +342,7 @@
         if (!hrefs.length) return Promise.resolve();
         return Promise.all(
             hrefs.map(function (href) {
-                return loadStylesheet(href);
+                return settle(loadStylesheet(href), href);
             })
         );
     }
@@ -335,13 +351,13 @@
         var spec = PAGE_ASSETS[pageKey];
         if (!spec) return Promise.resolve();
         var cssJobs = (spec.css || []).map(function (path) {
-            return loadStylesheet(staticUrl(path));
+            return settle(loadStylesheet(staticUrl(path)), path);
         });
         return Promise.all(cssJobs).then(function () {
             var chain = Promise.resolve();
             (spec.scripts || []).forEach(function (desc) {
                 chain = chain.then(function () {
-                    return loadScript(desc);
+                    return settle(loadScript(desc), desc.url || desc);
                 });
             });
             return chain;
@@ -429,8 +445,12 @@
         opts = opts || {};
         var absolute = new URL(url, window.location.origin);
         var pageKey = resolvePageKey(absolute.pathname);
-        if (!pageKey || !mainEl) {
-            window.location.href = absolute.href;
+        if (!mainEl) {
+            navFallback(absolute.href, 'main.page not found');
+            return Promise.resolve();
+        }
+        if (!pageKey) {
+            navFallback(absolute.href, 'unknown admin route');
             return Promise.resolve();
         }
 
@@ -491,7 +511,8 @@
             })
             .catch(function (err) {
                 if (err && err.name === 'AbortError') return;
-                window.location.href = absolute.href;
+                var reason = (err && err.message) || 'navigation failed';
+                navFallback(absolute.href, reason);
             })
             .finally(function () {
                 setLoading(false);
@@ -545,8 +566,16 @@
     }
 
     function bootstrap() {
+        if (navBootstrapped) return;
         mainEl = document.querySelector('main.page');
-        if (!mainEl) return;
+        if (!mainEl) {
+            if (typeof console !== 'undefined' && console.error) {
+                console.error('[AdminPanel] Cannot start in-shell nav: missing main.page');
+            }
+            return;
+        }
+        navBootstrapped = true;
+        document.body.setAttribute('data-ap-nav-ready', '1');
 
         markLoadedScripts();
         curPageKey = resolvePageKey(window.location.pathname);

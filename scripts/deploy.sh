@@ -12,6 +12,12 @@ fi
 echo "==> Collecting static files (hashed filenames for cache busting)"
 python manage.py collectstatic --noinput
 
+echo "==> Verify admin nav JS was collected"
+if ! ls staticfiles/js/admin-panel-nav*.js 1>/dev/null 2>&1; then
+  echo "WARNING: admin-panel-nav.js missing from staticfiles — in-shell sidebar nav will not work."
+  exit 1
+fi
+
 echo "==> Migrations"
 python manage.py migrate --noinput
 
