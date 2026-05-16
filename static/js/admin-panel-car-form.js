@@ -75,25 +75,34 @@
             });
     }
 
+    function readCfConfig() {
+        var el =
+            document.querySelector('[data-ap-car-form-root] [data-cf-config]') ||
+            document.querySelector('[data-ap-car-form-root][data-cf-config]') ||
+            document.getElementById('cf-config');
+        if (!el) return {};
+        var raw = el.getAttribute('data-cf-config');
+        if (raw == null && el.textContent) raw = el.textContent;
+        try {
+            return JSON.parse(raw || '{}');
+        } catch (_e) {
+            return {};
+        }
+    }
+
     function init() {
         destroy();
 
-        var cfgEl = document.getElementById('cf-config');
-        if (!cfgEl) return;
+        var cfg = readCfConfig();
 
-        var cfg = {};
-    try {
-        cfg = JSON.parse(cfgEl.textContent || '{}');
-    } catch (_e) {
-        cfg = {};
-    }
-
-    var brandEl = document.getElementById('id_brand');
+        var brandEl = document.getElementById('id_brand');
     var modelEl = document.getElementById('id_model');
     var transEl = document.getElementById('id_transmission');
     var fuelEl = document.getElementById('id_fuel_type');
     var variantEl = document.getElementById('id_variant');
     var variantSelect = document.getElementById('cf-variant-select');
+
+    if (!brandEl && !modelEl) return;
 
     function apiTransmission() {
         if (!transEl || !transEl.value) return '';
