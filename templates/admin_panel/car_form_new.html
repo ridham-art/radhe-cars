@@ -7,7 +7,140 @@
 <link rel="stylesheet" href="{% static 'css/admin-panel-car-form.css' %}" data-ap-server="1">
 {% endblock %}
 {% block content %}
-<div data-ap-car-form-root>
 {% include "admin_panel/partials/car_form_body_partial.html" %}
-</div>
+{% endblock %}
+{% block extra_js %}
+<script>
+(function () {
+    var brandEl = document.getElementById('id_brand');
+    var modelEl = document.getElementById('id_model');
+    if (!brandEl || !modelEl) return;
+
+    function loadModels(brandId, selectedId) {
+        if (!brandId) {
+            modelEl.innerHTML = '<option value="">---------</option>';
+            return;
+        }
+        fetch('/admin-panel/api/brands/' + brandId + '/models/', {
+            credentials: 'same-origin',
+            headers: { Accept: 'application/json' },
+        })
+            .then(function (r) {
+                return r.json();
+            })
+            .then(function (data) {
+                modelEl.innerHTML = '';
+                (data.models || []).forEach(function (m) {
+                    var opt = document.createElement('option');
+                    opt.value = m.id;
+                    opt.textContent = m.name;
+                    if (selectedId && String(m.id) === String(selectedId)) opt.selected = true;
+                    modelEl.appendChild(opt);
+                });
+            })
+            .catch(function () {});
+    }
+
+    brandEl.addEventListener('change', function () {
+        loadModels(this.value, null);
+    });
+
+    {% if object %}
+    if (brandEl.value) {
+        loadModels(brandEl.value, {{ object.model_id|default:"null" }});
+    }
+    {% endif %}
+})();
+
+(function () {
+    var formEl = document.getElementById('car-admin-form');
+    var imagesInput = document.getElementById('admin-images-input');
+    var previewWrap = document.getElementById('admin-new-image-preview-wrap');
+    var previewGrid = document.getElementById('admin-new-image-preview-grid');
+    var dropzone = document.getElementById('cf-dropzone');
+    if (!formEl || !imagesInput) return;
+
+    if (dropzone) {
+        dropzone.addEventListener('click', function () {
+            imagesInput.click();
+        });
+    }
+
+    var previewObjectUrls = [];
+
+    function clearPreview() {
+        previewObjectUrls.forEach(function (url) {
+            try {
+                URL.revokeObjectURL(url);
+            } catch (_e) {}
+        });
+        previewObjectUrls = [];
+        if (previewGrid) previewGrid.innerHTML = '';
+        if (previewWrap) previewWrap.classList.add('hidden');
+    }
+
+    function renderNewImagePreview() {
+        if (!previewWrap || !previewGrid) return;
+        clearPreview();
+        var files = Array.prototype.slice.call(imagesInput.files || []);
+        if (!files.length) return;
+        previewWrap.classList.remove('hidden');
+        files.forEach(function (file, index) {
+            var item = document.createElement('li');
+            item.className = 'cf-img-card';
+            var media = document.createElement('div');
+            media.className = 'cf-img-media';
+            var image = document.createElement('img');
+            image.alt = '';
+            var objectUrl = URL.createObjectURL(file);
+            previewObjectUrls.push(objectUrl);
+            image.src = objectUrl;
+            media.appendChild(image);
+            item.appendChild(media);
+            previewGrid.appendChild(item);
+        });
+    }
+
+    imagesInput.addEventListener('change', renderNewImagePreview);
+
+    formEl.addEventListener('submit', function (e) {
+        if (formEl.dataset.compressedOnce === '1') return;
+        if (!imagesInput.files || !imagesInput.files.length) return;
+        if (typeof DataTransfer === 'undefined') return;
+
+        e.preventDefault();
+        formEl.dataset.compressedOnce = '1';
+        var submitBtn = formEl.querySelector('button[type="submit"]');
+        var originalText = submitBtn ? submitBtn.textContent : '';
+        if (submitBtn) {
+            submitBtn.disabled = true;
+            submitBtn.textContent = 'Compressing images...';
+        }
+
+        var files = Array.prototype.slice.call(imagesInput.files);
+        Promise.all(
+            files.map(function (file) {
+                if (!file || file.size <= 300 * 1024) return Promise.resolve(file);
+                return Promise.resolve(file);
+            })
+        )
+            .then(function (processedFiles) {
+                var dt = new DataTransfer();
+                processedFiles.forEach(function (f) {
+                    if (f) dt.items.add(f);
+                });
+                imagesInput.files = dt.files;
+                if (submitBtn) submitBtn.textContent = 'Saving...';
+                formEl.submit();
+            })
+            .catch(function () {
+                if (submitBtn) {
+                    submitBtn.disabled = false;
+                    submitBtn.textContent = originalText || 'Save vehicle';
+                }
+                delete formEl.dataset.compressedOnce;
+            });
+    });
+})();
+</script>
 {% endblock %}

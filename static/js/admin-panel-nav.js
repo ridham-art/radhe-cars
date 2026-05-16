@@ -25,7 +25,7 @@
         },
         car_form: {
             css: ['css/admin-panel-dashboard.css', 'css/admin-panel-car-form.css'],
-            scripts: [{ url: 'js/admin-panel-car-form.js' }],
+            scripts: [],
         },
         requests: {
             css: [

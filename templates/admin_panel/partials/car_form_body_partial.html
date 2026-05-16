@@ -1,4 +1,4 @@
-<div class="cf-page" data-cf-config="{{ cf_config_json|escape }}">
+<div class="cf-page">
     <div class="cf-page-head">
         <h1>{% if object %}Edit vehicle{% else %}Add vehicle to inventory{% endif %}</h1>
         <p class="sub">{% if object %}Update listing details, photos, and status.{% else %}Enter vehicle details — variants load from Vehicle Master when available.{% endif %}</p>
@@ -12,7 +12,7 @@
                     <h3>Current images</h3>
                     <p>Choose primary or remove individual photos.</p>
                 </div>
-                <form method="post" action="{% url 'admin_panel:car_image_delete_all' car_pk=object.pk %}" data-confirm="Remove all images for this car?">
+                <form method="post" action="{% url 'admin_panel:car_image_delete_all' car_pk=object.pk %}" data-ap-full data-confirm="Remove all images for this car?">
                     {% csrf_token %}
                     {% if return_to_sell %}<input type="hidden" name="return" value="sell">{% endif %}
                     <button type="submit" class="cf-btn-danger-outline">Remove all images</button>
@@ -34,7 +34,7 @@
                             <input type="radio" form="car-admin-form" name="primary_image_choice" value="existing:{{ img.pk }}" class="cf-checkbox"{% if img.is_primary %} checked{% endif %}>
                             Primary
                         </label>
-                        <form method="post" action="{% url 'admin_panel:car_image_delete' car_pk=object.pk image_pk=img.pk %}" data-confirm="Remove this image?">
+                        <form method="post" action="{% url 'admin_panel:car_image_delete' car_pk=object.pk image_pk=img.pk %}" data-ap-full data-confirm="Remove this image?">
                             {% csrf_token %}
                             {% if return_to_sell %}<input type="hidden" name="return" value="sell">{% endif %}
                             <button type="submit" class="cf-btn-remove">Remove</button>
@@ -47,7 +47,7 @@
     </section>
     {% endif %}
 
-    <form id="car-admin-form" method="post" enctype="multipart/form-data" class="cf-form">
+    <form id="car-admin-form" method="post" enctype="multipart/form-data" class="cf-form" data-ap-full>
         {% csrf_token %}
         {% if return_to_sell %}<input type="hidden" name="return" value="sell">{% endif %}
 
@@ -83,7 +83,7 @@
                     <div class="cf-field full">
                         <label for="cf-variant-select">Variant (from master)</label>
                         <div class="cf-variant-row">
-                            <select id="cf-variant-select" class="cf-input" disabled aria-describedby="cf-variant-hint">
+                            <select id="cf-variant-select" class="cf-input" aria-describedby="cf-variant-hint" disabled>
                                 <option value="">— Select brand, model &amp; transmission —</option>
                             </select>
                             <p id="cf-variant-hint" class="cf-hint">Or type a custom name below if the variant is not listed.</p>
