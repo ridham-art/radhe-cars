@@ -69,7 +69,7 @@
                         {% if form.brand.errors %}<div class="cf-errors">{{ form.brand.errors }}</div>{% endif %}
                         {{ form.brand }}
                     </div>
-                    <div class="cf-field">
+                    <div class="cf-field cf-select-expand">
                         <label for="{{ form.model.id_for_label }}">{{ form.model.label }}</label>
                         {% if form.model.errors %}<div class="cf-errors">{{ form.model.errors }}</div>{% endif %}
                         {{ form.model }}
@@ -80,7 +80,7 @@
                         {{ form.transmission }}
                         <p class="cf-hint">Pick transmission before choosing a variant from Vehicle Master.</p>
                     </div>
-                    <div class="cf-field full">
+                    <div class="cf-field full cf-select-expand">
                         <label for="cf-variant-select">Variant (from master)</label>
                         <div class="cf-variant-row">
                             <select id="cf-variant-select" class="cf-input" aria-describedby="cf-variant-hint">

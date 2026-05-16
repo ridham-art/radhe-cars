@@ -20,6 +20,46 @@
     var variantSelect = document.getElementById('cf-variant-select');
     if (!brandEl || !modelEl) return;
 
+    function collapseSelect(el) {
+        if (!el) return;
+        el.size = 1;
+        el.classList.remove('cf-select-open');
+    }
+
+    function bindDownwardSelect(el, maxRows) {
+        if (!el || el.dataset.cfDownwardBound === '1') return;
+        el.dataset.cfDownwardBound = '1';
+        maxRows = maxRows || 10;
+
+        function expand() {
+            if (el.disabled) return;
+            var n = el.options.length;
+            if (n <= 1) return;
+            el.size = Math.min(maxRows, n);
+            el.classList.add('cf-select-open');
+        }
+
+        el.addEventListener('mousedown', function (e) {
+            if (el.size === 1) {
+                e.preventDefault();
+                expand();
+                el.focus();
+            }
+        });
+        el.addEventListener('focus', expand);
+        el.addEventListener('blur', function () {
+            setTimeout(function () {
+                collapseSelect(el);
+            }, 120);
+        });
+        el.addEventListener('change', function () {
+            collapseSelect(el);
+        });
+        el.addEventListener('keydown', function (e) {
+            if (e.key === 'Escape') collapseSelect(el);
+        });
+    }
+
     function apiTransmission() {
         if (!transEl || !transEl.value) return '';
         return transEl.value === 'AT' ? 'AUTOMATIC' : 'MANUAL';
@@ -49,6 +89,7 @@
             variantSelect.appendChild(opt);
         });
         variantSelect.disabled = !modelEl.value;
+        collapseSelect(variantSelect);
     }
 
     function applyVariantMeta(opt) {
@@ -89,6 +130,7 @@
     function loadModels(brandId, selectedId) {
         if (!brandId) {
             modelEl.innerHTML = '<option value="">---------</option>';
+            collapseSelect(modelEl);
             setVariantSelectOptions([]);
             return;
         }
@@ -108,10 +150,15 @@
                     if (selectedId && String(m.id) === String(selectedId)) opt.selected = true;
                     modelEl.appendChild(opt);
                 });
+                collapseSelect(modelEl);
                 loadVariants();
             })
             .catch(function () {});
     }
+
+    bindDownwardSelect(modelEl, 10);
+    if (variantSelect) bindDownwardSelect(variantSelect, 8);
+    bindDownwardSelect(brandEl, 8);
 
     brandEl.addEventListener('change', function () {
         loadModels(this.value, null);

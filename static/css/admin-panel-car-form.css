@@ -1,8 +1,9 @@
 /* Car add/edit — sectioned full-page form (AutoVault preview) */
 
 .cf-page {
-    max-width: 920px;
-    margin: 0 auto;
+    width: 100%;
+    max-width: none;
+    margin: 0;
 }
 
 .cf-form {
@@ -16,7 +17,7 @@
     border: 1px solid var(--border);
     border-radius: var(--radius);
     box-shadow: var(--shadow-sm);
-    overflow: hidden;
+    overflow: visible;
 }
 
 .cf-section-head {
@@ -97,6 +98,21 @@
     background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%236b7280' stroke-width='2.2' stroke-linecap='round' stroke-linejoin='round'><path d='M6 9l6 6 6-6'/></svg>");
     background-repeat: no-repeat;
     background-position: right 10px center;
+}
+
+/* Long lists: expand downward in-page instead of OS popup flipping up */
+.cf-select-expand select.cf-input.cf-select-open {
+    max-height: 240px;
+    overflow-y: auto;
+    background-color: #fff;
+    border-color: var(--border-strong);
+    box-shadow: 0 8px 24px rgba(15, 20, 25, 0.1);
+    background-image: none;
+    padding-right: 12px;
+}
+
+.cf-select-expand select.cf-input.cf-select-open option {
+    padding: 6px 12px;
 }
 
 .cf-input:focus,
