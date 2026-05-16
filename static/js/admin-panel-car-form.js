@@ -12,6 +12,69 @@
         previewObjectUrls = [];
     }
 
+    function applyCarFormPartial(html) {
+        var root = document.querySelector('[data-ap-car-form-root]');
+        if (!root || !html) return false;
+        root.innerHTML = html;
+        if (window.AdminPanel) {
+            window.AdminPanel.runDestroy('car_form');
+            window.AdminPanel.runInit('car_form');
+        }
+        return true;
+    }
+
+    function handleCarAjaxResponse(data) {
+        if (!data || typeof data !== 'object') {
+            window.location.reload();
+            return Promise.resolve();
+        }
+        if (data.partialHtml) {
+            applyCarFormPartial(data.partialHtml);
+            if (data.message && window.AdminPanelAjax) {
+                window.AdminPanelAjax.showMessage(data.message, data.level || 'error');
+            }
+            return Promise.resolve();
+        }
+        if (data.ok === false) {
+            var err = new Error(data.message || 'Request failed');
+            err.payload = data;
+            return Promise.reject(err);
+        }
+        if (data.message && window.AdminPanelAjax) {
+            window.AdminPanelAjax.showMessage(data.message, data.level || 'success');
+        }
+        if (data.reload && window.AdminPanel && window.AdminPanel.navigateTo) {
+            return window.AdminPanel.navigateTo(data.reload);
+        }
+        if (data.redirect && window.AdminPanel && window.AdminPanel.navigateTo) {
+            return window.AdminPanel.navigateTo(data.redirect);
+        }
+        return Promise.resolve();
+    }
+
+    function submitCarFormAjax(formEl, submitBtn, originalText) {
+        if (!window.AdminPanelAjax) {
+            formEl.submit();
+            return Promise.resolve();
+        }
+        var body = new FormData(formEl);
+        return window.AdminPanelAjax.fetchPost(formEl.action, body, { accept: 'application/json' })
+            .then(handleCarAjaxResponse)
+            .catch(function (err) {
+                var msg = (err && err.message) || 'Could not save. Please try again.';
+                if (window.AdminPanelAjax) {
+                    window.AdminPanelAjax.showMessage(msg, 'error');
+                }
+            })
+            .finally(function () {
+                delete formEl.dataset.compressedOnce;
+                if (submitBtn) {
+                    submitBtn.disabled = false;
+                    if (originalText) submitBtn.textContent = originalText;
+                }
+            });
+    }
+
     function init() {
         destroy();
 
@@ -205,7 +268,7 @@
         });
     }
 
-    if (!formEl || !imagesInput) return;
+    if (!formEl) return;
 
     var compressionMeta = [];
 
@@ -356,21 +419,39 @@
         });
     }
 
-    imagesInput.addEventListener('change', function () {
-        compressionMeta = [];
-        renderNewImagePreview();
-    });
+    if (imagesInput) {
+        imagesInput.addEventListener('change', function () {
+            compressionMeta = [];
+            renderNewImagePreview();
+        });
+    }
 
     formEl.addEventListener('submit', function (e) {
-        if (formEl.dataset.compressedOnce === '1') return;
-        if (!imagesInput.files || !imagesInput.files.length) return;
-        if (typeof DataTransfer === 'undefined') return;
-
         e.preventDefault();
-        formEl.dataset.compressedOnce = '1';
+        e.stopPropagation();
 
         var submitBtn = formEl.querySelector('button[type="submit"]');
         var originalText = submitBtn ? submitBtn.textContent : '';
+
+        function finishSave() {
+            if (submitBtn) submitBtn.textContent = 'Saving...';
+            return submitCarFormAjax(formEl, submitBtn, originalText || 'Save vehicle');
+        }
+
+        if (!imagesInput || !imagesInput.files || !imagesInput.files.length) {
+            if (submitBtn) {
+                submitBtn.disabled = true;
+                submitBtn.textContent = 'Saving...';
+            }
+            finishSave();
+            return;
+        }
+        if (typeof DataTransfer === 'undefined') {
+            if (submitBtn) submitBtn.disabled = true;
+            finishSave();
+            return;
+        }
+
         if (submitBtn) {
             submitBtn.disabled = true;
             submitBtn.textContent = 'Compressing images...';
@@ -389,15 +470,13 @@
                 });
                 imagesInput.files = dt.files;
                 renderNewImagePreview(selectedBeforeCompress);
-                if (submitBtn) submitBtn.textContent = 'Saving...';
-                formEl.submit();
+                return finishSave();
             })
             .catch(function () {
                 if (submitBtn) {
                     submitBtn.disabled = false;
                     submitBtn.textContent = originalText || 'Save vehicle';
                 }
-                delete formEl.dataset.compressedOnce;
             });
     });
     }

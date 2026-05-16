@@ -55,7 +55,11 @@ from cars.admin_panel.forms import (
 )
 from cars.admin_panel import csv_io
 from cars.admin_panel.cache_utils import get_cached_nav_counts, invalidate_admin_nav_counts_cache
-from cars.admin_panel.mixins import AdminListPartialMixin, admin_ajax_response
+from cars.admin_panel.mixins import (
+    AdminListPartialMixin,
+    CarFormAjaxMixin,
+    admin_ajax_response,
+)
 
 logger = logging.getLogger('cars.admin_panel.auth')
 
@@ -820,12 +824,12 @@ class CarUpdateView(StaffRequiredMixin, AdminPanelContextMixin, UpdateView):
         _save_car_images_with_primary(self.request, car)
 
 
-class CarCreatePreviewView(CarCreateView):
+class CarCreatePreviewView(CarFormAjaxMixin, CarCreateView):
     form_class = CarStaffFormPreview
     template_name = 'admin_panel/car_form_new.html'
 
 
-class CarUpdatePreviewView(CarUpdateView):
+class CarUpdatePreviewView(CarFormAjaxMixin, CarUpdateView):
     form_class = CarStaffFormPreview
     template_name = 'admin_panel/car_form_new.html'
 
@@ -846,11 +850,15 @@ class CarImageDeleteView(StaffRequiredMixin, View):
             first = CarImage.objects.filter(car_id=car_pk).order_by('id').first()
             if first:
                 CarImage.objects.filter(pk=first.pk).update(is_primary=True)
-        messages.success(request, 'Image removed.')
         url = reverse('admin_panel:car_edit', kwargs={'pk': car_pk})
         if request.POST.get('return') == 'sell':
             url = f'{url}?{urlencode({"return": "sell"})}'
-        return HttpResponseRedirect(url)
+        return admin_ajax_response(
+            request,
+            redirect_to=url,
+            message='Image removed.',
+            reload_url=request.build_absolute_uri(url),
+        )
 
 
 class CarImageDeleteAllView(StaffRequiredMixin, View):
@@ -860,18 +868,26 @@ class CarImageDeleteAllView(StaffRequiredMixin, View):
         car = get_object_or_404(Car, pk=car_pk)
         images = list(car.images.all())
         if not images:
-            messages.info(request, 'No images to remove.')
+            msg = 'No images to remove.'
+            level = 'info'
         else:
             for car_image in images:
                 if car_image.image and getattr(car_image.image, 'name', None):
                     _safe_delete_stored_file(car_image.image.name)
             CarImage.objects.filter(car_id=car.pk).delete()
-            messages.success(request, f'Removed all images ({len(images)}).')
+            msg = f'Removed all images ({len(images)}).'
+            level = 'success'
 
         url = reverse('admin_panel:car_edit', kwargs={'pk': car_pk})
         if request.POST.get('return') == 'sell':
             url = f'{url}?{urlencode({"return": "sell"})}'
-        return HttpResponseRedirect(url)
+        return admin_ajax_response(
+            request,
+            redirect_to=url,
+            message=msg,
+            level=level,
+            reload_url=request.build_absolute_uri(url),
+        )
 
 
 class CarDeleteView(StaffRequiredMixin, AdminPanelContextMixin, DeleteView):

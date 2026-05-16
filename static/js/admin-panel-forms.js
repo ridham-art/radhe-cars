@@ -3,6 +3,7 @@
 
     function isAjaxForm(form) {
         if (!form || form.method.toLowerCase() !== 'post') return false;
+        if (form.id === 'car-admin-form') return false;
         if (form.id === 'ap-logout-form' || form.id === 'reject-form') return false;
         if (form.hasAttribute('data-ap-full')) return false;
         var action = form.getAttribute('action') || window.location.href;
@@ -18,6 +19,9 @@
         if (!url || !window.AdminPanelAjax) return Promise.resolve();
         var root = document.querySelector('[data-ap-partial-root]');
         if (!root) {
+            if (document.querySelector('[data-ap-car-form-root]') && window.AdminPanel && window.AdminPanel.navigateTo) {
+                return window.AdminPanel.navigateTo(url);
+            }
             if (window.AdminPanel && window.AdminPanel.navigateTo) {
                 window.AdminPanel.navigateTo(url);
             } else {
