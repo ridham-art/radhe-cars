@@ -4,7 +4,6 @@ import os
 import re
 import tempfile
 from datetime import datetime, time, timedelta
-from calendar import month_abbr
 from urllib.parse import urlencode
 
 from django.contrib import messages
@@ -15,7 +14,6 @@ from django.http import Http404, HttpResponseRedirect
 from django.contrib.auth.mixins import LoginRequiredMixin, UserPassesTestMixin
 from django.core.paginator import EmptyPage
 from django.db.models import Q, Count, Prefetch
-from django.db.models.functions import TruncMonth
 from django.http import HttpResponse, JsonResponse
 from django.shortcuts import get_object_or_404, redirect, render
 from django.urls import reverse, reverse_lazy
@@ -54,7 +52,12 @@ from cars.admin_panel.forms import (
     VM_FUEL_OPTIONS,
 )
 from cars.admin_panel import csv_io
-from cars.admin_panel.cache_utils import get_cached_nav_counts, invalidate_admin_nav_counts_cache
+from cars.admin_panel.cache_utils import (
+    get_cached_dashboard_stats,
+    get_cached_inventory_tab_counts,
+    get_cached_nav_counts,
+    invalidate_admin_nav_counts_cache,
+)
 from cars.admin_panel.mixins import AdminListPartialMixin, admin_ajax_response
 
 logger = logging.getLogger('cars.admin_panel.auth')
@@ -360,28 +363,7 @@ class SafePagePaginationMixin:
 class DashboardStatsMixin:
     def get_context_data(self, **kwargs):
         ctx = super().get_context_data(**kwargs)
-        User = get_user_model()
-        car_stats = Car.objects.aggregate(
-            total_cars=Count('pk'),
-            active_cars=Count('pk', filter=~Q(status='SOLD')),
-            sold_cars=Count('pk', filter=Q(status='SOLD')),
-        )
-        inq_stats = Inquiry.objects.aggregate(
-            total_inquiries=Count('pk'),
-            unread_inquiries=Count('pk', filter=Q(is_read=False)),
-        )
-        wish_stats = Wishlist.objects.filter(user__isnull=False).aggregate(
-            total_wishlist_saves=Count('pk'),
-            customers_with_wishlist=Count('user_id', distinct=True),
-        )
-        ctx.update(
-            {
-                **car_stats,
-                **inq_stats,
-                'total_customers': User.objects.filter(is_staff=False).count(),
-                **wish_stats,
-            }
-        )
+        ctx.update(get_cached_dashboard_stats())
         return ctx
 
 
@@ -392,41 +374,6 @@ _CAR_STATUS_BADGE = {
     'ON_HOLD': ('hold', 'On hold'),
     'REJECTED': ('draft', 'Draft'),
 }
-
-_MAKE_CHART_COLORS = ['#2563eb', '#0f9d58', '#c8881a', '#6d4aff', '#0ea5e9']
-
-
-def _month_window(count=6):
-    """Return (month_starts, labels) for the last `count` calendar months."""
-    now = timezone.localtime(timezone.now())
-    year, month = now.year, now.month
-    starts = []
-    for _ in range(count):
-        starts.append(timezone.make_aware(datetime(year, month, 1)))
-        month -= 1
-        if month == 0:
-            month = 12
-            year -= 1
-    starts.reverse()
-    labels = [month_abbr[s.month] for s in starts]
-    return starts, labels
-
-
-def _delta_dir(current, previous):
-    if current > previous:
-        return 'up'
-    if current < previous:
-        return 'down'
-    return 'flat'
-
-
-def _pct_change(current, previous):
-    if previous == 0:
-        return '+100%' if current else '0%'
-    pct = ((current - previous) / previous) * 100
-    sign = '+' if pct >= 0 else ''
-    return f'{sign}{pct:.0f}%'
-
 
 def _car_seller_display(car):
     if car.contact_name:
@@ -444,75 +391,8 @@ def _car_meta_line(car):
 class DashboardPreviewMixin(DashboardStatsMixin):
     def get_context_data(self, **kwargs):
         ctx = super().get_context_data(**kwargs)
-        now = timezone.now()
-        today = timezone.localdate()
-
-        month_start = timezone.make_aware(datetime(today.year, today.month, 1))
-        if today.month == 1:
-            prev_month_start = timezone.make_aware(datetime(today.year - 1, 12, 1))
-        else:
-            prev_month_start = timezone.make_aware(datetime(today.year, today.month - 1, 1))
-
-        last_30 = now - timedelta(days=30)
-        prev_30_start = now - timedelta(days=60)
-        last_24h = now - timedelta(hours=24)
-
-        sold_this_month = Car.objects.filter(
-            status='SOLD', sold_at__gte=month_start
-        ).count()
-        sold_last_month = Car.objects.filter(
-            status='SOLD', sold_at__gte=prev_month_start, sold_at__lt=month_start
-        ).count()
-
-        pending_total = Car.objects.filter(
-            submit_via_sell_form=True, status='PENDING'
-        ).count()
-        pending_new_24h = Car.objects.filter(
-            submit_via_sell_form=True, status='PENDING', created_at__gte=last_24h
-        ).count()
-
-        added_last_30 = Car.objects.filter(created_at__gte=last_30).count()
-        added_prev_30 = Car.objects.filter(
-            created_at__gte=prev_30_start, created_at__lt=last_30
-        ).count()
-
-        total_cars = ctx.get('total_cars') or 0
-        active_cars = ctx.get('active_cars') or 0
-        stock_pct = (active_cars / total_cars * 100) if total_cars else 0
-
-        month_starts, month_labels = _month_window(6)
-        sold_by_month = {
-            row['month']: row['count']
-            for row in (
-                Car.objects.filter(status='SOLD', sold_at__gte=month_starts[0])
-                .annotate(month=TruncMonth('sold_at'))
-                .values('month')
-                .annotate(count=Count('pk'))
-            )
-        }
-        sold_series = [sold_by_month.get(start, 0) for start in month_starts]
-        avg_sold = sum(sold_series) / len(sold_series) if sold_series else 0
-        ref_target = max(1, round(avg_sold)) if avg_sold else 1
-        sales_chart = {
-            'labels': month_labels,
-            'sold': sold_series,
-            'target': [ref_target] * len(month_labels),
-        }
-
-        brand_rows = list(
-            Car.objects.filter(~Q(status='SOLD'))
-            .values('brand__name')
-            .annotate(value=Count('pk'))
-            .order_by('-value')[:5]
-        )
-        makes_total = sum(row['value'] for row in brand_rows)
-        makes_chart = {
-            'labels': [row['brand__name'] for row in brand_rows],
-            'values': [row['value'] for row in brand_rows],
-            'colors': _MAKE_CHART_COLORS[: len(brand_rows)],
-            'total': makes_total,
-            'make_count': len(brand_rows),
-        }
+        sales_chart = ctx.pop('sales_chart', {})
+        makes_chart = ctx.pop('makes_chart', {})
 
         recent_qs = (
             Car.objects.select_related('brand', 'model', 'seller')
@@ -557,18 +437,6 @@ class DashboardPreviewMixin(DashboardStatsMixin):
 
         ctx.update(
             {
-                'dashboard_date': today.strftime('%d %b %Y'),
-                'dashboard_updated': timezone.localtime(now).strftime('%d %b, %H:%M'),
-                'sold_this_month': sold_this_month,
-                'pending_sell_total': pending_total,
-                'stat_total_delta': f'+{added_last_30}' if added_last_30 else '0',
-                'stat_total_delta_dir': _delta_dir(added_last_30, added_prev_30),
-                'stat_stock_delta': f'{stock_pct:.1f}%',
-                'stat_stock_delta_dir': 'flat',
-                'stat_sold_delta': _pct_change(sold_this_month, sold_last_month),
-                'stat_sold_delta_dir': _delta_dir(sold_this_month, sold_last_month),
-                'stat_pending_delta': f'+{pending_new_24h}' if pending_new_24h else '0',
-                'stat_pending_delta_dir': 'up' if pending_new_24h else 'flat',
                 'sales_chart_json': json.dumps(sales_chart),
                 'makes_chart_json': json.dumps(makes_chart),
                 'recent_listings': recent_listings,
@@ -742,8 +610,9 @@ class CarListPreviewView(
         ctx['filter_year'] = self.request.GET.get('year', '')
         ctx['filter_sort'] = self.request.GET.get('sort', 'date-desc')
         ctx['active_tab'] = tab
-        ctx['stock_count'] = base.exclude(status='SOLD').count()
-        ctx['sold_count'] = base.filter(status='SOLD').count()
+        tab_counts = get_cached_inventory_tab_counts()
+        ctx['stock_count'] = tab_counts['stock_count']
+        ctx['sold_count'] = tab_counts['sold_count']
         ctx['tab_total'] = ctx['sold_count'] if tab == 'sold' else ctx['stock_count']
         ctx['car_list_querystring'] = car_list_querystring_except_page(self.request)
         filt = self.request.GET.copy()

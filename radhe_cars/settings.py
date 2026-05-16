@@ -1,5 +1,6 @@
 from pathlib import Path
 import os
+import sys
 import socket
 import dj_database_url
 from dotenv import load_dotenv
@@ -45,6 +46,8 @@ load_dotenv(BASE_DIR / '.env')
 
 # Development: set DEBUG=True in .env. Production (Lightsail): DEBUG=False or omit.
 DEBUG = os.environ.get('DEBUG', 'False').lower() in ('true', '1', 'yes')
+if 'test' in sys.argv:
+    DEBUG = False
 
 # -----------------------------------------------------------------------------
 # Required secrets (never commit real values)
@@ -126,6 +129,7 @@ AUTHENTICATION_BACKENDS = [
 ]
 
 ACCOUNT_LOGIN_METHODS = {'email'}
+ACCOUNT_EMAIL_REQUIRED = True
 ACCOUNT_SIGNUP_FIELDS = ['email*', 'password1*', 'password2*']
 ACCOUNT_EMAIL_VERIFICATION = 'optional'
 ACCOUNT_PREVENT_ENUMERATION = False
