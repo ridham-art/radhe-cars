@@ -14,11 +14,82 @@
 (function () {
     var brandEl = document.getElementById('id_brand');
     var modelEl = document.getElementById('id_model');
+    var transEl = document.getElementById('id_transmission');
+    var fuelEl = document.getElementById('id_fuel_type');
+    var variantEl = document.getElementById('id_variant');
+    var variantSelect = document.getElementById('cf-variant-select');
     if (!brandEl || !modelEl) return;
+
+    function apiTransmission() {
+        if (!transEl || !transEl.value) return '';
+        return transEl.value === 'AT' ? 'AUTOMATIC' : 'MANUAL';
+    }
+
+    function setVariantSelectOptions(variants) {
+        if (!variantSelect) return;
+        var current = variantEl ? variantEl.value.trim() : '';
+        variantSelect.innerHTML = '';
+        var placeholder = document.createElement('option');
+        placeholder.value = '';
+        placeholder.textContent = variants.length
+            ? '— Pick a variant —'
+            : '— No variants (type custom below) —';
+        variantSelect.appendChild(placeholder);
+        variants.forEach(function (item) {
+            var name = typeof item === 'string' ? item : item && item.name;
+            if (!name) return;
+            var opt = document.createElement('option');
+            opt.value = name;
+            opt.textContent = name;
+            if (item && typeof item === 'object') {
+                if (item.fuel_type) opt.dataset.fuel = item.fuel_type;
+                if (item.transmission) opt.dataset.trans = item.transmission;
+            }
+            if (current && name === current) opt.selected = true;
+            variantSelect.appendChild(opt);
+        });
+        variantSelect.disabled = !modelEl.value;
+    }
+
+    function applyVariantMeta(opt) {
+        if (!opt) return;
+        var fuel = opt.dataset && opt.dataset.fuel;
+        var trans = opt.dataset && opt.dataset.trans;
+        if (fuel && fuelEl) fuelEl.value = fuel;
+        if (trans === 'Manual' && transEl) transEl.value = 'MT';
+        if (trans === 'Automatic' && transEl) transEl.value = 'AT';
+    }
+
+    function loadVariants() {
+        if (!variantSelect) return;
+        var modelId = modelEl.value;
+        if (!modelId) {
+            setVariantSelectOptions([]);
+            return;
+        }
+        var url = '/api/variants/?model_id=' + encodeURIComponent(modelId);
+        var t = apiTransmission();
+        if (t) url += '&transmission=' + encodeURIComponent(t);
+
+        variantSelect.disabled = true;
+        variantSelect.innerHTML = '<option value="">Loading variants…</option>';
+
+        fetch(url, { credentials: 'same-origin', headers: { Accept: 'application/json' } })
+            .then(function (r) {
+                return r.json();
+            })
+            .then(function (rows) {
+                setVariantSelectOptions(rows || []);
+            })
+            .catch(function () {
+                setVariantSelectOptions([]);
+            });
+    }
 
     function loadModels(brandId, selectedId) {
         if (!brandId) {
             modelEl.innerHTML = '<option value="">---------</option>';
+            setVariantSelectOptions([]);
             return;
         }
         fetch('/admin-panel/api/brands/' + brandId + '/models/', {
@@ -37,6 +108,7 @@
                     if (selectedId && String(m.id) === String(selectedId)) opt.selected = true;
                     modelEl.appendChild(opt);
                 });
+                loadVariants();
             })
             .catch(function () {});
     }
@@ -44,6 +116,41 @@
     brandEl.addEventListener('change', function () {
         loadModels(this.value, null);
     });
+
+    modelEl.addEventListener('change', loadVariants);
+    if (transEl) {
+        transEl.addEventListener('change', loadVariants);
+    }
+
+    if (variantSelect) {
+        variantSelect.addEventListener('change', function () {
+            var opt = variantSelect.options[variantSelect.selectedIndex];
+            if (!opt || !opt.value) return;
+            if (variantEl) variantEl.value = opt.value;
+            applyVariantMeta(opt);
+        });
+    }
+
+    if (variantEl && variantSelect) {
+        variantEl.addEventListener('input', function () {
+            var v = this.value.trim();
+            if (!v) {
+                variantSelect.value = '';
+                return;
+            }
+            for (var i = 0; i < variantSelect.options.length; i++) {
+                if (variantSelect.options[i].value === v) {
+                    variantSelect.selectedIndex = i;
+                    return;
+                }
+            }
+            variantSelect.value = '';
+        });
+    }
+
+    if (!modelEl.value) {
+        setVariantSelectOptions([]);
+    }
 
     {% if object %}
     if (brandEl.value) {
