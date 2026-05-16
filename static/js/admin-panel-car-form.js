@@ -128,6 +128,39 @@
             });
     }
 
+    function fillModelOptions(modelEl, models, selectedId) {
+        var keep = selectedId ? String(selectedId) : String(modelEl.value || '');
+        modelEl.innerHTML = '';
+        (models || []).forEach(function (m) {
+            var opt = document.createElement('option');
+            opt.value = m.id;
+            opt.textContent = m.name;
+            if (keep && String(m.id) === keep) opt.selected = true;
+            modelEl.appendChild(opt);
+        });
+    }
+
+    function loadModelsFromEmbedded(root, brandId, selectedId) {
+        var cfg = readCfConfig(root);
+        var map = cfg.brandModels;
+        if (!map || typeof map !== 'object') return false;
+        var models = map[String(brandId)];
+        if (models === undefined) return false;
+
+        var modelEl = root.querySelector('#id_model');
+        if (!modelEl) return true;
+
+        fillModelOptions(modelEl, models, selectedId);
+        if (!models.length) {
+            showCfMessage(
+                'No models for this brand. Add models in Vehicle Master first.',
+                'info'
+            );
+        }
+        loadVariants(root);
+        return true;
+    }
+
     function loadModels(root, brandId, selectedId) {
         var brandEl = root.querySelector('#id_brand');
         var modelEl = root.querySelector('#id_model');
@@ -136,6 +169,10 @@
         if (!brandId) {
             modelEl.innerHTML = '<option value="">---------</option>';
             setVariantSelectOptions(root, []);
+            return;
+        }
+
+        if (loadModelsFromEmbedded(root, brandId, selectedId)) {
             return;
         }
 
@@ -148,17 +185,8 @@
                 return r.json();
             })
             .then(function (data) {
-                var keep = selectedId ? String(selectedId) : String(modelEl.value || '');
-                var models = data.models || [];
-                modelEl.innerHTML = '';
-                models.forEach(function (m) {
-                    var opt = document.createElement('option');
-                    opt.value = m.id;
-                    opt.textContent = m.name;
-                    if (keep && String(m.id) === keep) opt.selected = true;
-                    modelEl.appendChild(opt);
-                });
-                if (!models.length) {
+                fillModelOptions(modelEl, data.models || [], selectedId);
+                if (!(data.models || []).length) {
                     showCfMessage(
                         'No models for this brand. Add models in Vehicle Master first.',
                         'info'

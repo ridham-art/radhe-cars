@@ -1,0 +1,19 @@
+#!/usr/bin/env bash
+# Production deploy helper for Radhe Auto (run on the server after git pull).
+set -euo pipefail
+ROOT="$(cd "$(dirname "$0")/.." && pwd)"
+cd "$ROOT"
+
+echo "==> Installing dependencies (if requirements.txt exists)"
+if [ -f requirements.txt ]; then
+  pip install -r requirements.txt
+fi
+
+echo "==> Collecting static files (hashed filenames for cache busting)"
+python manage.py collectstatic --noinput
+
+echo "==> Migrations"
+python manage.py migrate --noinput
+
+echo "==> Done. Restart your app server (gunicorn / systemd), e.g.:"
+echo "    sudo systemctl restart gunicorn"

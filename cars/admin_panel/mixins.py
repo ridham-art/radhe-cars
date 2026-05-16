@@ -7,6 +7,8 @@ from django.http import JsonResponse
 from django.shortcuts import redirect
 from django.template.loader import render_to_string
 
+from cars.models import CarModel
+
 
 class AdminListPartialMixin:
     """Return a list partial when ?partial=list and X-Requested-With: XMLHttpRequest."""
@@ -51,6 +53,15 @@ def admin_ajax_response(request, *, redirect_to, message=None, level='success', 
     return redirect(redirect_to)
 
 
+def car_form_brand_models_map():
+    """brand_id (str) -> [{id, name}, ...] for client-side model dropdown (no API on change)."""
+    out = {}
+    for m in CarModel.objects.order_by('brand_id', 'name').values('id', 'name', 'brand_id'):
+        key = str(m['brand_id'])
+        out.setdefault(key, []).append({'id': m['id'], 'name': m['name']})
+    return out
+
+
 class CarFormAjaxMixin:
     """XHR save / validation for car add/edit (AutoVault preview templates)."""
 
@@ -64,7 +75,13 @@ class CarFormAjaxMixin:
         if obj and getattr(obj, 'pk', None):
             model_id = obj.model_id
             variant = obj.variant or ''
-        ctx['cf_config_json'] = json.dumps({'modelId': model_id, 'variant': variant})
+        ctx['cf_config_json'] = json.dumps(
+            {
+                'modelId': model_id,
+                'variant': variant,
+                'brandModels': car_form_brand_models_map(),
+            }
+        )
         return ctx
 
     def _is_car_form_xhr(self):
