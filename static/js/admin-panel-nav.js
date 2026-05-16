@@ -59,7 +59,7 @@
                 'css/admin-panel-dashboard.css',
                 'css/admin-panel-lists.css',
             ],
-            scripts: [],
+            scripts: [{ url: 'js/admin-panel-csv.js' }],
         },
     };
 

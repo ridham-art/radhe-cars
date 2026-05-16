@@ -62,7 +62,7 @@
 </div>
 <p style="font-size:13px;color:var(--text-muted);margin-bottom:16px">{{ preview_ok|length }} row(s) ready to import.</p>
 
-<form method="post" action="{% url 'admin_panel:csv_confirm' %}">
+<form id="csv-confirm-form" method="post" action="{% url 'admin_panel:csv_confirm' %}">
     {% csrf_token %}
     <input type="hidden" name="from_preview" value="1">
     {% if replace_all %}

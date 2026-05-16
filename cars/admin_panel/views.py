@@ -2194,9 +2194,60 @@ class CSVImportView(StaffRequiredMixin, AdminPanelContextMixin, FormView):
         return 'admin_panel:csv_preview'
 
 
+def _first_form_error(form):
+    for errors in form.errors.values():
+        if errors:
+            return str(errors[0])
+    return None
+
+
 class CSVImportPreviewView(CSVImportView):
     template_name = 'admin_panel/csv_import_new.html'
     form_class = CSVUploadFormPreview
+
+    def form_valid(self, form):
+        f = form.cleaned_data['file']
+        replace_all = form.cleaned_data.get('replace_all')
+        import_url = reverse('admin_panel:csv_import')
+        preview_url = reverse('admin_panel:csv_preview')
+        try:
+            rows = csv_io.parse_uploaded_csv(f)
+        except ValueError as e:
+            return admin_ajax_response(
+                self.request,
+                redirect_to=import_url,
+                message=str(e),
+                level='error',
+            )
+        ok, errs = csv_io.validate_and_preview_rows(rows)
+        fd, path = tempfile.mkstemp(suffix='.json')
+        with os.fdopen(fd, 'w', encoding='utf-8') as out:
+            json.dump(
+                {
+                    'ok': ok,
+                    'errors': errs,
+                    'replace_all': bool(replace_all),
+                },
+                out,
+            )
+        self.request.session['admin_csv_path'] = path
+        if errs and not ok:
+            return admin_ajax_response(
+                self.request,
+                redirect_to=preview_url,
+                message='CSV has errors; fix the file and try again.',
+                level='error',
+            )
+        return admin_ajax_response(self.request, redirect_to=preview_url)
+
+    def form_invalid(self, form):
+        msg = _first_form_error(form) or 'Please fix the errors below.'
+        return admin_ajax_response(
+            self.request,
+            redirect_to=reverse('admin_panel:csv_import'),
+            message=msg,
+            level='error',
+        )
 
 
 class CSVPreviewView(StaffRequiredMixin, AdminPanelContextMixin, TemplateView):
@@ -2226,28 +2277,30 @@ class CSVPreviewPreviewView(CSVPreviewView):
         return ctx
 
 
-def _csv_import_redirect(request):
-    return redirect('admin_panel:csv_import')
-
-
-def _csv_preview_redirect(request):
-    return redirect('admin_panel:csv_preview')
-
-
 class CSVConfirmView(StaffRequiredMixin, View):
     def post(self, request):
+        import_url = reverse('admin_panel:csv_import')
+        preview_url = reverse('admin_panel:csv_preview')
         path = request.session.get('admin_csv_path')
         if not path or not os.path.isfile(path):
-            messages.error(request, 'No import session; upload again.')
-            return _csv_import_redirect(request)
+            return admin_ajax_response(
+                request,
+                redirect_to=import_url,
+                message='No import session; upload again.',
+                level='error',
+            )
         with open(path, encoding='utf-8') as f:
             data = json.load(f)
         ok = data.get('ok', [])
         replace_all = data.get('replace_all', False)
         confirm = request.POST.get('confirm_replace')
         if replace_all and confirm != 'REPLACE':
-            messages.error(request, 'Type REPLACE to confirm deleting all cars.')
-            return _csv_preview_redirect(request)
+            return admin_ajax_response(
+                request,
+                redirect_to=preview_url,
+                message='Type REPLACE to confirm deleting all cars.',
+                level='error',
+            )
         try:
             result = csv_io.apply_import(ok, replace_all=replace_all)
         finally:
@@ -2256,14 +2309,20 @@ class CSVConfirmView(StaffRequiredMixin, View):
             except OSError:
                 pass
             request.session.pop('admin_csv_path', None)
-        messages.success(
-            request,
-            f"Import finished: {result['created']} created, {result['updated']} updated.",
+        msg = (
+            f"Import finished: {result['created']} created, {result['updated']} updated."
         )
+        level = 'success'
         if result['skipped']:
-            messages.warning(request, f"{len(result['skipped'])} row(s) skipped — see logs.")
             request.session['csv_skip_log'] = result['skipped'][:200]
-        return redirect('admin_panel:csv_import')
+            msg += f" {len(result['skipped'])} row(s) skipped — see logs below."
+            level = 'warning'
+        return admin_ajax_response(
+            request,
+            redirect_to=import_url,
+            message=msg,
+            level=level,
+        )
 
 
 class CSVExportView(StaffRequiredMixin, View):

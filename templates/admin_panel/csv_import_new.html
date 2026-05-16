@@ -50,7 +50,7 @@
             </div>
         </div>
 
-        <form method="post" enctype="multipart/form-data" class="csv-panel-form">
+        <form id="csv-upload-form" method="post" enctype="multipart/form-data" class="csv-panel-form">
             {% csrf_token %}
             {% for field in form %}
             <div class="csv-field{% if field.field.widget.input_type == 'file' %} csv-field--file{% endif %}">
