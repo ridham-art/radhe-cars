@@ -53,6 +53,13 @@
             ],
             scripts: [{ url: 'js/admin-panel-list.js' }],
         },
+        inquiry_detail: {
+            css: [
+                'css/admin-panel-dashboard.css',
+                'css/admin-panel-lists.css',
+            ],
+            scripts: [{ url: 'js/admin-panel-inquiry-detail.js' }],
+        },
         csv: {
             css: [
                 'css/admin-panel-car-form.css',
@@ -133,7 +140,9 @@
         if (rest === 'customers' || rest === 'customers-preview') return 'lists';
         if (rest === 'wishlists' || rest === 'wishlists-preview') return 'lists';
         if (rest === 'inquiries' || rest === 'inquiries-preview') return 'lists';
-        if (/^inquiries\/\d+$/.test(rest) || /^inquiries-preview\/\d+$/.test(rest)) return 'lists';
+        if (/^inquiries\/\d+$/.test(rest) || /^inquiries-preview\/\d+$/.test(rest)) {
+            return 'inquiry_detail';
+        }
         if (rest.indexOf('csv/') === 0) return 'csv';
         return null;
     }
@@ -401,6 +410,9 @@
                 active = true;
             }
             if (!active && linkKey === 'inventory' && pageKey === 'car_form') {
+                active = true;
+            }
+            if (!active && linkKey === 'lists' && pageKey === 'inquiry_detail') {
                 active = true;
             }
             a.classList.toggle('active', active);

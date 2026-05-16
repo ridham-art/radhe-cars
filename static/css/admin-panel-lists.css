@@ -155,7 +155,7 @@
     border-radius: var(--radius);
     box-shadow: var(--shadow-sm);
     padding: 22px;
-    max-width: 640px;
+    max-width: 720px;
 }
 
 .detail-card .head {
@@ -191,6 +191,27 @@
     letter-spacing: 0.04em;
 }
 
+.detail-contact-links a {
+    color: var(--blue);
+    text-decoration: none;
+    font-weight: 500;
+}
+
+.detail-contact-links a:hover {
+    text-decoration: underline;
+}
+
+.detail-contact-sep {
+    margin: 0 6px;
+    color: var(--text-faint);
+}
+
+.detail-car-meta {
+    margin: 6px 0 0;
+    font-size: 12px;
+    color: var(--text-muted);
+}
+
 .detail-related {
     margin: 16px 0;
     padding: 12px 14px;
@@ -198,6 +219,11 @@
     border: 1px solid var(--border);
     background: var(--surface-2);
     font-size: 13px;
+}
+
+.detail-related-label {
+    color: var(--text-muted);
+    margin-right: 6px;
 }
 
 .detail-related a {

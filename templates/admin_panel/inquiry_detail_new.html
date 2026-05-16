@@ -7,30 +7,41 @@
 <link rel="stylesheet" href="{% static 'css/admin-panel-lists.css' %}" data-ap-server="1">
 {% endblock %}
 {% block content %}
+<div class="page-head-list">
+    <h1>Inquiry detail</h1>
+    <p class="sub">Customer message{% if inquiry.car %} about a listing{% endif %}.</p>
+</div>
 <div class="detail-card">
     <div class="head">
         <div>
-            <h1 class="name">{{ inquiry.first_name }} {{ inquiry.last_name }}</h1>
-            <p class="meta">{{ inquiry.email }} · {{ inquiry.phone }}</p>
+            <h2 class="name">{{ inquiry.first_name }} {{ inquiry.last_name }}</h2>
+            <p class="detail-contact-links meta">
+                <a href="mailto:{{ inquiry.email }}">{{ inquiry.email }}</a>
+                <span class="detail-contact-sep">·</span>
+                <a href="tel:{{ inquiry.phone }}">{{ inquiry.phone }}</a>
+            </p>
+            {% if inquiry.car %}
+            <p class="detail-car-meta">{{ inquiry.car.brand.name }} {{ inquiry.car.model.name }}</p>
+            {% endif %}
         </div>
         <span class="detail-badge">{{ inquiry.get_subject_display|default:"General" }}</span>
     </div>
 
     {% if inquiry.car %}
     <div class="detail-related">
-        <span style="color:var(--text-muted)">Related listing:</span>
+        <span class="detail-related-label">Related listing:</span>
         <a href="{% url 'car_detail' inquiry.car.pk %}" target="_blank" rel="noopener">{{ inquiry.car.title }}</a>
     </div>
     {% endif %}
 
     <div class="detail-message">{{ inquiry.message }}</div>
-    <p class="detail-time">{{ inquiry.created_at }}</p>
+    <p class="detail-time">{{ inquiry.created_at|date:"M j, Y g:i A" }}</p>
 
     <div class="detail-actions">
-        <form method="post" action="{% url 'admin_panel:inquiry_delete' inquiry.pk %}">
+        <form id="inquiry-delete-form" method="post" action="{% url 'admin_panel:inquiry_delete' inquiry.pk %}">
             {% csrf_token %}
             <input type="hidden" name="next" value="{{ back_url }}">
-            <button type="submit" class="btn-table danger" onclick="return confirm('Delete this inquiry?');">Delete</button>
+            <button type="submit" class="btn-table danger" data-confirm="Delete this inquiry?">Delete</button>
         </form>
         <a href="{{ back_url }}" class="btn-table">Back to list</a>
     </div>

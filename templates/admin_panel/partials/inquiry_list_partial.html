@@ -41,7 +41,7 @@
                 <td class="num" style="color:var(--text-muted)">{{ i.created_at|date:"M j, Y H:i" }}</td>
                 <td>
                     <div class="row-actions">
-                        <a href="{% url 'admin_panel:inquiry_detail' i.pk %}" class="btn-table primary">View</a>
+                        <a href="{% url 'admin_panel:inquiry_detail' i.pk %}?next={{ inquiry_list_url|urlencode }}" class="btn-table primary">View</a>
                         {% if not i.is_read %}
                         <form method="post" action="{% url 'admin_panel:inquiry_mark_read' i.pk %}">
                             {% csrf_token %}

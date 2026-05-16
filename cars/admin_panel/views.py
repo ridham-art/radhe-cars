@@ -1348,24 +1348,28 @@ class InquiryDetailView(StaffRequiredMixin, AdminPanelContextMixin, DetailView):
         return response
 
 
-class InquiryDetailPreviewView(InquiryDetailView):
-    template_name = 'admin_panel/inquiry_detail_new.html'
-
-    def get_context_data(self, **kwargs):
-        ctx = super().get_context_data(**kwargs)
-        ctx['back_url'] = reverse('admin_panel:inquiry_list')
-        return ctx
-
-
-def _inquiry_redirect(request, fallback_name='admin_panel:inquiry_list'):
+def _safe_admin_next(request, fallback_name='admin_panel:inquiry_list'):
     from django.utils.http import url_has_allowed_host_and_scheme
 
     nxt = (request.POST.get('next') or request.GET.get('next') or '').strip()
     if nxt and url_has_allowed_host_and_scheme(
         nxt, allowed_hosts={request.get_host()}, require_https=request.is_secure()
     ):
-        return redirect(nxt)
-    return redirect(fallback_name)
+        return nxt
+    return reverse(fallback_name)
+
+
+class InquiryDetailPreviewView(InquiryDetailView):
+    template_name = 'admin_panel/inquiry_detail_new.html'
+
+    def get_context_data(self, **kwargs):
+        ctx = super().get_context_data(**kwargs)
+        ctx['back_url'] = _safe_admin_next(self.request)
+        return ctx
+
+
+def _inquiry_redirect(request, fallback_name='admin_panel:inquiry_list'):
+    return redirect(_safe_admin_next(request, fallback_name))
 
 
 class InquiryMarkReadView(StaffRequiredMixin, View):
@@ -1400,10 +1404,11 @@ class InquiryDeleteView(StaffRequiredMixin, View):
     def post(self, request, pk):
         Inquiry.objects.filter(pk=pk).delete()
         invalidate_admin_nav_counts_cache()
-        reload = request.build_absolute_uri(reverse('admin_panel:inquiry_list'))
+        next_url = _safe_admin_next(request)
+        reload = request.build_absolute_uri(next_url)
         return admin_ajax_response(
             request,
-            redirect_to=reverse('admin_panel:inquiry_list'),
+            redirect_to=next_url,
             message='Inquiry deleted.',
             reload_url=reload,
         )
