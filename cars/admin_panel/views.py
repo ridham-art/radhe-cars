@@ -640,6 +640,7 @@ class CarCreateView(StaffRequiredMixin, AdminPanelContextMixin, CreateView):
         messages.success(self.request, 'Car created successfully.')
         response = super().form_valid(form)
         self._save_images(self.object)
+        invalidate_admin_nav_counts_cache()
         return response
 
     def _save_images(self, car):
@@ -679,6 +680,7 @@ class CarUpdateView(StaffRequiredMixin, AdminPanelContextMixin, UpdateView):
         messages.success(self.request, 'Car updated successfully.')
         response = super().form_valid(form)
         self._save_images(self.object)
+        invalidate_admin_nav_counts_cache()
         return response
 
     def _save_images(self, car):
@@ -761,7 +763,9 @@ class CarDeleteView(StaffRequiredMixin, AdminPanelContextMixin, DeleteView):
 
     def delete(self, request, *args, **kwargs):
         messages.success(request, 'Car deleted.')
-        return super().delete(request, *args, **kwargs)
+        response = super().delete(request, *args, **kwargs)
+        invalidate_admin_nav_counts_cache()
+        return response
 
 
 class CarBulkDeleteView(StaffRequiredMixin, View):
@@ -770,8 +774,12 @@ class CarBulkDeleteView(StaffRequiredMixin, View):
         if not ids:
             messages.warning(request, 'No cars selected.')
             return redirect('admin_panel:car_list')
-        Car.objects.filter(pk__in=ids).exclude(submit_via_sell_form=True).delete()
-        messages.success(request, f'Deleted {len(ids)} car(s).')
+        deleted, _ = Car.objects.filter(pk__in=ids).exclude(
+            submit_via_sell_form=True
+        ).delete()
+        if deleted:
+            invalidate_admin_nav_counts_cache()
+        messages.success(request, f'Deleted {deleted} car(s).')
         return redirect('admin_panel:car_list')
 
 
@@ -2187,6 +2195,8 @@ class CSVConfirmView(StaffRequiredMixin, View):
             request.session['csv_skip_log'] = result['skipped'][:200]
             msg += f" {len(result['skipped'])} row(s) skipped — see logs below."
             level = 'warning'
+        if result.get('created') or result.get('updated'):
+            invalidate_admin_nav_counts_cache()
         return admin_ajax_response(
             request,
             redirect_to=import_url,

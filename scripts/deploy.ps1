@@ -17,3 +17,4 @@ if (-not $invCss) {
 }
 
 Write-Host "==> Done. Commit, push, then on the server run: bash scripts/deploy.sh"
+Write-Host "==> After deploy: hard refresh admin and run docs/admin-panel-qa.md checklist"

@@ -27,3 +27,5 @@ python manage.py migrate --noinput
 
 echo "==> Done. Restart your app server (gunicorn / systemd), e.g.:"
 echo "    sudo systemctl restart gunicorn"
+echo ""
+echo "==> After restart: hard refresh admin and run docs/admin-panel-qa.md checklist"

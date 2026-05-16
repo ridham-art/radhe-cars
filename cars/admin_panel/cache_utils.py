@@ -206,6 +206,7 @@ def get_cached_dashboard_stats():
 
 
 def invalidate_admin_nav_counts_cache():
+    """Clear nav badges, inventory tab counts, and dashboard stat caches."""
     cache.delete_many(
         [
             ADMIN_NAV_COUNTS_CACHE_KEY,
