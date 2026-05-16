@@ -1,4 +1,5 @@
 from django.urls import path
+from django.views.generic import RedirectView
 
 from cars.admin_panel import views
 
@@ -8,21 +9,12 @@ urlpatterns = [
     path('login/', views.StaffLoginView.as_view(), name='login'),
     path('logout/', views.StaffLogoutView.as_view(), name='logout'),
     path('', views.DashboardPreviewView.as_view(), name='dashboard'),
-    path('ui-preview/', views.ShellPreviewView.as_view(), name='shell_preview'),
-    path('dashboard-preview/', views.DashboardPreviewView.as_view(), name='dashboard_preview'),
     path('customers/', views.CustomerListPreviewView.as_view(), name='customer_list'),
-    path('customers-preview/', views.CustomerListPreviewView.as_view(), name='customer_list_preview'),
     path('wishlists/', views.WishlistListPreviewView.as_view(), name='wishlist_list'),
-    path('wishlists-preview/', views.WishlistListPreviewView.as_view(), name='wishlist_list_preview'),
     path(
         'sell-car-inquiries/',
         views.SellCarInquiryPreviewView.as_view(),
         name='sell_car_inquiry_list',
-    ),
-    path(
-        'listing-requests-preview/',
-        views.SellCarInquiryPreviewView.as_view(),
-        name='sell_car_inquiry_preview',
     ),
     path(
         'sell-car-inquiries/bulk-delete/',
@@ -45,16 +37,10 @@ urlpatterns = [
         name='sell_car_inquiry_toggle_featured',
     ),
     path('cars/', views.CarListPreviewView.as_view(), name='car_list'),
-    path('cars-preview/', views.CarListPreviewView.as_view(), name='car_list_preview'),
     path(
         'vehicle-master/',
         views.VehicleMasterPreviewView.as_view(),
         name='vehicle_master',
-    ),
-    path(
-        'vehicle-master-preview/',
-        views.VehicleMasterPreviewView.as_view(),
-        name='vehicle_master_preview',
     ),
     path(
         'vehicle-master/makes/add/',
@@ -133,13 +119,7 @@ urlpatterns = [
     ),
     path('cars/export/csv/', views.CarListCSVExportView.as_view(), name='car_list_csv'),
     path('cars/add/', views.CarCreatePreviewView.as_view(), name='car_add'),
-    path('cars-add-preview/', views.CarCreatePreviewView.as_view(), name='car_add_preview'),
     path('cars/<int:pk>/edit/', views.CarUpdatePreviewView.as_view(), name='car_edit'),
-    path(
-        'cars/<int:pk>/edit-preview/',
-        views.CarUpdatePreviewView.as_view(),
-        name='car_edit_preview',
-    ),
     path(
         'cars/<int:car_pk>/images/<int:image_pk>/delete/',
         views.CarImageDeleteView.as_view(),
@@ -166,24 +146,69 @@ urlpatterns = [
     path('carmodels/<int:pk>/edit/', views.CarModelUpdateView.as_view(), name='carmodel_edit'),
     path('carmodels/<int:pk>/delete/', views.CarModelDeleteView.as_view(), name='carmodel_delete'),
     path('inquiries/', views.InquiryListPreviewView.as_view(), name='inquiry_list'),
-    path('inquiries-preview/', views.InquiryListPreviewView.as_view(), name='inquiry_list_preview'),
     path(
         'inquiries/<int:pk>/',
         views.InquiryDetailPreviewView.as_view(),
         name='inquiry_detail',
     ),
-    path(
-        'inquiries-preview/<int:pk>/',
-        views.InquiryDetailPreviewView.as_view(),
-        name='inquiry_detail_preview',
-    ),
     path('inquiries/mark-all-read/', views.InquiryMarkAllReadView.as_view(), name='inquiry_mark_all_read'),
     path('inquiries/<int:pk>/mark-read/', views.InquiryMarkReadView.as_view(), name='inquiry_mark_read'),
     path('inquiries/<int:pk>/delete/', views.InquiryDeleteView.as_view(), name='inquiry_delete'),
     path('csv/import/', views.CSVImportPreviewView.as_view(), name='csv_import'),
-    path('csv/import-preview/', views.CSVImportPreviewView.as_view(), name='csv_import_preview'),
     path('csv/preview/', views.CSVPreviewPreviewView.as_view(), name='csv_preview'),
-    path('csv/preview-preview/', views.CSVPreviewPreviewView.as_view(), name='csv_preview_preview'),
     path('csv/confirm/', views.CSVConfirmView.as_view(), name='csv_confirm'),
     path('csv/export/', views.CSVExportView.as_view(), name='csv_export'),
+    # Legacy preview URL aliases (bookmarks)
+    path(
+        'ui-preview/',
+        RedirectView.as_view(pattern_name='admin_panel:dashboard', permanent=False),
+    ),
+    path(
+        'dashboard-preview/',
+        RedirectView.as_view(pattern_name='admin_panel:dashboard', permanent=False),
+    ),
+    path(
+        'customers-preview/',
+        RedirectView.as_view(pattern_name='admin_panel:customer_list', permanent=False),
+    ),
+    path(
+        'wishlists-preview/',
+        RedirectView.as_view(pattern_name='admin_panel:wishlist_list', permanent=False),
+    ),
+    path(
+        'listing-requests-preview/',
+        RedirectView.as_view(pattern_name='admin_panel:sell_car_inquiry_list', permanent=False),
+    ),
+    path(
+        'cars-preview/',
+        RedirectView.as_view(pattern_name='admin_panel:car_list', permanent=False),
+    ),
+    path(
+        'vehicle-master-preview/',
+        RedirectView.as_view(pattern_name='admin_panel:vehicle_master', permanent=False),
+    ),
+    path(
+        'cars-add-preview/',
+        RedirectView.as_view(pattern_name='admin_panel:car_add', permanent=False),
+    ),
+    path(
+        'cars/<int:pk>/edit-preview/',
+        RedirectView.as_view(pattern_name='admin_panel:car_edit', permanent=False),
+    ),
+    path(
+        'inquiries-preview/',
+        RedirectView.as_view(pattern_name='admin_panel:inquiry_list', permanent=False),
+    ),
+    path(
+        'inquiries-preview/<int:pk>/',
+        RedirectView.as_view(pattern_name='admin_panel:inquiry_detail', permanent=False),
+    ),
+    path(
+        'csv/import-preview/',
+        RedirectView.as_view(pattern_name='admin_panel:csv_import', permanent=False),
+    ),
+    path(
+        'csv/preview-preview/',
+        RedirectView.as_view(pattern_name='admin_panel:csv_preview', permanent=False),
+    ),
 ]

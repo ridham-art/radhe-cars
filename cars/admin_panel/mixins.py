@@ -1,13 +1,8 @@
 """AJAX partial rendering helpers for the admin panel."""
 
-import json
-
 from django.contrib import messages
 from django.http import JsonResponse
 from django.shortcuts import redirect
-from django.template.loader import render_to_string
-
-from cars.models import CarModel
 
 
 class AdminListPartialMixin:
@@ -51,73 +46,3 @@ def admin_ajax_response(request, *, redirect_to, message=None, level='success', 
         else:
             messages.info(request, message)
     return redirect(redirect_to)
-
-
-def car_form_brand_models_map():
-    """brand_id (str) -> [{id, name}, ...] for client-side model dropdown (no API on change)."""
-    out = {}
-    for m in CarModel.objects.order_by('brand_id', 'name').values('id', 'name', 'brand_id'):
-        key = str(m['brand_id'])
-        out.setdefault(key, []).append({'id': m['id'], 'name': m['name']})
-    return out
-
-
-class CarFormAjaxMixin:
-    """XHR save / validation for car add/edit (AutoVault preview templates)."""
-
-    car_form_partial_template = 'admin_panel/partials/car_form_body_partial.html'
-
-    def get_context_data(self, **kwargs):
-        ctx = super().get_context_data(**kwargs)
-        obj = ctx.get('object') or getattr(self, 'object', None)
-        model_id = None
-        variant = ''
-        if obj and getattr(obj, 'pk', None):
-            model_id = obj.model_id
-            variant = obj.variant or ''
-        ctx['cf_config_json'] = json.dumps(
-            {
-                'modelId': model_id,
-                'variant': variant,
-                'brandModels': car_form_brand_models_map(),
-            }
-        )
-        return ctx
-
-    def _is_car_form_xhr(self):
-        return self.request.headers.get('x-requested-with') == 'XMLHttpRequest'
-
-    def _car_form_success_message(self):
-        if getattr(self, 'object', None) and getattr(self.object, 'pk', None):
-            return 'Car updated successfully.'
-        return 'Car created successfully.'
-
-    def form_valid(self, form):
-        if not self._is_car_form_xhr():
-            return super().form_valid(form)
-        messages.success(self.request, self._car_form_success_message())
-        self.object = form.save()
-        self._save_images(self.object)
-        return admin_ajax_response(
-            self.request,
-            redirect_to=str(self.get_success_url()),
-            message=self._car_form_success_message(),
-        )
-
-    def form_invalid(self, form):
-        if not self._is_car_form_xhr():
-            return super().form_invalid(form)
-        ctx = self.get_context_data(form=form)
-        partial_html = render_to_string(
-            self.car_form_partial_template,
-            ctx,
-            request=self.request,
-        )
-        return JsonResponse(
-            {
-                'ok': False,
-                'level': 'error',
-                'message': 'Please correct the errors below.',
-                'partialHtml': partial_html,
-            }
-        )

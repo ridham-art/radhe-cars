@@ -92,7 +92,7 @@ def filter_car_list_queryset(request):
     else:
         tab = request.GET.get('tab', '').strip()
         url_name = getattr(getattr(request, 'resolver_match', None), 'url_name', None)
-        if url_name in ('car_list', 'car_list_preview') and not tab:
+        if url_name == 'car_list' and not tab:
             tab = 'stock'
         if tab == 'sold':
             qs = qs.filter(status='SOLD')
@@ -579,17 +579,13 @@ class DashboardPreviewMixin(DashboardStatsMixin):
 
 
 class DashboardView(StaffRequiredMixin, AdminPanelContextMixin, DashboardStatsMixin, TemplateView):
-    template_name = 'admin_panel/dashboard.html'
+    template_name = 'admin_panel/dashboard_new.html'
 
 
 class DashboardPreviewView(
     StaffRequiredMixin, AdminPanelContextMixin, DashboardPreviewMixin, TemplateView
 ):
     template_name = 'admin_panel/dashboard_new.html'
-
-
-class ShellPreviewView(StaffRequiredMixin, AdminPanelContextMixin, TemplateView):
-    template_name = 'admin_panel/shell_preview.html'
 
 
 class CustomerListView(
@@ -600,7 +596,7 @@ class CustomerListView(
 ):
     """Website sign-ups (non-staff). Newest first."""
 
-    template_name = 'admin_panel/customer_list.html'
+    template_name = 'admin_panel/customer_list_new.html'
     context_object_name = 'customers'
     paginate_by = 25
 
@@ -646,7 +642,7 @@ class WishlistActivityListView(
     """Cars saved by logged-in users. Newest first."""
 
     model = Wishlist
-    template_name = 'admin_panel/wishlist_list.html'
+    template_name = 'admin_panel/wishlist_list_new.html'
     context_object_name = 'wishlists'
     paginate_by = 25
 
@@ -689,7 +685,7 @@ class CarListView(
     ListView,
 ):
     model = Car
-    template_name = 'admin_panel/car_list.html'
+    template_name = 'admin_panel/car_list_new.html'
     context_object_name = 'cars'
     paginate_by = 25
 
@@ -760,7 +756,7 @@ class CarListPreviewView(
 class CarCreateView(StaffRequiredMixin, AdminPanelContextMixin, CreateView):
     model = Car
     form_class = CarStaffForm
-    template_name = 'admin_panel/car_form.html'
+    template_name = 'admin_panel/car_form_new.html'
 
     def get_context_data(self, **kwargs):
         ctx = super().get_context_data(**kwargs)
@@ -784,7 +780,7 @@ class CarCreateView(StaffRequiredMixin, AdminPanelContextMixin, CreateView):
 class CarUpdateView(StaffRequiredMixin, AdminPanelContextMixin, UpdateView):
     model = Car
     form_class = CarStaffForm
-    template_name = 'admin_panel/car_form.html'
+    template_name = 'admin_panel/car_form_new.html'
 
     def get_queryset(self):
         qs = super().get_queryset()
@@ -934,7 +930,7 @@ class SellCarInquiryListView(
     """Cars submitted via the public Sell Car form (pending review)."""
 
     model = Car
-    template_name = 'admin_panel/sell_car_inquiry_list.html'
+    template_name = 'admin_panel/sell_car_inquiry_list_new.html'
     context_object_name = 'cars'
     paginate_by = 25
 
@@ -1299,7 +1295,7 @@ class InquiryListView(
     ListView,
 ):
     model = Inquiry
-    template_name = 'admin_panel/inquiry_list.html'
+    template_name = 'admin_panel/inquiry_list_new.html'
     context_object_name = 'inquiries'
     paginate_by = 30
 
@@ -1332,7 +1328,7 @@ class InquiryListPreviewView(AdminListPartialMixin, InquiryListView):
 
 class InquiryDetailView(StaffRequiredMixin, AdminPanelContextMixin, DetailView):
     model = Inquiry
-    template_name = 'admin_panel/inquiry_detail.html'
+    template_name = 'admin_panel/inquiry_detail_new.html'
     context_object_name = 'inquiry'
 
     def get_queryset(self):
@@ -2163,7 +2159,7 @@ class VehicleMasterVariantDeleteView(StaffRequiredMixin, View):
 
 
 class CSVImportView(StaffRequiredMixin, AdminPanelContextMixin, FormView):
-    template_name = 'admin_panel/csv_import.html'
+    template_name = 'admin_panel/csv_import_new.html'
     form_class = CSVUploadForm
 
     def get_context_data(self, **kwargs):
@@ -2256,7 +2252,7 @@ class CSVImportPreviewView(CSVImportView):
 
 
 class CSVPreviewView(StaffRequiredMixin, AdminPanelContextMixin, TemplateView):
-    template_name = 'admin_panel/csv_preview.html'
+    template_name = 'admin_panel/csv_preview_new.html'
 
     def get_context_data(self, **kwargs):
         ctx = super().get_context_data(**kwargs)

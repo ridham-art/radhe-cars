@@ -130,19 +130,15 @@
         var rest = adminRest(pathname);
         if (rest === null) return null;
         if (!rest || rest === '') return 'dashboard';
-        if (rest === 'dashboard-preview' || rest === 'ui-preview') return 'dashboard';
-        if (/^cars\/add$/.test(rest) || rest === 'cars-add-preview') return 'car_form';
-        if (/^cars\/\d+\/edit$/.test(rest) || /^cars\/\d+\/edit-preview$/.test(rest)) return 'car_form';
-        if (rest === 'cars' || rest === 'cars-preview') return 'inventory';
-        if (rest === 'sell-car-inquiries' || rest === 'listing-requests-preview') return 'requests';
-        if (rest === 'vehicle-master' || rest === 'vehicle-master-preview') return 'vehicle_master';
-        if (rest.indexOf('vehicle-master/') === 0) return 'vehicle_master';
-        if (rest === 'customers' || rest === 'customers-preview') return 'lists';
-        if (rest === 'wishlists' || rest === 'wishlists-preview') return 'lists';
-        if (rest === 'inquiries' || rest === 'inquiries-preview') return 'lists';
-        if (/^inquiries\/\d+$/.test(rest) || /^inquiries-preview\/\d+$/.test(rest)) {
-            return 'inquiry_detail';
-        }
+        if (/^cars\/add$/.test(rest)) return 'car_form';
+        if (/^cars\/\d+\/edit$/.test(rest)) return 'car_form';
+        if (rest === 'cars') return 'inventory';
+        if (rest === 'sell-car-inquiries') return 'requests';
+        if (rest === 'vehicle-master' || rest.indexOf('vehicle-master/') === 0) return 'vehicle_master';
+        if (rest === 'customers') return 'lists';
+        if (rest === 'wishlists') return 'lists';
+        if (rest === 'inquiries') return 'lists';
+        if (/^inquiries\/\d+$/.test(rest)) return 'inquiry_detail';
         if (rest.indexOf('csv/') === 0) return 'csv';
         return null;
     }
