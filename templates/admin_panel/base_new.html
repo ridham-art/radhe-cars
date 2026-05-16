@@ -237,7 +237,21 @@
     <script>
     window.AP_NAV_CONFIG = {
         staticPrefix: "{% get_static_prefix %}",
-        adminPrefix: "/admin-panel/"
+        adminPrefix: "/admin-panel/",
+        staticUrls: {
+            "css/admin-panel-dashboard.css": "{% static 'css/admin-panel-dashboard.css' %}",
+            "css/admin-panel-inventory.css": "{% static 'css/admin-panel-inventory.css' %}",
+            "css/admin-panel-car-form.css": "{% static 'css/admin-panel-car-form.css' %}",
+            "css/admin-panel-requests.css": "{% static 'css/admin-panel-requests.css' %}",
+            "css/admin-panel-vehicle-master.css": "{% static 'css/admin-panel-vehicle-master.css' %}",
+            "css/admin-panel-lists.css": "{% static 'css/admin-panel-lists.css' %}",
+            "js/admin-panel-dashboard.js": "{% static 'js/admin-panel-dashboard.js' %}",
+            "js/admin-panel-list.js": "{% static 'js/admin-panel-list.js' %}",
+            "js/admin-panel-requests.js": "{% static 'js/admin-panel-requests.js' %}",
+            "js/admin-panel-vehicle-master.js": "{% static 'js/admin-panel-vehicle-master.js' %}",
+            "js/admin-panel-inquiry-detail.js": "{% static 'js/admin-panel-inquiry-detail.js' %}",
+            "js/admin-panel-csv.js": "{% static 'js/admin-panel-csv.js' %}"
+        }
     };
     </script>
     <script src="{% static 'js/admin-panel-nav.js' %}" data-ap-core="1"></script>

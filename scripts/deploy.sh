@@ -17,6 +17,10 @@ if ! ls staticfiles/js/admin-panel-nav*.js 1>/dev/null 2>&1; then
   echo "WARNING: admin-panel-nav.js missing from staticfiles — in-shell sidebar nav will not work."
   exit 1
 fi
+if ! ls staticfiles/css/admin-panel-inventory*.css 1>/dev/null 2>&1; then
+  echo "WARNING: admin-panel-inventory.css missing from staticfiles — inventory page styles will 404."
+  exit 1
+fi
 
 echo "==> Migrations"
 python manage.py migrate --noinput
