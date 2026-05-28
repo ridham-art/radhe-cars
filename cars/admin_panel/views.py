@@ -56,6 +56,7 @@ from cars.admin_panel.cache_utils import (
     get_cached_dashboard_stats,
     get_cached_inventory_tab_counts,
     get_cached_nav_counts,
+    get_cached_sell_inquiry_tab_counts,
     invalidate_admin_nav_counts_cache,
 )
 from cars.admin_panel.mixins import AdminListPartialMixin, admin_ajax_response
@@ -884,11 +885,11 @@ class SellCarInquiryPreviewView(
         tab = self.request.GET.get('tab', 'pending').strip()
         if tab not in ('pending', 'approved', 'rejected'):
             tab = 'pending'
-        base = _sell_inquiry_base_qs()
         ctx['active_tab'] = tab
-        ctx['pending_count'] = base.filter(status='PENDING').count()
-        ctx['approved_count'] = base.filter(status='APPROVED').count()
-        ctx['rejected_count'] = base.filter(status='REJECTED').count()
+        tab_counts = get_cached_sell_inquiry_tab_counts()
+        ctx['pending_count'] = tab_counts['pending_count']
+        ctx['approved_count'] = tab_counts['approved_count']
+        ctx['rejected_count'] = tab_counts['rejected_count']
         filt = self.request.GET.copy()
         filt.pop('page', None)
         ctx['filter_querystring'] = urlencode(filt)

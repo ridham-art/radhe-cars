@@ -5,10 +5,13 @@ from cars.admin_panel.cache_utils import (
     ADMIN_DASHBOARD_STATS_CACHE_KEY,
     ADMIN_INVENTORY_TAB_COUNTS_CACHE_KEY,
     ADMIN_NAV_COUNTS_CACHE_KEY,
+    ADMIN_SELL_INQUIRY_TAB_COUNTS_CACHE_KEY,
     build_inventory_tab_counts_dict,
+    build_sell_inquiry_tab_counts_dict,
     get_cached_dashboard_stats,
     get_cached_inventory_tab_counts,
     get_cached_nav_counts,
+    get_cached_sell_inquiry_tab_counts,
     invalidate_admin_nav_counts_cache,
 )
 from cars.models import Brand, Car, CarModel
@@ -68,6 +71,26 @@ class AdminPanelCacheTests(TestCase):
         second = get_cached_inventory_tab_counts()
         self.assertEqual(first, second)
 
+    def test_sell_inquiry_tab_counts_match_builder(self):
+        self._make_car(status='PENDING', submit_via_sell_form=True)
+        self._make_car(status='APPROVED', submit_via_sell_form=True)
+        self._make_car(status='REJECTED', submit_via_sell_form=True)
+
+        expected = build_sell_inquiry_tab_counts_dict()
+        cached = get_cached_sell_inquiry_tab_counts()
+
+        self.assertEqual(cached, expected)
+        self.assertEqual(cached['pending_count'], 1)
+        self.assertEqual(cached['approved_count'], 1)
+        self.assertEqual(cached['rejected_count'], 1)
+
+    def test_sell_inquiry_tab_counts_cached_second_call(self):
+        self._make_car(status='PENDING', submit_via_sell_form=True)
+        first = get_cached_sell_inquiry_tab_counts()
+        self.assertIsNotNone(cache.get(ADMIN_SELL_INQUIRY_TAB_COUNTS_CACHE_KEY))
+        second = get_cached_sell_inquiry_tab_counts()
+        self.assertEqual(first, second)
+
     def test_dashboard_stats_has_expected_keys(self):
         stats = get_cached_dashboard_stats()
         for key in (
@@ -93,6 +116,7 @@ class AdminPanelCacheTests(TestCase):
 
         invalidate_admin_nav_counts_cache()
         self.assertIsNone(cache.get(ADMIN_INVENTORY_TAB_COUNTS_CACHE_KEY))
+        self.assertIsNone(cache.get(ADMIN_SELL_INQUIRY_TAB_COUNTS_CACHE_KEY))
         self.assertIsNone(cache.get(ADMIN_DASHBOARD_STATS_CACHE_KEY))
         self.assertIsNone(cache.get(ADMIN_NAV_COUNTS_CACHE_KEY))
 

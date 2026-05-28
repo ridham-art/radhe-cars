@@ -11,10 +11,12 @@ from django.utils import timezone
 
 ADMIN_NAV_COUNTS_CACHE_KEY = 'admin_panel:nav_counts_v1'
 ADMIN_INVENTORY_TAB_COUNTS_CACHE_KEY = 'admin_panel:inventory_tab_counts_v1'
+ADMIN_SELL_INQUIRY_TAB_COUNTS_CACHE_KEY = 'admin_panel:sell_inquiry_tab_counts_v1'
 ADMIN_DASHBOARD_STATS_CACHE_KEY = 'admin_panel:dashboard_stats_v1'
 
 ADMIN_NAV_COUNTS_TTL = 180
 ADMIN_INVENTORY_TAB_COUNTS_TTL = 180
+ADMIN_SELL_INQUIRY_TAB_COUNTS_TTL = 180
 ADMIN_DASHBOARD_STATS_TTL = 120
 
 _MAKE_CHART_COLORS = ['#2563eb', '#0f9d58', '#c8881a', '#6d4aff', '#0ea5e9']
@@ -68,6 +70,16 @@ def build_inventory_tab_counts_dict():
     return Car.objects.exclude(submit_via_sell_form=True).aggregate(
         stock_count=Count('pk', filter=~Q(status='SOLD')),
         sold_count=Count('pk', filter=Q(status='SOLD')),
+    )
+
+
+def build_sell_inquiry_tab_counts_dict():
+    from cars.models import Car
+
+    return Car.objects.filter(submit_via_sell_form=True).aggregate(
+        pending_count=Count('pk', filter=Q(status='PENDING')),
+        approved_count=Count('pk', filter=Q(status='APPROVED')),
+        rejected_count=Count('pk', filter=Q(status='REJECTED')),
     )
 
 
@@ -197,6 +209,14 @@ def get_cached_inventory_tab_counts():
     )
 
 
+def get_cached_sell_inquiry_tab_counts():
+    return cache.get_or_set(
+        ADMIN_SELL_INQUIRY_TAB_COUNTS_CACHE_KEY,
+        build_sell_inquiry_tab_counts_dict,
+        ADMIN_SELL_INQUIRY_TAB_COUNTS_TTL,
+    )
+
+
 def get_cached_dashboard_stats():
     return cache.get_or_set(
         ADMIN_DASHBOARD_STATS_CACHE_KEY,
@@ -206,11 +226,12 @@ def get_cached_dashboard_stats():
 
 
 def invalidate_admin_nav_counts_cache():
-    """Clear nav badges, inventory tab counts, and dashboard stat caches."""
+    """Clear nav badges, list tab counts, and dashboard stat caches."""
     cache.delete_many(
         [
             ADMIN_NAV_COUNTS_CACHE_KEY,
             ADMIN_INVENTORY_TAB_COUNTS_CACHE_KEY,
+            ADMIN_SELL_INQUIRY_TAB_COUNTS_CACHE_KEY,
             ADMIN_DASHBOARD_STATS_CACHE_KEY,
         ]
     )
