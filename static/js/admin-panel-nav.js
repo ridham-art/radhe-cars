@@ -6,6 +6,15 @@
         adminPrefix: '/admin-panel/',
     };
 
+    var listPageAssets = {
+        css: [
+            'css/admin-panel-inventory.css',
+            'css/admin-panel-dashboard.css',
+            'css/admin-panel-lists.css',
+        ],
+        scripts: [{ url: 'js/admin-panel-list.js' }],
+    };
+
     var PAGE_ASSETS = {
         dashboard: {
             css: ['css/admin-panel-dashboard.css'],
@@ -45,14 +54,9 @@
                 { url: 'js/admin-panel-vehicle-master.js' },
             ],
         },
-        lists: {
-            css: [
-                'css/admin-panel-inventory.css',
-                'css/admin-panel-dashboard.css',
-                'css/admin-panel-lists.css',
-            ],
-            scripts: [{ url: 'js/admin-panel-list.js' }],
-        },
+        customers: listPageAssets,
+        wishlists: listPageAssets,
+        inquiries: listPageAssets,
         inquiry_detail: {
             css: [
                 'css/admin-panel-dashboard.css',
@@ -159,9 +163,9 @@
         if (rest === 'cars') return 'inventory';
         if (rest === 'sell-car-inquiries') return 'requests';
         if (rest === 'vehicle-master' || rest.indexOf('vehicle-master/') === 0) return 'vehicle_master';
-        if (rest === 'customers') return 'lists';
-        if (rest === 'wishlists') return 'lists';
-        if (rest === 'inquiries') return 'lists';
+        if (rest === 'customers') return 'customers';
+        if (rest === 'wishlists') return 'wishlists';
+        if (rest === 'inquiries') return 'inquiries';
         if (/^inquiries\/\d+$/.test(rest)) return 'inquiry_detail';
         if (rest.indexOf('csv/') === 0) return 'csv';
         return null;
@@ -450,7 +454,7 @@
             if (!active && linkKey === 'inventory' && pageKey === 'car_form') {
                 active = true;
             }
-            if (!active && linkKey === 'lists' && pageKey === 'inquiry_detail') {
+            if (!active && linkKey === 'inquiries' && pageKey === 'inquiry_detail') {
                 active = true;
             }
             a.classList.toggle('active', active);
